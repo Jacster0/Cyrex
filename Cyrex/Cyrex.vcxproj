@@ -152,10 +152,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Core\Application.h" />
+    <ClInclude Include="Core\Input\Cursor.h" />
+    <ClInclude Include="Core\Input\Mouse.h" />
     <ClInclude Include="Platform\Windows\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Application.cpp" />
+    <ClCompile Include="Core\Input\Cursor.cpp" />
+    <ClCompile Include="Core\Input\Mouse.cpp" />
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="Platform\Windows\Window.cpp" />
   </ItemGroup>
