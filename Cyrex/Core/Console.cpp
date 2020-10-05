@@ -69,7 +69,10 @@ void Cyrex::Console::Write(std::string_view message) noexcept {
 }
 
 void Cyrex::Console::Flush() noexcept {
-   (*Logger::Get().GetOutputStream()) << std::flush;
+    auto stream = Logger::Get().GetOutputStream();
+
+    if(stream->rdbuf() == std::cout.rdbuf())
+        *stream << std::flush;
 }
 
 void Cyrex::Console::SetTextColor(Color clr) noexcept {
