@@ -19,7 +19,7 @@ namespace Cyrex {
         void SetOutputStream(OutputStream ostream) noexcept;
         std::ostream* GetOutputStream() noexcept { return stream; }
         void Reset() noexcept;
-        constexpr auto NewLine() const noexcept { return std::endl<char, std::char_traits<char>>; }
+        static constexpr auto NewLine() noexcept { return std::endl<char, std::char_traits<char>>; }
     public:
         template<typename... Args>
         void Log(Level lvl, Args&& ...args);
@@ -51,31 +51,26 @@ namespace Cyrex {
 namespace Cyrex::crxlog {
     template<typename ...Args>
     inline void info(Args&& ...args) {
-        auto logger = Logger::Get();
-        logger.Log(Level::crx_info, args..., logger.NewLine());
+        Logger::Get().Log(Level::crx_info, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
     inline void err(Args&& ...args) {
-        auto logger = Logger::Get();
-        logger.Log(Level::crx_error, args..., logger.NewLine());
+        Logger::Get().Log(Level::crx_error, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
     inline void warn(Args&& ...args) {
-        auto logger = Logger::Get();
-        logger.Log(Level::crx_warn, args..., logger.NewLine());
+        Logger::Get().Log(Level::crx_warn, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
     inline void critical(Args&& ...args) {
-        auto logger = Logger::Get();
-        logger.Log(Level::crx_critical, args..., logger.NewLine());
+        Logger::Get().Log(Level::crx_critical, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
     inline void normal(Args&& ...args) {
-        auto logger = Logger::Get();
-        logger.Log(Level::crx_default, args..., logger.NewLine());
+        Logger::Get().Log(Level::crx_default, args..., Logger::NewLine());
     }
 }
