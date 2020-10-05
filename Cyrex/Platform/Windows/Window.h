@@ -1,6 +1,7 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <Core\Input\Mouse.h>
 #undef min
 #undef max
 
@@ -36,5 +37,6 @@ namespace Cyrex {
 		HWND m_hWnd;
 		int m_width{ 800 };
 		int m_height{ 600 };
+		Mouse m_mouse;
 	};
 }
