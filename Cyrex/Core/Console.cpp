@@ -2,17 +2,7 @@
 #include "Console.h"
 #include "Platform/Windows/CrxWindow.h"
 
-
 Cyrex::Console* Cyrex::Console::console(new Console);
-
-#define COLOR_RED     FOREGROUND_RED   |  FOREGROUND_INTENSITY							
-#define COLOR_GREEN   FOREGROUND_GREEN |  FOREGROUND_INTENSITY							
-#define COLOR_YELLOW  FOREGROUND_RED   |  FOREGROUND_GREEN		| FOREGROUND_INTENSITY 
-#define COLOR_BLUE    FOREGROUND_BLUE  |  FOREGROUND_INTENSITY							
-#define COLOR_MAGENTA FOREGROUND_RED   |  FOREGROUND_BLUE		| FOREGROUND_INTENSITY	 
-#define COLOR_CYAN    FOREGROUND_BLUE  |  FOREGROUND_GREEN		| FOREGROUND_INTENSITY  
-#define COLOR_WHITE   FOREGROUND_BLUE  |  FOREGROUND_GREEN		| FOREGROUND_RED	
-
 
 Cyrex::Console::Console() noexcept {
     Create();
@@ -55,7 +45,7 @@ void Cyrex::Console::Reset() noexcept {
 }
 
 void Cyrex::Console::ResetTextColor() noexcept {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), COLOR_WHITE);
+    SetTextColor(Color::White);
 }
 
 void Cyrex::Console::WriteLine(std::string_view message) noexcept {
@@ -80,31 +70,7 @@ void Cyrex::Console::Flush() noexcept {
 }
 
 void Cyrex::Console::SetTextColor(Color clr) noexcept {
-    switch (clr) {
-    case Color::Red:
-        SetTextColor(COLOR_RED);
-        break;
-    case Color::Green:
-        SetTextColor(COLOR_GREEN);
-        break;
-    case Color::Yellow:
-        SetTextColor(COLOR_YELLOW);
-        break;
-    case Color::Blue:
-        SetTextColor(COLOR_BLUE);
-        break;
-    case Color::Magenta:
-        SetTextColor(COLOR_MAGENTA);
-        break;
-    case Color::Cyan:
-        SetTextColor(COLOR_CYAN);
-        break;
-    case Color::White:
-        SetTextColor(COLOR_WHITE);
-        break;
-    default:
-        break;
-    }
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), static_cast<WORD>(clr));
 }
 
 void Cyrex::Console::Create() noexcept {
@@ -119,8 +85,4 @@ void Cyrex::Console::Create() noexcept {
 
     SetConsoleWindowInfo(handle, true, &size);
     SetConsoleTitle(L"Cyrex Console");
-}
-
-void Cyrex::Console::SetTextColor(int color) noexcept {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }

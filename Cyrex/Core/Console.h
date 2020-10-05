@@ -4,7 +4,15 @@
 #include <iostream>
 
 namespace Cyrex {
-    enum class Color { Red, Green, Yellow, Blue, Magenta, Cyan, White };
+    enum class Color { 
+        Red     = (0x0004 | 0x0008), 
+        Green   = (0x0002 | 0x0008),
+        Blue    = (0x0001 | 0x0008),
+        Yellow  = (0x0004 | 0x0002 | 0x0008),
+        Magenta = (0x0004 | 0x0001 | 0x0008),
+        Cyan    = (0x0001 | 0x0002 | 0x0008),
+        White   = (0x0004 | 0x0002 | 0x0001),
+    };
 
     class Console {
     private:
@@ -36,7 +44,6 @@ namespace Cyrex {
         static std::ostream* GetLogStream() noexcept { return Console::console->m_logOutput; }
     private:
         static void Create() noexcept;
-        static void SetTextColor(int color) noexcept;
     private:
         static Console* console;
         std::ostream* m_standardOutput = &std::cout;
