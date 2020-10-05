@@ -1,11 +1,17 @@
 #include "Application.h"
+#include "Logger.h"
+#include "Console.h"
 
 using namespace Cyrex;
 
 Cyrex::Application::Application() 
     :
     window(std::make_unique<Window>())
-{}
+{
+	if (Console::Instance()) {
+		Console::Show();
+	}
+}
 
 int Cyrex::Application::Run() {
 	while (true) {
