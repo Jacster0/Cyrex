@@ -21,10 +21,10 @@ void Cyrex::Logger::ShutDown() noexcept {
 void Cyrex::Logger::SetOutputStream(OutputStream ostream) noexcept {
     switch (ostream) {
     case OutputStream::crx_console_default:
-        SetOutputStream(&std::cout);
+        SetOutputStream(Console::GetStandardStream());
         break;
     case OutputStream::crx_console_err:
-        SetOutputStream(&std::cerr);
+        SetOutputStream(Console::GetErrorStream());
         break;
     default:
         break;

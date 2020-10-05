@@ -1,6 +1,4 @@
 #pragma once
-#include <ostream>
-#include <iostream>
 #include <string_view>
 #include "Console.h"
 
@@ -17,7 +15,6 @@ namespace Cyrex {
         void ShutDown() noexcept;
     public:
         void SetOutputStream(OutputStream ostream) noexcept;
-        std::ostream* GetOutputStream() noexcept { return stream; }
         void Reset() noexcept;
         static constexpr auto NewLine() noexcept { return std::endl<char, std::char_traits<char>>; }
     public:
@@ -30,7 +27,7 @@ namespace Cyrex {
         void SetLevel(Level lvl) noexcept;
         void SetLevel(OutputStream ostream, Color clr, std::string_view attribute) noexcept;
     private:
-        std::ostream* stream = &std::cout;
+        std::ostream* stream = Console::GetStandardStream();
     private:
         std::string prefix{};
     };
@@ -39,6 +36,7 @@ namespace Cyrex {
     inline void Logger::Log(Level lvl, Args&& ...args) {
         SetLevel(lvl);
         Log(args...);
+        SetLevel(Level::crx_default);
     }
 
     template<typename ...Args>

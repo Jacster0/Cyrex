@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "Console.h"
 #include "Platform/Windows/CrxWindow.h"
-#include "Logger.h"
 
 
 Cyrex::Console* Cyrex::Console::console(new Console);
@@ -52,6 +51,10 @@ void Cyrex::Console::SetOpacity(uint8_t alpha) noexcept {
 
 void Cyrex::Console::Reset() noexcept {
     SetOpacity(std::numeric_limits<uint8_t>::max());
+    ResetTextColor();
+}
+
+void Cyrex::Console::ResetTextColor() noexcept {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), COLOR_WHITE);
 }
 
@@ -61,17 +64,12 @@ void Cyrex::Console::WriteLine(std::string_view message) noexcept {
 }
 
 void Cyrex::Console::Write(std::string_view message) noexcept {
-    auto logger = Logger::Get();
-    logger.Reset();
-    logger.SetOutputStream(OutputStream::crx_console_default);
-    logger.Log(message);
+    auto stream = Console::GetStandardStream();
+    *stream << message;
 }
 
 void Cyrex::Console::Flush() noexcept {
-    auto stream = Logger::Get().GetOutputStream();
-
-    if(stream->rdbuf() == std::cout.rdbuf())
-        *stream << std::flush;
+    *Console::GetStandardStream() << std::flush;
 }
 
 void Cyrex::Console::SetTextColor(Color clr) noexcept {
