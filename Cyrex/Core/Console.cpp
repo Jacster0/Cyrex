@@ -64,8 +64,15 @@ void Cyrex::Console::WriteLine(std::string_view message) noexcept {
 }
 
 void Cyrex::Console::Write(std::string_view message) noexcept {
-    auto stream = Console::GetStandardStream();
-    *stream << message;
+    *Console::GetStandardStream() << message;
+}
+
+void Cyrex::Console::Error(std::string_view message) noexcept {
+    *Console::GetErrorStream() << message;
+}
+
+void Cyrex::Console::Log(std::string_view message) noexcept {
+    *Console::GetLogStream() << message;
 }
 
 void Cyrex::Console::Flush() noexcept {

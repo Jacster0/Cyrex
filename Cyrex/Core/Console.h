@@ -26,6 +26,8 @@ namespace Cyrex {
     public:
         static void WriteLine(std::string_view message) noexcept;
         static void Write(std::string_view message) noexcept;
+        static void Error(std::string_view message) noexcept;
+        static void Log(std::string_view message) noexcept;
         static void Flush() noexcept;
         static void SetTextColor(Color clr) noexcept;
     public:
