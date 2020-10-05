@@ -3,7 +3,11 @@
 #include <queue>
 
 namespace Cyrex {
+    class Cursor;
+
     class Mouse {
+    public:
+        Mouse();
     public:
         struct RawDelta {
             int X;
@@ -15,7 +19,7 @@ namespace Cyrex {
         void OnRawDelta(int dx, int dy) noexcept;
         std::optional<RawDelta> ReadRawDelta() noexcept;
     public:
-        class Cursor& cursor;
+        Cursor* cursor;
     private:
         void TrimRawInputBuffer() noexcept;
     private:

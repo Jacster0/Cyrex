@@ -1,6 +1,12 @@
 #include "Mouse.h"
 #include "Cursor.h"
 
+Cyrex::Mouse::Mouse()
+{
+    Cursor cursor;
+    this->cursor = &cursor;
+}
+
 void Cyrex::Mouse::EnableRawInput() noexcept { m_rawEnabled = true; }
 
 void Cyrex::Mouse::DisableRawInput() noexcept { m_rawEnabled = false; }
