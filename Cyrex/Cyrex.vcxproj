@@ -157,6 +157,7 @@
     <ClInclude Include="Core\Input\Mouse.h" />
     <ClInclude Include="Core\Logger.h" />
     <ClInclude Include="Core\Time\Time.h" />
+    <ClInclude Include="Platform\Windows\CrxWindow.h" />
     <ClInclude Include="Platform\Windows\Window.h" />
   </ItemGroup>
   <ItemGroup>

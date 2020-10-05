@@ -1,11 +1,10 @@
-#include "Console.h"
-#include <Windows.h>
 #include <stdio.h>
+#include "Console.h"
+#include "Platform/Windows/CrxWindow.h"
 #include "Logger.h"
 
+
 Cyrex::Console* Cyrex::Console::console(new Console);
-#undef min
-#undef max
 
 #define COLOR_RED     FOREGROUND_RED   |  FOREGROUND_INTENSITY							
 #define COLOR_GREEN   FOREGROUND_GREEN |  FOREGROUND_INTENSITY							

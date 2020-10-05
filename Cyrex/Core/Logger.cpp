@@ -1,5 +1,4 @@
 #include "Logger.h"
-#include <fstream>
 #include "Time/Time.h"
 
 static Cyrex::Logger* gpSingleton = nullptr;

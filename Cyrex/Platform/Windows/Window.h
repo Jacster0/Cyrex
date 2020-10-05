@@ -1,9 +1,6 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include "CrxWindow.h"
 #include <Core\Input\Mouse.h>
-#undef min
-#undef max
 
 namespace Cyrex {
 	class Window {

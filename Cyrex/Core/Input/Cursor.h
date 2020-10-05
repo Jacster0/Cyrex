@@ -1,5 +1,5 @@
 #pragma once
-#include <Windows.h>
+#include "Platform/Windows/CrxWindow.h"
 
 namespace Cyrex {
     class Cursor {
