@@ -154,6 +154,7 @@
     <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Core\Console.h" />
     <ClInclude Include="Core\Input\Cursor.h" />
+    <ClInclude Include="Core\Input\Keyboard.h" />
     <ClInclude Include="Core\Input\Mouse.h" />
     <ClInclude Include="Core\Logger.h" />
     <ClInclude Include="Core\Time\Time.h" />
@@ -164,6 +165,7 @@
     <ClCompile Include="Core\Application.cpp" />
     <ClCompile Include="Core\Console.cpp" />
     <ClCompile Include="Core\Input\Cursor.cpp" />
+    <ClCompile Include="Core\Input\Keyboard.cpp" />
     <ClCompile Include="Core\Input\Mouse.cpp" />
     <ClCompile Include="Core\Logger.cpp" />
     <ClCompile Include="Core\Main.cpp" />

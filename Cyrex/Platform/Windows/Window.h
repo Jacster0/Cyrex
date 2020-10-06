@@ -1,6 +1,7 @@
 #pragma once
 #include "CrxWindow.h"
-#include <Core\Input\Mouse.h>
+#include "Core/Input/Mouse.h"
+#include "Core/Input/Keyboard.h"
 
 namespace Cyrex {
 	class Window {
@@ -35,5 +36,6 @@ namespace Cyrex {
 		int m_width{ 800 };
 		int m_height{ 600 };
 		Mouse m_mouse;
+		Keyboard m_kbd;
 	};
 }
