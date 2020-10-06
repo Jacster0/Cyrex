@@ -78,7 +78,7 @@ void Cyrex::Keyboard::ClearState() noexcept {
 
 template<typename T>
 void Cyrex::Keyboard::TrimBuffer(std::queue<T>& buffer) noexcept {
-    while (buffer.size() > bufferSize) {
+    while (buffer.size() > m_bufferSize) {
         buffer.pop();
     }
 }
