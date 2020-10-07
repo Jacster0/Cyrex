@@ -1,4 +1,5 @@
 #include "Window.h"
+#include <cassert>
 
 namespace Cyrex {
 	Window::WindowClass Window::WindowClass::wndClass;
@@ -21,7 +22,8 @@ namespace Cyrex {
 		wc.lpszClassName = L"MainWnd";
 		wc.hIconSm = nullptr;
 
-		RegisterClassEx(&wc);
+		ATOM atom = RegisterClassEx(&wc);
+		assert(atom > 0);
 	}
 
 	Window::WindowClass::~WindowClass() {
