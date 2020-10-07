@@ -159,6 +159,10 @@
     <ClInclude Include="Core\Input\Mouse.h" />
     <ClInclude Include="Core\Logger.h" />
     <ClInclude Include="Core\Time\Time.h" />
+    <ClInclude Include="Graphics\API\DX12\Common.h" />
+    <ClInclude Include="Graphics\API\DX12\d3dx12.h" />
+    <ClInclude Include="Graphics\API\DX12\DXException.h" />
+    <ClInclude Include="Graphics\API\DX12\Fence.h" />
     <ClInclude Include="Platform\Windows\CrxWindow.h" />
     <ClInclude Include="Platform\Windows\Window.h" />
   </ItemGroup>
@@ -171,6 +175,7 @@
     <ClCompile Include="Core\Input\Mouse.cpp" />
     <ClCompile Include="Core\Logger.cpp" />
     <ClCompile Include="Core\Main.cpp" />
+    <ClCompile Include="Graphics\API\DX12\Fence.cpp" />
     <ClCompile Include="Platform\Windows\Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
