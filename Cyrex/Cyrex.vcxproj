@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Core\Console.h" />
+    <ClInclude Include="Core\Exceptions\CyrexException.h" />
     <ClInclude Include="Core\Input\Cursor.h" />
     <ClInclude Include="Core\Input\Keyboard.h" />
     <ClInclude Include="Core\Input\Mouse.h" />
@@ -164,6 +165,7 @@
   <ItemGroup>
     <ClCompile Include="Core\Application.cpp" />
     <ClCompile Include="Core\Console.cpp" />
+    <ClCompile Include="Core\Exceptions\CyrexException.cpp" />
     <ClCompile Include="Core\Input\Cursor.cpp" />
     <ClCompile Include="Core\Input\Keyboard.cpp" />
     <ClCompile Include="Core\Input\Mouse.cpp" />

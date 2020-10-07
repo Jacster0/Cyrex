@@ -42,6 +42,9 @@
     <ClInclude Include="Core\Input\Keyboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Core\Exceptions\CyrexException.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Platform\Windows\Window.cpp">
@@ -66,6 +69,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Core\Input\Keyboard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Exceptions\CyrexException.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
