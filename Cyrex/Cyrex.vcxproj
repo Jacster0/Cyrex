@@ -163,6 +163,7 @@
     <ClInclude Include="Graphics\API\DX12\d3dx12.h" />
     <ClInclude Include="Graphics\API\DX12\DXException.h" />
     <ClInclude Include="Graphics\API\DX12\Fence.h" />
+    <ClInclude Include="Graphics\Graphics.h" />
     <ClInclude Include="Platform\Windows\CrxWindow.h" />
     <ClInclude Include="Platform\Windows\Window.h" />
   </ItemGroup>
@@ -176,6 +177,7 @@
     <ClCompile Include="Core\Logger.cpp" />
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="Graphics\API\DX12\Fence.cpp" />
+    <ClCompile Include="Graphics\Graphics.cpp" />
     <ClCompile Include="Platform\Windows\Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
