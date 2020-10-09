@@ -1,21 +1,25 @@
 #pragma once
-#include "Platform/Windows/Window.h"
 #include <optional>
 #include <memory>
 
 namespace Cyrex {
+    class Graphics;
+    class Window;
     class Application {
     public:
         Application();
         Application(const Application& rhs) = delete;
         Application& operator=(const Application& rhs) = delete;
-        ~Application() = default;
+        ~Application();
     public:
         int Run();
     private:
+        void HandleInput() noexcept;
+        void KeyboardInput() noexcept;
         std::optional<int> MessagePump();
     private:
-        std::unique_ptr<Window> window;
+        std::unique_ptr<Window> m_wnd;
+        std::shared_ptr<Graphics> m_gfx = nullptr;
     };
 }
 

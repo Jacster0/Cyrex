@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "Graphics/Graphics.h"
 #include <cassert>
 
 namespace Cyrex {
@@ -70,15 +71,52 @@ namespace Cyrex {
 	}
 
 	LRESULT Window::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept {
-		return DefWindowProc(hWnd, msg, wParam, lParam);
+		switch (msg) {
+		case WM_SYSKEYDOWN:
+		case WM_KEYDOWN:
+			if (!(lParam & 0x40000000) || Kbd.AutorepeatIsEnabled()) {
+				Kbd.OnKeyPressed(static_cast<unsigned char>(wParam));
+			}
+		break;
+		case WM_SYSKEYUP:
+		case WM_KEYUP:
+			Kbd.OnKeyReleased(static_cast<unsigned char>(wParam));
+			break;
+		case WM_CHAR:
+			Kbd.OnChar(static_cast<unsigned char>(wParam));
+			break;
+			//We won't handle any Alt+key combination (yet atleast)
+		case WM_SYSCHAR:
+			break;
+		case WM_SIZE:
+		{
+			RECT clientRect = {};
+			::GetClientRect(m_hWnd, &clientRect);
+
+			int width = clientRect.right - clientRect.left;
+			int height = clientRect.bottom - clientRect.top;
+
+			if (Gfx) {
+				if (Gfx->IsInitialized()) {
+					Gfx->Resize(width, height);
+				}
+			}
+		}
+		break;
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			break;
+		default:
+			return DefWindowProc(hWnd, msg, wParam, lParam);
+		}
 	}
 
 	void Window::CreateMainWindow() noexcept {
 		// Compute window rectangle dimensions based on requested client area dimensions.
-		RECT R = { 0, 0, m_width, m_height };
-		AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
-		int width = R.right - R.left;
-		int height = R.bottom - R.top;
+		RECT r = { 0, 0, m_width, m_height };
+		AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, false);
+		int width = r.right - r.left;
+		int height = r.bottom - r.top;
 
 		m_hWnd = CreateWindow(
 			L"MainWnd",
@@ -103,4 +141,44 @@ namespace Cyrex {
 		UpdateWindow(m_hWnd);
 	}
 
+	void Window::ToggleFullScreen(bool fullscreen) noexcept {
+		if (m_fullScreen != fullscreen) {
+			m_fullScreen = fullscreen;
+
+			if (m_fullScreen) {
+				GetWindowRect(m_hWnd, &m_windowRect);
+
+				SetWindowLong(m_hWnd, GWL_STYLE, WS_OVERLAPPED);
+
+				// Query the name of the nearest display device for the window.
+				// This is required to set the fullscreen dimensions of the window
+				// when using a multi-monitor setup.
+				HMONITOR hMonitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+				MONITORINFOEX monitorInfo = {};
+				monitorInfo.cbSize = sizeof(MONITORINFOEX);
+				GetMonitorInfo(hMonitor, &monitorInfo);
+
+				SetWindowPos(m_hWnd, HWND_TOP,
+					monitorInfo.rcMonitor.left,
+					monitorInfo.rcMonitor.top,
+					monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+					monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+					SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+				ShowWindow(m_hWnd, SW_MAXIMIZE);
+			}
+			else {
+				SetWindowLong(m_hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
+
+				SetWindowPos(m_hWnd, HWND_NOTOPMOST,
+					m_windowRect.left,
+					m_windowRect.top,
+					m_windowRect.right - m_windowRect.left,
+					m_windowRect.bottom - m_windowRect.top,
+					SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+				ShowWindow(m_hWnd, SW_NORMAL);
+			}
+		}
+	}
 }

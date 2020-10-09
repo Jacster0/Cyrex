@@ -1,9 +1,11 @@
 #pragma once
+#include <memory>
 #include "CrxWindow.h"
 #include "Core/Input/Mouse.h"
 #include "Core/Input/Keyboard.h"
 
 namespace Cyrex {
+	class Graphics;
 	class Window {
 	private:
 		class WindowClass {
@@ -25,6 +27,10 @@ namespace Cyrex {
 		~Window();
 		Window(const Window&) = delete;
 		Window& operator = (const Window&) = delete;
+	public:
+		HWND GetHWnd() const { return m_hWnd; }
+		void ToggleFullScreen(bool fullscreen) noexcept;
+		bool FullScreen() { return m_fullScreen; }
 	private:
 		static LRESULT CALLBACK SetupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 		static LRESULT CALLBACK RedirectProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
@@ -33,9 +39,13 @@ namespace Cyrex {
 		void CreateMainWindow() noexcept;
 	private:
 		HWND m_hWnd;
+		RECT m_windowRect;
 		int m_width{ 800 };
 		int m_height{ 600 };
 		Mouse m_mouse;
-		Keyboard m_kbd;
+		bool m_fullScreen;
+	public:
+		Keyboard Kbd;
+		std::shared_ptr<Graphics> Gfx = nullptr;
 	};
 }
