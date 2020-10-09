@@ -27,7 +27,7 @@ uint64_t Cyrex::Fence::Signal(
 
 void Cyrex::Fence::WaitForFenceValue( 
     uint64_t fenceValue,
-    std::chrono::milliseconds duration = std::chrono::milliseconds::max()) const
+    std::chrono::milliseconds duration) const
 {
     if (m_fence->GetCompletedValue() < fenceValue) {
         ThrowIfFailed(m_fence->SetEventOnCompletion(fenceValue, m_fenceEvent));

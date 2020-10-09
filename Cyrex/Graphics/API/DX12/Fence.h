@@ -14,7 +14,7 @@ namespace Cyrex {
             uint64_t& fenceValue) const;
         void WaitForFenceValue( 
             uint64_t fenceValue, 
-            std::chrono::milliseconds duration) const;
+            std::chrono::milliseconds duration = std::chrono::milliseconds::max()) const;
         void Flush(
             Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue, 
             uint64_t& fenceValue) const;
