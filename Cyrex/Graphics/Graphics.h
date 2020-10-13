@@ -8,7 +8,6 @@
 #pragma comment(lib, "dxgi.lib")
 
 namespace Cyrex {
-    class Fence;
     class Graphics {
     public:
         Graphics();
@@ -43,15 +42,18 @@ namespace Cyrex {
         Microsoft::WRL::ComPtr<IDXGISwapChain4> m_swapChain;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvDescriptorHeap;
+        Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
 
         std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, m_numFrames> m_backBuffers;
         std::array<Microsoft::WRL::ComPtr<ID3D12CommandAllocator>, m_numFrames> m_commandAllocators;
     private:
         uint32_t m_rtvDescriptorHeapSize{0};
         uint32_t m_currentBackBufferIndex{0};
+
         std::array<uint64_t, m_numFrames> m_frameFenceValues{};
         uint64_t m_fenceValue{ 0 };
-        std::unique_ptr<Fence> m_pFence{};
+        HANDLE m_fenceEvent;
+      
         bool m_vsync = true;
         uint32_t m_clientWidth{};
         uint32_t m_clientHeight{};

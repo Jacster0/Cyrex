@@ -28,9 +28,8 @@ void Cyrex::Graphics::Initialize() {
     }
     CreateCommandList(m_commandAllocators.at(m_currentBackBufferIndex), D3D12_COMMAND_LIST_TYPE_DIRECT);
 
-    m_pFence = std::make_unique<Fence>();
-    m_pFence->Create(m_device);
-    m_pFence->CreateEventHandle();
+    m_fence = Fence::Create(m_device);
+    m_fenceEvent = Fence::CreateEventHandle();
 
     m_isIntialized = true;
 }
@@ -97,10 +96,10 @@ void Cyrex::Graphics::Render() {
         uint32_t presentFlags = CheckTearingSupport() && !m_vsync ? DXGI_PRESENT_ALLOW_TEARING : 0;
         ThrowIfFailed(m_swapChain->Present(syncInterval, presentFlags));
 
-        m_frameFenceValues.at(m_currentBackBufferIndex) = m_pFence->Signal(m_commandQueue, m_fenceValue);
+        m_frameFenceValues.at(m_currentBackBufferIndex) = Fence::Signal(m_fence.Get(), m_commandQueue, m_fenceValue);
 
         m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
-        m_pFence->WaitForFenceValue(m_frameFenceValues.at(m_currentBackBufferIndex));
+        Fence::WaitForFenceValue(m_fence.Get(), m_fenceEvent, m_frameFenceValues.at(m_currentBackBufferIndex));
     }
    
 }
@@ -111,7 +110,7 @@ void Cyrex::Graphics::Resize(uint32_t width, uint32_t height) {
         m_clientWidth = std::max(1u, width);
         m_clientHeight = std::max(1u, height);
 
-        m_pFence->Flush(m_commandQueue, m_fenceValue);
+        Fence::Flush(m_fence.Get(), m_fenceEvent, m_commandQueue, m_fenceValue);
 
         for (uint8_t i = 0; i < m_numFrames; ++i) {
             m_backBuffers.at(i).Reset();

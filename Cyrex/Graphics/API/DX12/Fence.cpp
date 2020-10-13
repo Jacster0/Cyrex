@@ -4,41 +4,52 @@
 namespace wrl = Microsoft::WRL;
 
 wrl::ComPtr<ID3D12Fence> Cyrex::Fence::Create(wrl::ComPtr<ID3D12Device2> device) {
-    ThrowIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-    return m_fence;
+    wrl::ComPtr<ID3D12Fence> fence;
+    ThrowIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
+
+    return fence;
 }
 
 HANDLE Cyrex::Fence::CreateEventHandle() {  
-    m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
-    assert(m_fenceEvent && "Failed to create fence event.");
+    auto fenceEvent = CreateEvent(nullptr, false, false, nullptr);
+    assert(fenceEvent && "Failed to create fence event.");
 
-    return m_fenceEvent;
+    return fenceEvent;
 }
 
 uint64_t Cyrex::Fence::Signal(
+    ID3D12Fence* fence,
     wrl::ComPtr<ID3D12CommandQueue> commandQueue,
-    uint64_t& fenceValue) const
+    uint64_t& fenceValue)
 {
     uint64_t fenceValueForSignal = ++fenceValue;
-    ThrowIfFailed(commandQueue->Signal(m_fence.Get(), fenceValueForSignal));
+    ThrowIfFailed(commandQueue->Signal(fence, fenceValueForSignal));
 
     return fenceValueForSignal;
 }
 
 void Cyrex::Fence::WaitForFenceValue( 
+    ID3D12Fence* fence,
+    HANDLE fenceEvent,
     uint64_t fenceValue,
-    std::chrono::milliseconds duration) const
+    std::chrono::milliseconds duration)
 {
-    if (m_fence->GetCompletedValue() < fenceValue) {
-        ThrowIfFailed(m_fence->SetEventOnCompletion(fenceValue, m_fenceEvent));
-        WaitForSingleObject(m_fenceEvent, static_cast<DWORD>(duration.count()));
+    if (!IsFenceComplete(fence, fenceValue)) {
+        ThrowIfFailed(fence->SetEventOnCompletion(fenceValue, fenceEvent));
+        WaitForSingleObject(fenceEvent, static_cast<DWORD>(duration.count()));
     }
 }
 
 void Cyrex::Fence::Flush(
+    ID3D12Fence* fence,
+    HANDLE fenceEvent,
     wrl::ComPtr<ID3D12CommandQueue> commandQueue, 
-    uint64_t& fenceValue) const
+    uint64_t& fenceValue)
 {
-    uint64_t fenceValueForSignal = Signal(commandQueue,fenceValue);
-    WaitForFenceValue(fenceValueForSignal);
+    uint64_t fenceValueForSignal = Signal(fence,commandQueue,fenceValue);
+    Fence::WaitForFenceValue(fence, fenceEvent,fenceValueForSignal);
+}
+
+bool Cyrex::Fence::IsFenceComplete(ID3D12Fence* fence, uint64_t fenceValue) {
+    return fence->GetCompletedValue() >= fenceValue;
 }
