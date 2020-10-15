@@ -29,6 +29,8 @@ namespace Cyrex {
 		Window& operator = (const Window&) = delete;
 	public:
 		HWND GetHWnd() const { return m_hWnd; }
+		uint32_t GetWidth() const noexcept { return m_width; }
+		uint32_t GetHeight() const noexcept { return m_height; }
 		void ToggleFullScreen(bool fullscreen) noexcept;
 		bool FullScreen() { return m_fullScreen; }
 	private:

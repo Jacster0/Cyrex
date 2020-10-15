@@ -88,6 +88,14 @@ namespace Cyrex {
 			//We won't handle any Alt+key combination (yet atleast)
 		case WM_SYSCHAR:
 			break;
+		case WM_MOUSEWHEEL:
+		{
+			float delta = static_cast<int>
+				(static_cast<short>(HIWORD(wParam))) / static_cast<float>(WHEEL_DELTA);
+	
+			Gfx->OnMouseWheel(delta);
+		}
+		break;
 		case WM_SIZE:
 		{
 			RECT clientRect = {};
@@ -101,9 +109,11 @@ namespace Cyrex {
 					Gfx->Resize(width, height);
 				}
 			}
+			break;
 		}
-		break;
+		case WM_QUIT:
 		case WM_DESTROY:
+			Gfx->Flush();
 			PostQuitMessage(0);
 			break;
 		default:

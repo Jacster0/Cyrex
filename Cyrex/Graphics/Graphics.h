@@ -6,44 +6,95 @@
 #pragma comment(lib,"d3dcompiler.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "dxguid.lib")
 
 namespace Cyrex {
+    struct VertexPosColor {
+        DirectX::XMFLOAT3 Position;
+        DirectX::XMFLOAT3 Color;
+    };
+
+    class CommandQueue;
     class Graphics {
     public:
         Graphics();
         ~Graphics();
     public:
-        void Initialize();
+        void Initialize(uint32_t width, uint32_t height);
         void Update() const noexcept;
         void Render();
         void Resize(uint32_t width, uint32_t height);
+        void LoadContent();
+        void Flush() noexcept;
+        void OnMouseWheel(float delta);
     public:
-        void ToggleVsync();
-        void SetHwnd(HWND hWnd) { m_hWnd = hWnd; }
-        bool IsInitialized() const { return m_isIntialized; }
+        void ToggleVsync() noexcept;
+        void SetHwnd(HWND hWnd) noexcept { m_hWnd = hWnd; }
+        bool IsInitialized() const noexcept { return m_isIntialized; }
     private:
+        std::shared_ptr<CommandQueue> GetCommandQueue(
+            D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT);
         void EnableDebugLayer() const;
         Microsoft::WRL::ComPtr<IDXGIAdapter4> GetAdapter(bool useWarp);
+
         void CreateDevice(Microsoft::WRL::ComPtr<IDXGIAdapter4> adapter);
-        void CreateCommandQueue(D3D12_COMMAND_LIST_TYPE type);
         bool CheckTearingSupport() const;
         void CreateSwapChain(HWND hWnd, uint32_t width, uint32_t height, uint32_t bufferCount);
         void CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
+
         void UpdateRenderTargetViews();
-        Microsoft::WRL::ComPtr<ID3D12CommandAllocator> CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
-        void CreateCommandList(
-            Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator,
-            D3D12_COMMAND_LIST_TYPE type);
+        void ResizeDepthBuffer(uint32_t width, uint32_t height);
+        void TransitionResource(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
+            Microsoft::WRL::ComPtr<ID3D12Resource> resource,
+            D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
+
+        void ClearRTV(
+            Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
+            D3D12_CPU_DESCRIPTOR_HANDLE rtv, DirectX::XMVECTORF32 clearColor);
+        void ClearDepth(Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
+            D3D12_CPU_DESCRIPTOR_HANDLE dsv, float depth = 1.0f);
+        void UpdateBufferResource(
+            Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
+            ID3D12Resource** ppDestinationResource,
+            ID3D12Resource** ppIntermediateResource,
+            size_t numElements, size_t elementSize, const void* bufferData,
+            D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
+
+        D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRenderTargetView() const;
+        Microsoft::WRL::ComPtr<ID3D12Resource> GetCurrentBackBuffer() const;
+        uint32_t GetCurrentBackBufferIndex() const;
+        uint32_t Present();
     private:
         static constexpr uint8_t m_numFrames = 3;
     private:
         Microsoft::WRL::ComPtr<ID3D12Device2> m_device;
-        Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_commandQueue;
+        Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_d3d12commandQueue;
         Microsoft::WRL::ComPtr<IDXGISwapChain4> m_swapChain;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_commandList;
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvDescriptorHeap;
         Microsoft::WRL::ComPtr<ID3D12Fence> m_fence;
 
+    private:
+        Microsoft::WRL::ComPtr<ID3D12Resource> m_vertexBuffer;
+        D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
+
+        Microsoft::WRL::ComPtr<ID3D12Resource> m_indexBuffer;
+        D3D12_INDEX_BUFFER_VIEW m_indexBufferView;
+
+        Microsoft::WRL::ComPtr<ID3D12Resource> m_depthBuffer;
+        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dSVHeap;
+        Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
+        Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
+
+        D3D12_VIEWPORT m_viewport;
+        D3D12_RECT m_scissorRect;
+
+        float m_FoV = 30.0f;
+
+        DirectX::XMFLOAT4X4 m_modelMatrix;
+        DirectX::XMFLOAT4X4 m_viewMatrix;
+        DirectX::XMFLOAT4X4 m_projectionMatrix;
+    private:
         std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, m_numFrames> m_backBuffers;
         std::array<Microsoft::WRL::ComPtr<ID3D12CommandAllocator>, m_numFrames> m_commandAllocators;
     private:
@@ -59,5 +110,9 @@ namespace Cyrex {
         uint32_t m_clientHeight{};
         HWND m_hWnd;
         bool m_isIntialized = false;
+
+        std::shared_ptr<CommandQueue> m_directCommandQueue;
+        std::shared_ptr<CommandQueue> m_computeCommandQueue;
+        std::shared_ptr<CommandQueue> m_copyCommandQueue;
     };
 }

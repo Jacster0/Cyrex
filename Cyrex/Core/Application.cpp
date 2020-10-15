@@ -6,9 +6,9 @@
 
 using namespace Cyrex;
 
-Cyrex::Application::Application()  :
+Cyrex::Application::Application() :
 	m_gfx(std::make_shared<Graphics>()),
-	m_wnd(std::make_unique<Window>())
+	m_wnd(std::make_unique<Window>()) 
 {
 	if (Console::Instance()) {
 		Console::Show();
@@ -16,7 +16,7 @@ Cyrex::Application::Application()  :
 
 	m_wnd->Gfx = m_gfx;
 	m_gfx->SetHwnd(m_wnd->GetHWnd());
-	m_gfx->Initialize();
+	m_gfx->Initialize(m_wnd->GetWidth(), m_wnd->GetHeight());
 }
 
 Cyrex::Application::~Application() = default;
