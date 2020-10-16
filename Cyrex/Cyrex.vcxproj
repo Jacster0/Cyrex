@@ -180,6 +180,9 @@
     <ClInclude Include="Graphics\API\DX12\CommandQueue.h" />
     <ClInclude Include="Graphics\API\DX12\Common.h" />
     <ClInclude Include="Graphics\API\DX12\d3dx12.h" />
+    <ClInclude Include="Graphics\API\DX12\DescriptorAllocation.h" />
+    <ClInclude Include="Graphics\API\DX12\DescriptorAllocator.h" />
+    <ClInclude Include="Graphics\API\DX12\DescriptorAllocatorPage.h" />
     <ClInclude Include="Graphics\API\DX12\DXException.h" />
     <ClInclude Include="Graphics\API\DX12\UploadBuffer.h" />
     <ClInclude Include="Graphics\Graphics.h" />
@@ -196,6 +199,9 @@
     <ClCompile Include="Core\Logger.cpp" />
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="Graphics\API\DX12\CommandQueue.cpp" />
+    <ClCompile Include="Graphics\API\DX12\DescriptorAllocation.cpp" />
+    <ClCompile Include="Graphics\API\DX12\DescriptorAllocator.cpp" />
+    <ClCompile Include="Graphics\API\DX12\DescriptorAllocatorPage.cpp" />
     <ClCompile Include="Graphics\API\DX12\UploadBuffer.cpp" />
     <ClCompile Include="Graphics\Graphics.cpp" />
     <ClCompile Include="Platform\Windows\Window.cpp" />
