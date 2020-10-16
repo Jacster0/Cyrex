@@ -37,6 +37,13 @@ Cyrex::Graphics::Graphics()
 Cyrex::Graphics::~Graphics() = default;
 
 void Cyrex::Graphics::Initialize(uint32_t width, uint32_t height) {
+    //Check for DirectX Math suport
+    if (!DirectX::XMVerifyCPUSupport()) {
+        crxlog::err("No support for DirectX Math found");
+        m_isIntialized = false;
+        return;
+    }
+
     m_clientWidth = width;
     m_clientHeight = height;
 

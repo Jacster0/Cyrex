@@ -29,9 +29,11 @@ int Cyrex::Application::Run() {
 		}
 		else {
 			//Render/Graphics stuff
-			HandleInput();
-			m_gfx->Update();
-			m_gfx->Render();
+			if (m_gfx->IsInitialized()) {
+				HandleInput();
+				m_gfx->Update();
+				m_gfx->Render();
+			}
 		}
 	}
 }
