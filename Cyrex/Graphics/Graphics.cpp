@@ -7,15 +7,17 @@
 namespace wrl = Microsoft::WRL;
 namespace dx = DirectX;
 
-static Cyrex::VertexPosColor g_Vertices[8] = {
-    { dx::XMFLOAT3(-1.0f, -1.0f, -1.0f), dx::XMFLOAT3(0.0f, 0.0f, 0.0f) },
-    { dx::XMFLOAT3(-1.0f,  1.0f, -1.0f), dx::XMFLOAT3(0.0f, 1.0f, 0.0f) },
-    { dx::XMFLOAT3( 1.0f,  1.0f, -1.0f), dx::XMFLOAT3(1.0f, 1.0f, 0.0f) },
-    { dx::XMFLOAT3( 1.0f, -1.0f, -1.0f), dx::XMFLOAT3(1.0f, 0.0f, 0.0f) },
-    { dx::XMFLOAT3(-1.0f, -1.0f,  1.0f), dx::XMFLOAT3(0.0f, 0.0f, 1.0f) },
-    { dx::XMFLOAT3(-1.0f,  1.0f,  1.0f), dx::XMFLOAT3(0.0f, 1.0f, 1.0f) }, 
-    { dx::XMFLOAT3( 1.0f,  1.0f,  1.0f), dx::XMFLOAT3(1.0f, 1.0f, 1.0f) },
-    { dx::XMFLOAT3( 1.0f, -1.0f,  1.0f), dx::XMFLOAT3(1.0f, 0.0f, 1.0f) }
+static std::array<Cyrex::VertexPosColor, 8> g_Vertices = {
+    {
+        { dx::XMFLOAT3(-1.0f, -1.0f, -1.0f), dx::XMFLOAT3(0.0f, 0.0f, 0.0f) },
+        { dx::XMFLOAT3(-1.0f,  1.0f, -1.0f), dx::XMFLOAT3(0.0f, 1.0f, 0.0f) },
+        { dx::XMFLOAT3(1.0f,  1.0f, -1.0f), dx::XMFLOAT3(1.0f, 1.0f, 0.0f)  },
+        { dx::XMFLOAT3(1.0f, -1.0f, -1.0f), dx::XMFLOAT3(1.0f, 0.0f, 0.0f)  },
+        { dx::XMFLOAT3(-1.0f, -1.0f,  1.0f), dx::XMFLOAT3(0.0f, 0.0f, 1.0f) },
+        { dx::XMFLOAT3(-1.0f,  1.0f,  1.0f), dx::XMFLOAT3(0.0f, 1.0f, 1.0f) },
+        { dx::XMFLOAT3(1.0f,  1.0f,  1.0f), dx::XMFLOAT3(1.0f, 1.0f, 1.0f)  },
+        { dx::XMFLOAT3(1.0f, -1.0f,  1.0f), dx::XMFLOAT3(1.0f, 0.0f, 1.0f)  }
+    }
 };
 
 static std::array<WORD, 36> g_Indicies = {
@@ -277,9 +279,9 @@ void Cyrex::Graphics::LoadContent() {
         commandList, 
         &m_vertexBuffer,
         &intermediateVertexBuffer,
-        _countof(g_Vertices), 
+        g_Vertices.size(), 
         sizeof(VertexPosColor), 
-        g_Vertices);
+        g_Vertices.data());
 
     // Create the vertex buffer view.
     m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
