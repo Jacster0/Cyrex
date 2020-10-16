@@ -7,20 +7,22 @@
 namespace wrl = Microsoft::WRL;
 namespace dx = DirectX;
 
+static constexpr auto g_longMax = std::numeric_limits<long>::max();
+
 static std::array<Cyrex::VertexPosColor, 8> g_Vertices = {
     {
-        { dx::XMFLOAT3(-1.0f, -1.0f, -1.0f), dx::XMFLOAT3(0.0f, 0.0f, 0.0f) },
-        { dx::XMFLOAT3(-1.0f,  1.0f, -1.0f), dx::XMFLOAT3(0.0f, 1.0f, 0.0f) },
-        { dx::XMFLOAT3(1.0f,  1.0f, -1.0f), dx::XMFLOAT3(1.0f, 1.0f, 0.0f)  },
-        { dx::XMFLOAT3(1.0f, -1.0f, -1.0f), dx::XMFLOAT3(1.0f, 0.0f, 0.0f)  },
-        { dx::XMFLOAT3(-1.0f, -1.0f,  1.0f), dx::XMFLOAT3(0.0f, 0.0f, 1.0f) },
-        { dx::XMFLOAT3(-1.0f,  1.0f,  1.0f), dx::XMFLOAT3(0.0f, 1.0f, 1.0f) },
-        { dx::XMFLOAT3(1.0f,  1.0f,  1.0f), dx::XMFLOAT3(1.0f, 1.0f, 1.0f)  },
-        { dx::XMFLOAT3(1.0f, -1.0f,  1.0f), dx::XMFLOAT3(1.0f, 0.0f, 1.0f)  }
+        { dx::XMFLOAT3(-1.0f, -1.0f, -1.0f), dx::XMFLOAT3(0.0f, 0.0f, 0.0f)  },
+        { dx::XMFLOAT3(-1.0f,  1.0f, -1.0f), dx::XMFLOAT3(0.0f, 1.0f, 0.0f)  },
+        { dx::XMFLOAT3(1.0f,  1.0f, -1.0f),  dx::XMFLOAT3(1.0f, 1.0f, 0.0f)  },
+        { dx::XMFLOAT3(1.0f, -1.0f, -1.0f),  dx::XMFLOAT3(1.0f, 0.0f, 0.0f)  },
+        { dx::XMFLOAT3(-1.0f, -1.0f,  1.0f), dx::XMFLOAT3(0.0f, 0.0f, 1.0f)  },
+        { dx::XMFLOAT3(-1.0f,  1.0f,  1.0f), dx::XMFLOAT3(0.0f, 1.0f, 1.0f)  },
+        { dx::XMFLOAT3(1.0f,  1.0f,  1.0f),  dx::XMFLOAT3(1.0f, 1.0f, 1.0f)  },
+        { dx::XMFLOAT3(1.0f, -1.0f,  1.0f),  dx::XMFLOAT3(1.0f, 0.0f, 1.0f)  }
     }
 };
 
-static std::array<WORD, 36> g_Indicies = {
+static std::array<uint16_t, 36> g_Indicies = {
     0, 1, 2, 0, 2, 3,
     4, 6, 5, 4, 7, 6,
     4, 5, 1, 4, 1, 0,
@@ -31,7 +33,7 @@ static std::array<WORD, 36> g_Indicies = {
 
 Cyrex::Graphics::Graphics() 
     :
-    m_scissorRect(CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX))
+    m_scissorRect(CD3DX12_RECT(0, 0, g_longMax, g_longMax))
 {}
 
 Cyrex::Graphics::~Graphics() = default;
@@ -55,10 +57,10 @@ void Cyrex::Graphics::Initialize(uint32_t width, uint32_t height) {
     m_computeCommandQueue = std::make_shared<CommandQueue>(D3D12_COMMAND_LIST_TYPE_COMPUTE, m_device.Get());
     m_copyCommandQueue    = std::make_shared<CommandQueue>(D3D12_COMMAND_LIST_TYPE_COPY, m_device.Get());
     
-    CreateSwapChain(m_hWnd, m_clientWidth, m_clientHeight, m_numFrames);
+    CreateSwapChain(m_hWnd, m_clientWidth, m_clientHeight, m_bufferCount);
     m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-    CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, m_numFrames);
+    CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, m_bufferCount);
 
     m_rtvDescriptorHeapSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     UpdateRenderTargetViews();
@@ -186,14 +188,14 @@ void Cyrex::Graphics::Resize(uint32_t width, uint32_t height) {
 
         Flush();
 
-        for (int i = 0; i < m_numFrames; ++i) {
+        for (int i = 0; i < m_bufferCount; ++i) {
             m_backBuffers[i].Reset();
         }
 
         DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
         ThrowIfFailed(m_swapChain->GetDesc(&swapChainDesc));
         ThrowIfFailed(m_swapChain->ResizeBuffers(
-            m_numFrames,
+            m_bufferCount,
             m_clientWidth,
             m_clientHeight,
             swapChainDesc.BufferDesc.Format,
@@ -351,7 +353,7 @@ void Cyrex::Graphics::LoadContent() {
         D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 
     // A single 32-bit constant root parameter that is used by the vertex shader.
-    CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+    CD3DX12_ROOT_PARAMETER1 rootParameters[1] = {};
     rootParameters[0].InitAsConstants(sizeof(dx::XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 
     CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
@@ -593,7 +595,7 @@ void Cyrex::Graphics::UpdateRenderTargetViews() {
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
-    for (uint8_t i = 0; i < m_numFrames; ++i) {
+    for (uint8_t i = 0; i < m_bufferCount; ++i) {
         wrl::ComPtr<ID3D12Resource> backBuffer;
         ThrowIfFailed(m_swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
 

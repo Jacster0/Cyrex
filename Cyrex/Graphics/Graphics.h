@@ -64,8 +64,10 @@ namespace Cyrex {
         Microsoft::WRL::ComPtr<ID3D12Resource> GetCurrentBackBuffer() const;
         uint32_t GetCurrentBackBufferIndex() const;
         uint32_t Present();
+    public:
+        Microsoft::WRL::ComPtr<ID3D12Device2> GetDevice() const noexcept { return  m_device; }
     private:
-        static constexpr uint8_t m_numFrames = 3;
+        static constexpr uint8_t m_bufferCount = 3;
     private:
         Microsoft::WRL::ComPtr<ID3D12Device2> m_device;
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_d3d12commandQueue;
@@ -95,13 +97,13 @@ namespace Cyrex {
         DirectX::XMFLOAT4X4 m_viewMatrix;
         DirectX::XMFLOAT4X4 m_projectionMatrix;
     private:
-        std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, m_numFrames> m_backBuffers;
-        std::array<Microsoft::WRL::ComPtr<ID3D12CommandAllocator>, m_numFrames> m_commandAllocators;
+        std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, m_bufferCount> m_backBuffers;
+        std::array<Microsoft::WRL::ComPtr<ID3D12CommandAllocator>, m_bufferCount> m_commandAllocators;
     private:
         uint32_t m_rtvDescriptorHeapSize{0};
         uint32_t m_currentBackBufferIndex{0};
 
-        std::array<uint64_t, m_numFrames> m_frameFenceValues{};
+        std::array<uint64_t, m_bufferCount> m_frameFenceValues{};
         uint64_t m_fenceValue{ 0 };
         HANDLE m_fenceEvent;
       
