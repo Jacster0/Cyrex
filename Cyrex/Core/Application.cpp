@@ -19,8 +19,6 @@ Cyrex::Application::Application() :
 	m_gfx->Initialize(m_wnd->GetWidth(), m_wnd->GetHeight());
 }
 
-Cyrex::Application::~Application() = default;
-
 int Cyrex::Application::Run() {
 	while (true) {
 		if (const auto ecode = MessagePump()) {
@@ -36,6 +34,15 @@ int Cyrex::Application::Run() {
 			}
 		}
 	}
+}
+
+Application& Cyrex::Application::Get() noexcept {
+	static Application instance;
+	return instance;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Device2> Cyrex::Application::GetDevice() const noexcept {
+	return m_gfx->GetDevice();
 }
 
 void Cyrex::Application::HandleInput() noexcept {

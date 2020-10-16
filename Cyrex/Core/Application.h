@@ -1,18 +1,23 @@
 #pragma once
 #include <optional>
 #include <memory>
+#include <wrl.h>
+#include <d3d12.h>
 
 namespace Cyrex {
     class Graphics;
     class Window;
     class Application {
-    public:
+    private:
         Application();
+    public:
         Application(const Application& rhs) = delete;
         Application& operator=(const Application& rhs) = delete;
-        ~Application();
     public:
         int Run();
+    public:
+        static Application& Get() noexcept;
+        Microsoft::WRL::ComPtr<ID3D12Device2> GetDevice() const noexcept;
     private:
         void HandleInput() noexcept;
         void KeyboardInput() noexcept;
