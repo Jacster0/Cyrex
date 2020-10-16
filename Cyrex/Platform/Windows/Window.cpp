@@ -90,25 +90,15 @@ namespace Cyrex {
 			break;
 		case WM_MOUSEWHEEL:
 		{
-			float delta = static_cast<int>
-				(static_cast<short>(HIWORD(wParam))) / static_cast<float>(WHEEL_DELTA);
+			//Negative value means we are scrolling down, positive value means we are scrolling up.
+			float delta = (static_cast<short>(HIWORD(wParam))) / static_cast<float>(WHEEL_DELTA);
 	
 			Gfx->OnMouseWheel(delta);
 		}
 		break;
 		case WM_SIZE:
 		{
-			RECT clientRect = {};
-			::GetClientRect(m_hWnd, &clientRect);
-
-			int width = clientRect.right - clientRect.left;
-			int height = clientRect.bottom - clientRect.top;
-
-			if (Gfx) {
-				if (Gfx->IsInitialized()) {
-					Gfx->Resize(width, height);
-				}
-			}
+			Resize();
 			break;
 		}
 		case WM_QUIT:
@@ -149,6 +139,20 @@ namespace Cyrex {
 
 		ShowWindow(m_hWnd, SW_SHOW);
 		UpdateWindow(m_hWnd);
+	}
+
+	void Window::Resize() const noexcept {
+		RECT rect;
+		GetClientRect(m_hWnd, &rect);
+
+		int width = rect.right - rect.left;
+		int height = rect.bottom - rect.top;
+
+		if (Gfx) {
+			if (Gfx->IsInitialized()) {
+				Gfx->Resize(width, height);
+			}
+		}
 	}
 
 	void Window::ToggleFullScreen(bool fullscreen) noexcept {

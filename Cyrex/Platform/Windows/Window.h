@@ -39,6 +39,7 @@ namespace Cyrex {
 		LRESULT MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 	private:
 		void CreateMainWindow() noexcept;
+		void Resize() const noexcept;
 	private:
 		HWND m_hWnd;
 		RECT m_windowRect;
