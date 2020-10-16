@@ -169,6 +169,8 @@
   <ItemGroup>
     <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Core\Console.h" />
+    <ClInclude Include="Core\Math\Math.h" />
+    <ClInclude Include="Core\MemoryHelperFuncs.h" />
     <ClInclude Include="Core\Exceptions\CyrexException.h" />
     <ClInclude Include="Core\Input\Cursor.h" />
     <ClInclude Include="Core\Input\Keyboard.h" />
@@ -179,6 +181,7 @@
     <ClInclude Include="Graphics\API\DX12\Common.h" />
     <ClInclude Include="Graphics\API\DX12\d3dx12.h" />
     <ClInclude Include="Graphics\API\DX12\DXException.h" />
+    <ClInclude Include="Graphics\API\DX12\UploadBuffer.h" />
     <ClInclude Include="Graphics\Graphics.h" />
     <ClInclude Include="Platform\Windows\CrxWindow.h" />
     <ClInclude Include="Platform\Windows\Window.h" />
@@ -193,6 +196,7 @@
     <ClCompile Include="Core\Logger.cpp" />
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="Graphics\API\DX12\CommandQueue.cpp" />
+    <ClCompile Include="Graphics\API\DX12\UploadBuffer.cpp" />
     <ClCompile Include="Graphics\Graphics.cpp" />
     <ClCompile Include="Platform\Windows\Window.cpp" />
   </ItemGroup>
