@@ -18,6 +18,7 @@ namespace Cyrex {
     public:
         static Application& Get() noexcept;
         Microsoft::WRL::ComPtr<ID3D12Device2> GetDevice() const noexcept;
+        static uint64_t& FrameCount() { return ms_frameCount; }
     private:
         void HandleInput() noexcept;
         void KeyboardInput() noexcept;
@@ -25,6 +26,7 @@ namespace Cyrex {
     private:
         std::unique_ptr<Window> m_wnd;
         std::shared_ptr<Graphics> m_gfx = nullptr;
+        static uint64_t ms_frameCount;
     };
 }
 

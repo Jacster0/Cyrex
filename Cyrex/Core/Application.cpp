@@ -6,6 +6,8 @@
 
 using namespace Cyrex;
 
+uint64_t Cyrex::Application::ms_frameCount = 0;
+
 Cyrex::Application::Application() :
 	m_gfx(std::make_shared<Graphics>()),
 	m_wnd(std::make_unique<Window>()) 
@@ -17,6 +19,7 @@ Cyrex::Application::Application() :
 	m_wnd->Gfx = m_gfx;
 	m_gfx->SetHwnd(m_wnd->GetHWnd());
 	m_gfx->Initialize(m_wnd->GetWidth(), m_wnd->GetHeight());
+	m_wnd->Show();
 }
 
 int Cyrex::Application::Run() {
@@ -28,6 +31,7 @@ int Cyrex::Application::Run() {
 		else {
 			//Render/Graphics stuff
 			if (m_gfx->IsInitialized()) {
+				Application::FrameCount()++;
 				HandleInput();
 				m_gfx->Update();
 				m_gfx->Render();
