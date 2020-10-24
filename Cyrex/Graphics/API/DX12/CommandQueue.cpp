@@ -1,5 +1,7 @@
 #include "CommandQueue.h"
 #include "DXException.h"
+#include "CommandList.h"
+#include "ResourceStateTracker.h"
 #include <cassert>
 
 namespace wrl = Microsoft::WRL;
@@ -28,52 +30,42 @@ wrl::ComPtr<ID3D12CommandQueue> Cyrex::CommandQueue::GetD3D12CommandQueue() cons
     return m_d3d12CommandQueue;
 }
 
-wrl::ComPtr<ID3D12GraphicsCommandList2> Cyrex::CommandQueue::GetCommandList() {
-    wrl::ComPtr<ID3D12CommandAllocator> commandAllocator;
-    wrl::ComPtr<ID3D12GraphicsCommandList2> commandList;
+std::shared_ptr<Cyrex::CommandList> Cyrex::CommandQueue::GetCommandList() {
+    std::shared_ptr<CommandList> commandList;
 
-    if (!m_commandAllocatorQueue.empty() && IsFenceComplete(m_commandAllocatorQueue.front().fenceValue))
-    {
-        commandAllocator = m_commandAllocatorQueue.front().commandAllocator;
-        m_commandAllocatorQueue.pop();
-
-        ThrowIfFailed(commandAllocator->Reset());
-    }
-    else {
-        commandAllocator = CreateCommandAllocator();
-    }
-
-    if (!m_commandListQueue.empty()) {
-        commandList = m_commandListQueue.front();
+    if (!m_commandListQueue.empty() && IsFenceComplete(m_commandListQueue.front().FenceValue)) {
+        commandList = m_commandListQueue.front().CommandList;
         m_commandListQueue.pop();
 
-        ThrowIfFailed(commandList->Reset(commandAllocator.Get(), nullptr));
+        commandList->Reset();
+
     }
     else {
-        commandList = CreateCommandList(commandAllocator);
+        commandList = std::make_shared<CommandList>(m_commandListType,m_device);
     }
-
-    ThrowIfFailed(commandList->SetPrivateDataInterface(__uuidof(ID3D12CommandAllocator), commandAllocator.Get()));
-
     return commandList;
 }
 
-uint64_t Cyrex::CommandQueue::ExecuteCommandList(wrl::ComPtr<ID3D12GraphicsCommandList2> commandList) {
-    commandList->Close();
+uint64_t Cyrex::CommandQueue::ExecuteCommandList(std::shared_ptr<CommandList> commandList) {
+    ResourceStateTracker::Lock();
+    auto pendingCommandList = GetCommandList();
 
-    ID3D12CommandAllocator* commandAllocator;
-    uint32_t dataSize = sizeof(commandAllocator);
-    ThrowIfFailed(commandList->GetPrivateData(__uuidof(ID3D12CommandAllocator), &dataSize, &commandAllocator));
+    commandList->Close(*pendingCommandList);
+    pendingCommandList->Close();
 
-    ID3D12CommandList* const ppCommandList[] = { commandList.Get() };
+    ID3D12CommandList* const ppCommandLists[] = {
+        pendingCommandList->GetGraphicsCommandList().Get(),
+        commandList->GetGraphicsCommandList().Get()
+    };
 
-    m_d3d12CommandQueue->ExecuteCommandLists(1, ppCommandList);
+    m_d3d12CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
     auto fenceValue = Signal();
 
-    m_commandAllocatorQueue.emplace(CommandAllocatorEntry{ fenceValue, commandAllocator });
-    m_commandListQueue.push(commandList);
+    ResourceStateTracker::Unlock();
 
-    commandAllocator->Release();
+    m_commandListQueue.emplace(CommandListEntry{ fenceValue, pendingCommandList });
+    m_commandListQueue.emplace(CommandListEntry{ fenceValue, commandList });
 
     return fenceValue;
 }
@@ -97,26 +89,4 @@ void Cyrex::CommandQueue::Flush(uint64_t fenceValue) {
 
 bool Cyrex::CommandQueue::IsFenceComplete(uint64_t fenceValue) {
     return m_d3d12Fence->GetCompletedValue() >= fenceValue;
-}
-
-wrl::ComPtr<ID3D12CommandAllocator> Cyrex::CommandQueue::CreateCommandAllocator() const {
-    wrl::ComPtr<ID3D12CommandAllocator> commandAllocator;
-    ThrowIfFailed(m_device->CreateCommandAllocator(m_commandListType, IID_PPV_ARGS(&commandAllocator)));
-
-    return commandAllocator;
-}
-
-wrl::ComPtr<ID3D12GraphicsCommandList2> Cyrex::CommandQueue::CreateCommandList(
-    wrl::ComPtr<ID3D12CommandAllocator> allocator) const
-{
-    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList;
-    ThrowIfFailed(m_device->CreateCommandList(
-        0,
-        m_commandListType,
-        allocator.Get(),
-        nullptr,
-        IID_PPV_ARGS(&commandList)
-    ));
-
-    return commandList;
 }
