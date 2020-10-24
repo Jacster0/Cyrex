@@ -3,6 +3,9 @@
 #include "API/DX12/DXException.h"
 #include "Core/Logger.h"
 #include "Graphics/API/DX12/CommandQueue.h"
+#include "Core/Application.h"
+#include "Graphics/API/DX12/CommandList.h"
+#include "Graphics/API/DX12/RootSignature.h"
 
 namespace wrl = Microsoft::WRL;
 namespace dx = DirectX;
@@ -122,6 +125,7 @@ void Cyrex::Graphics::Update() const noexcept {
 void Cyrex::Graphics::Render() {
     auto commandQueue = GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
     auto commandList = commandQueue->GetCommandList();
+    auto d3d12commandList = commandList->GetGraphicsCommandList();
 
     auto currentBackbufferIndex = GetCurrentBackBufferIndex();
     auto backbuffer = GetCurrentBackBuffer();
@@ -130,52 +134,44 @@ void Cyrex::Graphics::Render() {
 
     // Clear the render targets.
     {
-        TransitionResource(
-            commandList,
-            backbuffer,
-            D3D12_RESOURCE_STATE_PRESENT,
-            D3D12_RESOURCE_STATE_RENDER_TARGET
-        );
-        ClearRTV(commandList, rtv, DirectX::Colors::LightSteelBlue);
-        ClearDepth(commandList, dsv);
+        TransitionResource(d3d12commandList, backbuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        ClearRTV(d3d12commandList, rtv, DirectX::Colors::LightSteelBlue);
+        ClearDepth(d3d12commandList, dsv);
     }
 
-    commandList->SetPipelineState(m_pipelineState.Get());
-    commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    commandList->SetPipelineState(m_pipelineState);
+    commandList->SetGraphicsRootSignature(*m_rootSignature);
 
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-    commandList->IASetIndexBuffer(&m_indexBufferView);
+    commandList->SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    d3d12commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    d3d12commandList->IASetIndexBuffer(&m_indexBufferView);
 
-    commandList->RSSetViewports(1, &m_viewport);
-    commandList->RSSetScissorRects(1, &m_scissorRect);
+    commandList->SetViewport(m_viewport);
+    commandList->SetScissorRect(m_scissorRect);
 
-    commandList->OMSetRenderTargets(1, &rtv, false, &dsv);
+    d3d12commandList->OMSetRenderTargets(1, &rtv, false, &dsv);
 
     // Update the MVP matrix
     auto modelMatrix = dx::XMLoadFloat4x4(&m_modelMatrix);
-    auto viewMatrix = dx::XMLoadFloat4x4(&m_viewMatrix);
-    auto projMatrix = dx::XMLoadFloat4x4(&m_projectionMatrix);
+    auto viewMatrix  = dx::XMLoadFloat4x4(&m_viewMatrix);
+    auto projMatrix  = dx::XMLoadFloat4x4(&m_projectionMatrix);
 
     dx::XMMATRIX mvpMatrix = dx::XMMatrixMultiply(modelMatrix, viewMatrix);
     mvpMatrix = dx::XMMatrixMultiply(mvpMatrix, projMatrix);
-    commandList->SetGraphicsRoot32BitConstants(0, sizeof(dx::XMMATRIX) / 4, &mvpMatrix, 0);
-
+    commandList->SetGraphics32BitConstants(0, mvpMatrix);
+   
     dx::XMStoreFloat4x4(&m_modelMatrix, modelMatrix);
     dx::XMStoreFloat4x4(&m_viewMatrix, viewMatrix);
     dx::XMStoreFloat4x4(&m_projectionMatrix, projMatrix);
 
-    commandList->DrawIndexedInstanced(g_Indicies.size(), 1, 0, 0, 0);
+    commandList->DrawIndexed(g_Indicies.size(), 1, 0, 0, 0);
 
     // Present
     {
-        TransitionResource(
-            commandList,
-            backbuffer,
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
-            D3D12_RESOURCE_STATE_PRESENT);
-
+        TransitionResource(d3d12commandList, backbuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
         m_frameFenceValues.at(currentBackbufferIndex) = commandQueue->ExecuteCommandList(commandList);
+        m_frameValues.at(currentBackbufferIndex) = Application::FrameCount();
+
         currentBackbufferIndex = Present();
         commandQueue->WaitForFenceValue(m_frameFenceValues.at(currentBackbufferIndex));
     }
@@ -281,11 +277,12 @@ uint32_t Cyrex::Graphics::Present() {
 void Cyrex::Graphics::LoadContent() {
     auto commandQueue = GetCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
     auto commandList = commandQueue->GetCommandList();
+    auto d3d12CommandList = commandList->GetGraphicsCommandList();
 
     // Upload vertex buffer data.
     wrl::ComPtr<ID3D12Resource> intermediateVertexBuffer;
     UpdateBufferResource(
-        commandList, 
+        d3d12CommandList,
         &m_vertexBuffer,
         &intermediateVertexBuffer,
         g_Vertices.size(), 
@@ -300,7 +297,7 @@ void Cyrex::Graphics::LoadContent() {
     // Upload index buffer data.
     wrl::ComPtr<ID3D12Resource> intermediateIndexBuffer;
     UpdateBufferResource(
-        commandList,
+        d3d12CommandList,
         &m_indexBuffer,
         &intermediateIndexBuffer,
         g_Indicies.size(),
@@ -356,18 +353,14 @@ void Cyrex::Graphics::LoadContent() {
     CD3DX12_ROOT_PARAMETER1 rootParameters[1] = {};
     rootParameters[0].InitAsConstants(sizeof(dx::XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 
-    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
-    rootSignatureDescription.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
+    D3D12_ROOT_SIGNATURE_DESC1 rootSigDesc = {};
+    rootSigDesc.NumParameters     = _countof(rootParameters);
+    rootSigDesc.pParameters       = rootParameters;
+    rootSigDesc.NumStaticSamplers = 0;
+    rootSigDesc.pStaticSamplers   = nullptr;
+    rootSigDesc.Flags             = rootSignatureFlags;
 
-    // Serialize the root signature.
-    wrl::ComPtr<ID3DBlob> rootSignatureBlob;
-    wrl::ComPtr<ID3DBlob> errorBlob;
-    ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription,
-        featureData.HighestVersion, &rootSignatureBlob, &errorBlob));
-
-    // Create the root signature.
-    ThrowIfFailed(m_device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(),
-        rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+    m_rootSignature = std::make_shared<RootSignature>(m_device, rootSigDesc, featureData.HighestVersion);
 
     struct PipelineStateStream
     {
@@ -384,7 +377,7 @@ void Cyrex::Graphics::LoadContent() {
     rtvFormats.NumRenderTargets = 1;
     rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    pipelineStateStream.pRootSignature        = m_rootSignature.Get();
+    pipelineStateStream.pRootSignature        = m_rootSignature->GetRootSignature().Get();
     pipelineStateStream.InputLayout           = { inputLayout, _countof(inputLayout) };
     pipelineStateStream.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     pipelineStateStream.VS                    = CD3DX12_SHADER_BYTECODE(vertexShaderBlob.Get());

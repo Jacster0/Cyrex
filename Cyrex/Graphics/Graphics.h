@@ -14,6 +14,7 @@ namespace Cyrex {
         DirectX::XMFLOAT3 Color;
     };
 
+    class RootSignature;
     class CommandQueue;
     class Graphics {
     public:
@@ -85,7 +86,7 @@ namespace Cyrex {
 
         Microsoft::WRL::ComPtr<ID3D12Resource> m_depthBuffer;
         Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dSVHeap;
-        Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
+       /* Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;*/
         Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
 
         D3D12_VIEWPORT m_viewport;
@@ -104,6 +105,7 @@ namespace Cyrex {
         uint32_t m_currentBackBufferIndex{0};
 
         std::array<uint64_t, m_bufferCount> m_frameFenceValues{};
+        std::array<uint64_t, m_bufferCount> m_frameValues{};
         uint64_t m_fenceValue{ 0 };
         HANDLE m_fenceEvent;
       
@@ -116,5 +118,7 @@ namespace Cyrex {
         std::shared_ptr<CommandQueue> m_directCommandQueue;
         std::shared_ptr<CommandQueue> m_computeCommandQueue;
         std::shared_ptr<CommandQueue> m_copyCommandQueue;
+
+        std::shared_ptr<RootSignature> m_rootSignature;
     };
 }
