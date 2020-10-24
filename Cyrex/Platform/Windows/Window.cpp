@@ -1,5 +1,6 @@
 #include "Window.h"
 #include "Graphics/Graphics.h"
+#include "Core/Application.h"
 #include <cassert>
 
 namespace Cyrex {
@@ -99,8 +100,8 @@ namespace Cyrex {
 		case WM_SIZE:
 		{
 			Resize();
-			break;
 		}
+		break;
 		case WM_QUIT:
 		case WM_DESTROY:
 			if (Gfx->IsInitialized()) {
@@ -111,6 +112,7 @@ namespace Cyrex {
 		default:
 			return DefWindowProc(hWnd, msg, wParam, lParam);
 		}
+		return DefWindowProc(hWnd, msg, wParam, lParam);
 	}
 
 	void Window::CreateMainWindow() noexcept {
@@ -138,9 +140,6 @@ namespace Cyrex {
 			//When we get to that point we will also have to remove the noexcept keyword
 			return;
 		}
-
-		ShowWindow(m_hWnd, SW_SHOW);
-		UpdateWindow(m_hWnd);
 	}
 
 	void Window::Resize() const noexcept {
@@ -196,5 +195,9 @@ namespace Cyrex {
 				ShowWindow(m_hWnd, SW_NORMAL);
 			}
 		}
+	}
+	void Window::Show() noexcept {
+		ShowWindow(m_hWnd, SW_SHOW);
+		UpdateWindow(m_hWnd);
 	}
 }

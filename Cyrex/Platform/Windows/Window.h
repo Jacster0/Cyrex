@@ -33,6 +33,7 @@ namespace Cyrex {
 		uint32_t GetHeight() const noexcept { return m_height; }
 		void ToggleFullScreen(bool fullscreen) noexcept;
 		bool FullScreen() { return m_fullScreen; }
+		void Show() noexcept;
 	private:
 		static LRESULT CALLBACK SetupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 		static LRESULT CALLBACK RedirectProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;

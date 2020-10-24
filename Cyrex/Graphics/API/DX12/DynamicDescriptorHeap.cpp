@@ -10,6 +10,7 @@ namespace wrl = Microsoft::WRL;
 
 Cyrex::DynamicDescriptorHeap::DynamicDescriptorHeap(
     D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
+    wrl::ComPtr<ID3D12Device2> device,
     uint32_t numDescriptorsPerHeap)
     :
     m_descriptorHeapType(heapType),
@@ -19,7 +20,7 @@ Cyrex::DynamicDescriptorHeap::DynamicDescriptorHeap(
     m_currentGPUDescriptorHandle(D3D12_DEFAULT),
     m_numFreeHandles(0)
 {
-    m_descriptorHandleIncrementSize = Application::Get().GetDevice()->GetDescriptorHandleIncrementSize(heapType);
+    m_descriptorHandleIncrementSize = device->GetDescriptorHandleIncrementSize(heapType);
     m_descriptorHandleCache         = std::make_unique<D3D12_CPU_DESCRIPTOR_HANDLE[]>(m_numDescriptorsPerHeap);
 }
 
