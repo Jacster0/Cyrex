@@ -10,11 +10,12 @@
 
 namespace wrl = Microsoft::WRL;
 
-Cyrex::CommandList::CommandList(D3D12_COMMAND_LIST_TYPE type, wrl::ComPtr<ID3D12Device2> device)
+Cyrex::CommandList::CommandList(D3D12_COMMAND_LIST_TYPE type)
     :
     m_d3d12CommandListType(type)
 {
     wrl::ComPtr<ID3D12GraphicsCommandList2> commandList;
+    const auto device = Application::Get().GetDevice();
 
     ThrowIfFailed(device->CreateCommandAllocator(m_d3d12CommandListType, IID_PPV_ARGS(&m_d3d12CommandAllocator)));
     ThrowIfFailed(device->CreateCommandList(
@@ -29,7 +30,7 @@ Cyrex::CommandList::CommandList(D3D12_COMMAND_LIST_TYPE type, wrl::ComPtr<ID3D12
     m_resourceStateTracker = std::make_unique<ResourceStateTracker>();
 
     for (auto i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; i++) {
-        m_dynamicDescriptorHeap[i] = std::make_unique<DynamicDescriptorHeap>(static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i), device);
+        m_dynamicDescriptorHeap[i] = std::make_unique<DynamicDescriptorHeap>(static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i));
         m_descriptorHeaps[i] = nullptr;
     }
 }

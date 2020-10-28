@@ -105,7 +105,7 @@ namespace Cyrex {
 		case WM_QUIT:
 		case WM_DESTROY:
 			if (Gfx->IsInitialized()) {
-				Gfx->Flush();
+				Application::Get().Flush();
 			}
 			PostQuitMessage(0);
 			break;

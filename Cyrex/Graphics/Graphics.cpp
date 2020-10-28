@@ -49,16 +49,9 @@ void Cyrex::Graphics::Initialize(uint32_t width, uint32_t height) {
         return;
     }
 
+    m_device = Application::Get().GetDevice();
     m_clientWidth = width;
     m_clientHeight = height;
-
-    EnableDebugLayer();
-    wrl::ComPtr<IDXGIAdapter4> dxgiAdapter4 = GetAdapter(false);
-    CreateDevice(dxgiAdapter4);
-
-    m_directCommandQueue  = std::make_shared<CommandQueue>(D3D12_COMMAND_LIST_TYPE_DIRECT, m_device.Get());
-    m_computeCommandQueue = std::make_shared<CommandQueue>(D3D12_COMMAND_LIST_TYPE_COMPUTE, m_device.Get());
-    m_copyCommandQueue    = std::make_shared<CommandQueue>(D3D12_COMMAND_LIST_TYPE_COPY, m_device.Get());
     
     CreateSwapChain(m_hWnd, m_clientWidth, m_clientHeight, m_bufferCount);
     m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -123,7 +116,7 @@ void Cyrex::Graphics::Update() const noexcept {
 }
 
 void Cyrex::Graphics::Render() {
-    auto commandQueue = GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    auto commandQueue = Application::Get().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
     auto commandList = commandQueue->GetCommandList();
     auto d3d12commandList = commandList->GetGraphicsCommandList();
 
@@ -182,7 +175,7 @@ void Cyrex::Graphics::Resize(uint32_t width, uint32_t height) {
         m_clientWidth = std::max(1u, width);
         m_clientHeight = std::max(1u, height);
 
-        Flush();
+        Application::Get().Flush();
 
         for (int i = 0; i < m_bufferCount; ++i) {
             m_backBuffers[i].Reset();
@@ -266,7 +259,7 @@ uint32_t Cyrex::Graphics::GetCurrentBackBufferIndex() const {
 
 uint32_t Cyrex::Graphics::Present() {
     uint32_t syncInterval = m_vsync ? 1 : 0;
-    uint32_t presentFlags = CheckTearingSupport() && !m_vsync ? DXGI_PRESENT_ALLOW_TEARING : 0;
+    uint32_t presentFlags = Application::Get().IsTearingSupported() && !m_vsync ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
     ThrowIfFailed(m_swapChain->Present(syncInterval, presentFlags));
     m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
@@ -275,7 +268,7 @@ uint32_t Cyrex::Graphics::Present() {
 }
 
 void Cyrex::Graphics::LoadContent() {
-    auto commandQueue = GetCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
+    auto commandQueue = Application::Get().GetCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
     auto commandList = commandQueue->GetCommandList();
     auto d3d12CommandList = commandList->GetGraphicsCommandList();
 
@@ -360,7 +353,7 @@ void Cyrex::Graphics::LoadContent() {
     rootSigDesc.pStaticSamplers   = nullptr;
     rootSigDesc.Flags             = rootSignatureFlags;
 
-    m_rootSignature = std::make_shared<RootSignature>(m_device, rootSigDesc, featureData.HighestVersion);
+    m_rootSignature = std::make_shared<RootSignature>(rootSigDesc, featureData.HighestVersion);
 
     struct PipelineStateStream
     {
@@ -400,136 +393,11 @@ void Cyrex::Graphics::ToggleVsync() noexcept {
     m_vsync = !m_vsync;
 }
 
-std::shared_ptr<Cyrex::CommandQueue> Cyrex::Graphics::GetCommandQueue(D3D12_COMMAND_LIST_TYPE type) {
-    std::shared_ptr<CommandQueue> commandQueue;
-
-    switch (type)
-    {
-    case D3D12_COMMAND_LIST_TYPE_DIRECT:
-        commandQueue = m_directCommandQueue;
-        break;
-    case D3D12_COMMAND_LIST_TYPE_COMPUTE:
-        commandQueue = m_computeCommandQueue;
-        break;
-    case D3D12_COMMAND_LIST_TYPE_COPY:
-        commandQueue = m_copyCommandQueue;
-        break;
-    default:
-        assert(false && "Invalid command queue type.");
-    }
-
-    return commandQueue;
-}
-
-void Cyrex::Graphics::Flush() noexcept {
-    m_directCommandQueue->Flush(m_fenceValue);
-    m_computeCommandQueue->Flush(m_fenceValue);
-    m_copyCommandQueue->Flush(m_fenceValue);
-}
-
 void Cyrex::Graphics::OnMouseWheel(float delta) {
     m_FoV -= delta;
     m_FoV = std::clamp(m_FoV, 12.0f, 90.0f);
 
     crxlog::info("Fov: ", m_FoV);
-}
-
-void Cyrex::Graphics::EnableDebugLayer() const {
-#if defined(_DEBUG)
-    wrl::ComPtr<ID3D12Debug> debugInterface;
-    ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)));
-    debugInterface->EnableDebugLayer();
-#endif
-}
-
-wrl::ComPtr<IDXGIAdapter4> Cyrex::Graphics::GetAdapter(bool useWarp) {
-    wrl::ComPtr<IDXGIFactory4> dxgiFactory;
-    uint32_t createFactoryFlags = 0;
-
-#if defined(_DEBUG)
-    createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-#endif
-
-    ThrowIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory)));
-
-    wrl::ComPtr<IDXGIAdapter1> dxgiAdapter1;
-    wrl::ComPtr<IDXGIAdapter4> dxgiAdapter4;
-
-    if (useWarp) {
-        ThrowIfFailed(dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&dxgiAdapter1)));
-        ThrowIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
-    }
-    else {
-        size_t maxDedicatedVideoMemory = 0;
-
-        for (uint32_t i = 0; dxgiFactory->EnumAdapters1(i, &dxgiAdapter1) != DXGI_ERROR_NOT_FOUND; ++i) {
-            DXGI_ADAPTER_DESC1 dxgiAdapterDesc1;
-            dxgiAdapter1->GetDesc1(&dxgiAdapterDesc1);
-
-            if ((dxgiAdapterDesc1.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0 &&
-                SUCCEEDED(D3D12CreateDevice(
-                    dxgiAdapter1.Get(),
-                    D3D_FEATURE_LEVEL_11_0,
-                    __uuidof(ID3D12Device),
-                    nullptr)) &&
-                dxgiAdapterDesc1.DedicatedVideoMemory > maxDedicatedVideoMemory)
-            {
-                maxDedicatedVideoMemory = dxgiAdapterDesc1.DedicatedVideoMemory;
-                ThrowIfFailed(dxgiAdapter1.As(&dxgiAdapter4));
-            }
-        }
-    }
-
-    return dxgiAdapter4;
-}
-
-void Cyrex::Graphics::CreateDevice(wrl::ComPtr<IDXGIAdapter4> adapter) {
-    ThrowIfFailed(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device)));
-
-    //enable debug messages in debug mode
-#if defined(_DEBUG)
-    wrl::ComPtr<ID3D12InfoQueue> p_infoQueue;
-
-    if (SUCCEEDED(m_device.As(&p_infoQueue))) {
-        p_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-        p_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-        p_infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
-
-        std::array severities = { D3D12_MESSAGE_SEVERITY_INFO };
-        std::array denyIds = {
-            D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
-            D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,
-            D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE,
-        };
-       
-        D3D12_INFO_QUEUE_FILTER newFilter = {};
-        newFilter.DenyList.NumSeverities  = severities.size();
-        newFilter.DenyList.pSeverityList  = severities.data();
-        newFilter.DenyList.NumIDs         = denyIds.size();
-        newFilter.DenyList.pIDList        = denyIds.data();
-
-        ThrowIfFailed(p_infoQueue->PushStorageFilter(&newFilter));
-    }
-#endif
-}
-
-bool Cyrex::Graphics::CheckTearingSupport() const {
-    bool allowTearing = false;
-
-    wrl::ComPtr<IDXGIFactory4> factory4;
-
-    if (SUCCEEDED(CreateDXGIFactory1(IID_PPV_ARGS(&factory4)))) {
-        wrl::ComPtr<IDXGIFactory5> factory5;
-
-        if (SUCCEEDED(factory4.As(&factory5))) {
-            factory5->CheckFeatureSupport(
-                DXGI_FEATURE_PRESENT_ALLOW_TEARING,
-                &allowTearing,
-                sizeof(allowTearing));
-        }
-    }
-
-    return allowTearing;
 }
 
 void Cyrex::Graphics::CreateSwapChain(HWND hWnd, uint32_t width, uint32_t height, uint32_t bufferCount) {
@@ -553,9 +421,9 @@ void Cyrex::Graphics::CreateSwapChain(HWND hWnd, uint32_t width, uint32_t height
     swapChainDesc.Scaling     = DXGI_SCALING_STRETCH;
     swapChainDesc.SwapEffect  = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.AlphaMode   = DXGI_ALPHA_MODE_UNSPECIFIED;
-    swapChainDesc.Flags       = CheckTearingSupport() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+    swapChainDesc.Flags       = Application::Get().IsTearingSupported() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
-    auto commandQueue = GetCommandQueue()->GetD3D12CommandQueue();
+    auto commandQueue = Application::Get().GetCommandQueue()->GetD3D12CommandQueue();
     wrl::ComPtr<IDXGISwapChain1> swapchain1;
 
     ThrowIfFailed(dxgiFactory4->CreateSwapChainForHwnd(
@@ -600,8 +468,7 @@ void Cyrex::Graphics::UpdateRenderTargetViews() {
 }
 
 void Cyrex::Graphics::ResizeDepthBuffer(uint32_t width, uint32_t height) {
-
-    Flush();
+    Application::Get().Flush();
     //don't allow width and height to be 0
     width  = std::max(1u, width);
     height = std::max(1u, height);

@@ -2,16 +2,18 @@
 #include "DXException.h"
 #include "CommandList.h"
 #include "ResourceStateTracker.h"
+#include "Core/Application.h"
 #include <cassert>
 
 namespace wrl = Microsoft::WRL;
 
-Cyrex::CommandQueue::CommandQueue(D3D12_COMMAND_LIST_TYPE type, ID3D12Device2* device)
+Cyrex::CommandQueue::CommandQueue(D3D12_COMMAND_LIST_TYPE type)
     :
     m_fenceValue(0),
-    m_commandListType(type),
-    m_device(device)
+    m_commandListType(type)
 {
+    const auto device = Application::Get().GetDevice();
+
     D3D12_COMMAND_QUEUE_DESC desc = {};
     desc.Type     = type;
     desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
@@ -41,7 +43,7 @@ std::shared_ptr<Cyrex::CommandList> Cyrex::CommandQueue::GetCommandList() {
 
     }
     else {
-        commandList = std::make_shared<CommandList>(m_commandListType,m_device);
+        commandList = std::make_shared<CommandList>(m_commandListType);
     }
     return commandList;
 }
@@ -83,7 +85,7 @@ void Cyrex::CommandQueue::WaitForFenceValue(uint64_t fenceValue) {
     }
 }
 
-void Cyrex::CommandQueue::Flush(uint64_t fenceValue) {
+void Cyrex::CommandQueue::Flush() {
     WaitForFenceValue(Signal());
 }
 

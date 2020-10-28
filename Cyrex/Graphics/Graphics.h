@@ -3,11 +3,6 @@
 #include <array>
 #include "API/DX12/Common.h"
 
-#pragma comment(lib,"d3dcompiler.lib")
-#pragma comment(lib, "D3D12.lib")
-#pragma comment(lib, "dxgi.lib")
-#pragma comment(lib, "dxguid.lib")
-
 namespace Cyrex {
     struct VertexPosColor {
         DirectX::XMFLOAT3 Position;
@@ -26,20 +21,12 @@ namespace Cyrex {
         void Render();
         void Resize(uint32_t width, uint32_t height);
         void LoadContent();
-        void Flush() noexcept;
         void OnMouseWheel(float delta);
     public:
         void ToggleVsync() noexcept;
         void SetHwnd(HWND hWnd) noexcept { m_hWnd = hWnd; }
         bool IsInitialized() const noexcept { return m_isIntialized; }
     private:
-        std::shared_ptr<CommandQueue> GetCommandQueue(
-            D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT);
-        void EnableDebugLayer() const;
-        Microsoft::WRL::ComPtr<IDXGIAdapter4> GetAdapter(bool useWarp);
-
-        void CreateDevice(Microsoft::WRL::ComPtr<IDXGIAdapter4> adapter);
-        bool CheckTearingSupport() const;
         void CreateSwapChain(HWND hWnd, uint32_t width, uint32_t height, uint32_t bufferCount);
         void CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
 
@@ -65,8 +52,6 @@ namespace Cyrex {
         Microsoft::WRL::ComPtr<ID3D12Resource> GetCurrentBackBuffer() const;
         uint32_t GetCurrentBackBufferIndex() const;
         uint32_t Present();
-    public:
-        Microsoft::WRL::ComPtr<ID3D12Device2> GetDevice() const noexcept { return  m_device; }
     private:
         static constexpr uint8_t m_bufferCount = 3;
     private:
@@ -114,10 +99,6 @@ namespace Cyrex {
         uint32_t m_clientHeight{};
         HWND m_hWnd;
         bool m_isIntialized = false;
-
-        std::shared_ptr<CommandQueue> m_directCommandQueue;
-        std::shared_ptr<CommandQueue> m_computeCommandQueue;
-        std::shared_ptr<CommandQueue> m_copyCommandQueue;
 
         std::shared_ptr<RootSignature> m_rootSignature;
     };

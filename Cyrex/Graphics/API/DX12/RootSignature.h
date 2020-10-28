@@ -10,7 +10,6 @@ namespace Cyrex {
     public:
         RootSignature() noexcept;
         RootSignature(
-            Microsoft::WRL::ComPtr<ID3D12Device2> device,
             const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc,
             D3D_ROOT_SIGNATURE_VERSION rootSignatureVersion
         );
@@ -23,7 +22,6 @@ namespace Cyrex {
         }
 
         void SetRootSignatureDesc(
-            Microsoft::WRL::ComPtr<ID3D12Device2> device,
             const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc,
             D3D_ROOT_SIGNATURE_VERSION rootSignatureVersion
         );

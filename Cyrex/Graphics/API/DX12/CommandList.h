@@ -16,7 +16,7 @@ namespace Cyrex {
 
     class CommandList {
     public:
-        CommandList(D3D12_COMMAND_LIST_TYPE type, Microsoft::WRL::ComPtr<ID3D12Device2> device);
+        CommandList(D3D12_COMMAND_LIST_TYPE type);
         ~CommandList();
     public:
         D3D12_COMMAND_LIST_TYPE GetCommandListType() const noexcept { return m_d3d12CommandListType; }

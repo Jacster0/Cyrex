@@ -14,7 +14,6 @@ Cyrex::RootSignature::RootSignature() noexcept
 {}
 
 Cyrex::RootSignature::RootSignature(
-    wrl::ComPtr<ID3D12Device2> device,
     const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc, 
     D3D_ROOT_SIGNATURE_VERSION rootSignatureVersion) 
     :
@@ -23,7 +22,7 @@ Cyrex::RootSignature::RootSignature(
     m_samplerTableBitMask(0),
     m_descriptorTableBitMask(0)
 {
-    SetRootSignatureDesc(device,rootSignatureDesc, rootSignatureVersion);
+    SetRootSignatureDesc(rootSignatureDesc, rootSignatureVersion);
 }
 
 Cyrex::RootSignature::~RootSignature() {
@@ -54,7 +53,6 @@ void Cyrex::RootSignature::Destroy() {
 }
 
 void Cyrex::RootSignature::SetRootSignatureDesc(
-    wrl::ComPtr<ID3D12Device2> device,
     const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc, 
     D3D_ROOT_SIGNATURE_VERSION rootSignatureVersion)
 {
@@ -62,7 +60,8 @@ void Cyrex::RootSignature::SetRootSignatureDesc(
     // up first.
     Destroy();
 
-    auto numParams = rootSignatureDesc.NumParameters;
+    const auto device = Application::Get().GetDevice();
+    const auto numParams = rootSignatureDesc.NumParameters;
     D3D12_ROOT_PARAMETER1* pParams = numParams > 0 ? new D3D12_ROOT_PARAMETER1[numParams] : nullptr;
 
     for (uint32_t i = 0; i < numParams; i++) {

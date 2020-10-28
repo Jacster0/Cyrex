@@ -47,7 +47,7 @@ namespace Cyrex {
     private:
         static Console* console;
         std::ostream* m_standardOutput = &std::cout;
-        std::ostream* m_errorOutput = &std::cerr;
-        std::ostream* m_logOutput = &std::clog;
+        std::ostream* m_errorOutput    = &std::cerr;
+        std::ostream* m_logOutput      = &std::clog;
     };
 }
