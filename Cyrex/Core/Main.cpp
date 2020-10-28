@@ -10,7 +10,7 @@ int main() {
         crx::Application::Create();
         return crx::Application::Get().Run();
     }
-    catch (const CyrexException& e) {
+    catch (const crx::CyrexException& e) {
         crx::MessageBox::Show(e.what(), e.GetType(), crx::MessageBox::OK, crx::MessageBox::Exclamation);
     }
     catch (const std::exception& e) {
