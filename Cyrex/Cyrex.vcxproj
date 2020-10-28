@@ -176,6 +176,7 @@
     <ClInclude Include="Core\Input\Keyboard.h" />
     <ClInclude Include="Core\Input\Mouse.h" />
     <ClInclude Include="Core\Logger.h" />
+    <ClInclude Include="Core\Time\GameTimer.h" />
     <ClInclude Include="Core\Time\Time.h" />
     <ClInclude Include="Core\Utils\StringUtils.h" />
     <ClInclude Include="Graphics\API\DX12\CommandList.h" />
@@ -205,6 +206,7 @@
     <ClCompile Include="Core\Input\Mouse.cpp" />
     <ClCompile Include="Core\Logger.cpp" />
     <ClCompile Include="Core\Main.cpp" />
+    <ClCompile Include="Core\Time\GameTimer.cpp" />
     <ClCompile Include="Graphics\API\DX12\CommandList.cpp" />
     <ClCompile Include="Graphics\API\DX12\CommandQueue.cpp" />
     <ClCompile Include="Graphics\API\DX12\DescriptorAllocation.cpp" />

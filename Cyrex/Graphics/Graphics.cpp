@@ -66,35 +66,26 @@ void Cyrex::Graphics::Initialize(uint32_t width, uint32_t height) {
     m_isIntialized = true;
 }
 
-void Cyrex::Graphics::Update() const noexcept {
+void Cyrex::Graphics::Update() noexcept {
     static uint64_t frameCounter = 0;
-    static double elapsedSeconds = 0.0;
-    static double totalTime = 0.0;
-    static std::chrono::high_resolution_clock clock;
-    static auto t0 = clock.now();
 
+    m_timer.Tick();
     frameCounter++;
-    auto t1 = clock.now();
-    auto deltaTime = t1 - t0;
-    t0 = t1;
 
-    elapsedSeconds += deltaTime.count() * 1e-9;
-    totalTime += deltaTime.count() * 1e-9;
-
-    if (elapsedSeconds > 1.0) {
-        const auto fps = frameCounter / elapsedSeconds;
+    if (m_timer.GetDeltaSeconds() > 1.0) {
+        const auto fps = frameCounter / m_timer.GetDeltaSeconds();
         crxlog::normal(fps, " fps");
         frameCounter = 0;
-        elapsedSeconds = 0.0;
+        m_timer.ResetDelta();
     }
 
     // Update the model matrix.
-    float angle = static_cast<float>(totalTime * 90);
+    float angle = static_cast<float>(m_timer.GetTotalSeconds() * 90);
     const dx::XMVECTOR rotationAxis = dx::XMVectorSet(0, 1, 1, 0);
 
     auto modelMatrix = dx::XMLoadFloat4x4(&m_modelMatrix);
     modelMatrix = dx::XMMatrixRotationAxis(rotationAxis, dx::XMConvertToRadians(angle));
-    dx::XMStoreFloat4x4(const_cast<dx::XMFLOAT4X4*>(&m_modelMatrix), modelMatrix);
+    dx::XMStoreFloat4x4(&m_modelMatrix, modelMatrix);
 
     // Update the view matrix.
     const dx::XMVECTOR eyePosition = dx::XMVectorSet(0, 0, -10, 1);
@@ -103,7 +94,7 @@ void Cyrex::Graphics::Update() const noexcept {
 
     auto viewMatrix = dx::XMLoadFloat4x4(&m_viewMatrix);
     viewMatrix = dx::XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
-    dx::XMStoreFloat4x4(const_cast<dx::XMFLOAT4X4*>(&m_viewMatrix), viewMatrix);
+    dx::XMStoreFloat4x4(&m_viewMatrix, viewMatrix);
 
     // Update the projection matrix.
     float aspectratio = m_clientWidth / static_cast<float>(m_clientHeight);

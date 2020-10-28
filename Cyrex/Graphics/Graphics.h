@@ -1,7 +1,8 @@
 #pragma once
+#include "API/DX12/Common.h"
+#include "Core/Time/GameTimer.h" 
 #include <memory>
 #include <array>
-#include "API/DX12/Common.h"
 
 namespace Cyrex {
     struct VertexPosColor {
@@ -17,7 +18,7 @@ namespace Cyrex {
         ~Graphics();
     public:
         void Initialize(uint32_t width, uint32_t height);
-        void Update() const noexcept;
+        void Update() noexcept;
         void Render();
         void Resize(uint32_t width, uint32_t height);
         void LoadContent();
@@ -100,5 +101,6 @@ namespace Cyrex {
         bool m_isIntialized = false;
 
         std::shared_ptr<RootSignature> m_rootSignature;
+        GameTimer m_timer;
     };
 }
