@@ -2,14 +2,14 @@
 #include <string>
 class CyrexException {
 public:
-    CyrexException(int line, const std::wstring file) noexcept;
-    const std::wstring what() const noexcept;
+    CyrexException(int line, const std::string file) noexcept;
+    const std::string what() const noexcept;
     int GetLine() const noexcept;
-    const std::wstring& GetFile() const noexcept;
-    std::wstring GetOriginString() const noexcept;
+    const std::string& GetFile() const noexcept;
+    std::string GetOriginString() const noexcept;
 protected:
-    virtual const std::wstring GetType() const noexcept;
+    virtual const std::string GetType() const noexcept;
 private:
     int line;
-    std::wstring file;
+    std::string file;
 };

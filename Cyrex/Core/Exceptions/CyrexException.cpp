@@ -1,28 +1,28 @@
 #include "CyrexException.h"
 #include <sstream>
 
-CyrexException::CyrexException(int line, const std::wstring file) noexcept
+CyrexException::CyrexException(int line, const std::string file) noexcept
     :
     line(line),
     file(file)
 {}
 
-const std::wstring CyrexException::what() const noexcept {
-    return (std::wstringstream{} << GetType() << "\n" << GetOriginString()).str();
+const std::string CyrexException::what() const noexcept {
+    return (std::stringstream{} << GetType() << "\n" << GetOriginString()).str();
 }
 
 int CyrexException::GetLine() const noexcept {
     return line;
 }
 
-const std::wstring& CyrexException::GetFile() const noexcept {
+const std::string& CyrexException::GetFile() const noexcept {
     return file;
 }
 
-std::wstring CyrexException::GetOriginString() const noexcept {
-    return (std::wostringstream{} << L"File: " << file << "\n" << L"Line: " << line).str();
+std::string CyrexException::GetOriginString() const noexcept {
+    return (std::ostringstream{} << "File: " << file << "\n" << "Line: " << line).str();
 }
 
-const std::wstring CyrexException::GetType() const noexcept {
-    return L"Cyrex Exception";
+const std::string CyrexException::GetType() const noexcept {
+    return "Cyrex Exception";
 }
