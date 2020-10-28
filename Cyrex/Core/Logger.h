@@ -22,6 +22,10 @@ namespace Cyrex {
         void Log(Level lvl, Args&& ...args);
         template<typename... Args>
         void Log(Args&& ...args);
+        template<typename... Args>
+        void DebugLog(Level lvl, Args&& ...args);
+        template<typename... Args>
+        void DebugLog(Args&& ...args);
     private:
         void SetOutputStream(std::ostream* stream) noexcept { this->stream = stream; }
         void SetLevel(Level lvl) noexcept;
@@ -43,6 +47,23 @@ namespace Cyrex {
     inline void Logger::Log(Args&& ...args) {
         *stream << prefix;
         (*stream << ... << args);  
+    }
+
+    template<typename ...Args>
+    inline void Logger::DebugLog(Level lvl, Args&& ...args) {
+#ifdef _DEBUG
+        SetLevel(lvl);
+        DebugLog(args...);
+        SetLevel(Level::crx_default);
+#endif
+    }
+
+    template<typename ...Args>
+    inline void Logger::DebugLog(Args&& ...args) {
+#ifdef _DEBUG
+        *stream << prefix;
+        (*stream << ... << args);
+#endif
     }
 }
 
@@ -70,5 +91,32 @@ namespace Cyrex::crxlog {
     template<typename ...Args>
     inline void normal(Args&& ...args) {
         Logger::Get().Log(Level::crx_default, args..., Logger::NewLine());
+    }
+}
+
+namespace Cyrex::crxdebuglog {
+    template<typename ...Args>
+    inline void info(Args&& ...args) {
+        Logger::Get().DebugLog(Level::crx_info, args..., Logger::NewLine());
+    }
+
+    template<typename ...Args>
+    inline void err(Args&& ...args) {
+        Logger::Get().DebugLog(Level::crx_error, args..., Logger::NewLine());
+    }
+
+    template<typename ...Args>
+    inline void warn(Args&& ...args) {
+        Logger::Get().DebugLog(Level::crx_warn, args..., Logger::NewLine());
+    }
+
+    template<typename ...Args>
+    inline void critical(Args&& ...args) {
+        Logger::Get().DebugLog(Level::crx_critical, args..., Logger::NewLine());
+    }
+
+    template<typename ...Args>
+    inline void normal(Args&& ...args) {
+        Logger::Get().DebugLog(Level::crx_default, args..., Logger::NewLine());
     }
 }
