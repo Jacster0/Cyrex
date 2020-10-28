@@ -177,6 +177,7 @@
     <ClInclude Include="Core\Input\Mouse.h" />
     <ClInclude Include="Core\Logger.h" />
     <ClInclude Include="Core\Time\Time.h" />
+    <ClInclude Include="Core\Utils\StringUtils.h" />
     <ClInclude Include="Graphics\API\DX12\CommandList.h" />
     <ClInclude Include="Graphics\API\DX12\CommandQueue.h" />
     <ClInclude Include="Graphics\API\DX12\Common.h" />
@@ -192,6 +193,7 @@
     <ClInclude Include="Graphics\API\DX12\UploadBuffer.h" />
     <ClInclude Include="Graphics\Graphics.h" />
     <ClInclude Include="Platform\Windows\CrxWindow.h" />
+    <ClInclude Include="Platform\Windows\MessageBox.h" />
     <ClInclude Include="Platform\Windows\Window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -208,12 +210,14 @@
     <ClCompile Include="Graphics\API\DX12\DescriptorAllocation.cpp" />
     <ClCompile Include="Graphics\API\DX12\DescriptorAllocator.cpp" />
     <ClCompile Include="Graphics\API\DX12\DescriptorAllocatorPage.cpp" />
+    <ClCompile Include="Graphics\API\DX12\DXException.cpp" />
     <ClCompile Include="Graphics\API\DX12\DynamicDescriptorHeap.cpp" />
     <ClCompile Include="Graphics\API\DX12\Resource.cpp" />
     <ClCompile Include="Graphics\API\DX12\ResourceStateTracker.cpp" />
     <ClCompile Include="Graphics\API\DX12\RootSignature.cpp" />
     <ClCompile Include="Graphics\API\DX12\UploadBuffer.cpp" />
     <ClCompile Include="Graphics\Graphics.cpp" />
+    <ClCompile Include="Platform\Windows\MessageBox.cpp" />
     <ClCompile Include="Platform\Windows\Window.cpp" />
   </ItemGroup>
   <ItemGroup>

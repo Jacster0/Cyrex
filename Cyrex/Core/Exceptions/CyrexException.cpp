@@ -7,8 +7,8 @@ CyrexException::CyrexException(int line, const std::string file) noexcept
     file(file)
 {}
 
-const std::string CyrexException::what() const noexcept {
-    return (std::stringstream{} << GetType() << "\n" << GetOriginString()).str();
+const char* CyrexException::what() const noexcept {
+    return (std::stringstream{} << GetType() << "\n" << GetOriginString()).str().c_str();
 }
 
 int CyrexException::GetLine() const noexcept {
