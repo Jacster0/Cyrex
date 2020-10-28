@@ -8,6 +8,7 @@ void Cyrex::GameTimer::Tick() noexcept {
     auto newTimePoint = std::chrono::high_resolution_clock::now();
     m_delta = newTimePoint - m_oldTimePoint;
     m_total += m_delta;
+    m_elapsed += m_delta;
     m_oldTimePoint = newTimePoint;
 }
 
@@ -17,8 +18,8 @@ void Cyrex::GameTimer::Reset() noexcept {
     m_total = std::chrono::high_resolution_clock::duration();
 }
 
-void Cyrex::GameTimer::ResetDelta() noexcept {
-    m_delta = std::chrono::high_resolution_clock::duration();
+void Cyrex::GameTimer::ResetElapsedTime() noexcept {
+    m_elapsed = std::chrono::high_resolution_clock::duration();
 }
 
 double Cyrex::GameTimer::GetDeltaNanoseconds() const noexcept {
@@ -51,4 +52,20 @@ double Cyrex::GameTimer::GetTotalMilliSeconds() const noexcept {
 
 double Cyrex::GameTimer::GetTotalSeconds() const noexcept {
     return std::chrono::duration<double, std::ratio<1>>(m_total).count();
+}
+
+double Cyrex::GameTimer::GetElapsedNanoseconds() const noexcept {
+    return std::chrono::duration<double, std::nano>(m_elapsed).count();
+}
+
+double Cyrex::GameTimer::GetElapsedMicroseconds() const noexcept {
+    return std::chrono::duration<double, std::micro>(m_elapsed).count();
+}
+
+double Cyrex::GameTimer::GetElapsedMilliSeconds() const noexcept {
+    return std::chrono::duration<double, std::milli>(m_elapsed).count();
+}
+
+double Cyrex::GameTimer::GetElapsedSeconds() const noexcept {
+    return std::chrono::duration<double, std::ratio<1>>(m_elapsed).count();
 }

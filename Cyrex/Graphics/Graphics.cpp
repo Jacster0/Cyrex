@@ -72,11 +72,11 @@ void Cyrex::Graphics::Update() noexcept {
     m_timer.Tick();
     frameCounter++;
 
-    if (m_timer.GetDeltaSeconds() > 1.0) {
-        const auto fps = frameCounter / m_timer.GetDeltaSeconds();
+    if (m_timer.GetElapsedSeconds() > 1.0) {
+        const auto fps = frameCounter / m_timer.GetElapsedSeconds();
         crxlog::normal(fps, " fps");
         frameCounter = 0;
-        m_timer.ResetDelta();
+        m_timer.ResetElapsedTime();
     }
 
     // Update the model matrix.
