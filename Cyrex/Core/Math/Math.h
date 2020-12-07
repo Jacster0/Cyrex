@@ -2,6 +2,21 @@
 #include <numbers>
 
 namespace Cyrex::Math {
+    template<typename T>
+    concept Addable = requires (T x) { x + x; };
+
+    template<typename T>
+    concept Subtractable = requires (T x) { x - x; };
+
+    template<typename T>
+    concept Divisble = requires (T x) { x / x; };
+
+    template<typename T>
+    concept Multipliable = requires (T x) { x * x; };
+
+    template<typename T>
+    concept MathematicallyOperational = Divisble<T> || Subtractable<T> || Divisble<T> || Multipliable<T>;
+
     struct MathConstants {
         static constexpr auto pi_float = std::numbers::pi_v<float>;
         static constexpr auto pi_div2 = pi_float / 2.0f;
