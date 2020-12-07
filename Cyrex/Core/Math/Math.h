@@ -1,5 +1,13 @@
 #pragma once
+#include <numbers>
+
 namespace Cyrex::Math {
+    struct MathConstants {
+        static constexpr auto pi_float = std::numbers::pi_v<float>;
+        static constexpr auto pi_div2 = pi_float / 2.0f;
+        static constexpr auto pi_mul2 = pi_float * 2.0f;
+    };
+
     template<typename T>
     inline T AlignUpWithMask(T value, size_t mask) {
         return static_cast<T>((static_cast<size_t>(value + mask) & ~mask));
