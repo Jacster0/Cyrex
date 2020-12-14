@@ -44,6 +44,7 @@ namespace Cyrex {
             RtlReading          = 0x100000,
             ServiceNotification = 0x200000
         };
+
         enum class DialogResult {
             None   = 0x0,
             OK     = 0x1,
