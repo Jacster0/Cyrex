@@ -13,7 +13,7 @@ namespace Cyrex {
 			static const wchar_t* GetName() noexcept;
 			static HINSTANCE GetInstance() noexcept;
 		private:
-			WindowClass() noexcept;
+			WindowClass();
 			~WindowClass();
 			WindowClass(const WindowClass&) = delete;
 			WindowClass& operator = (const WindowClass&) = delete;
@@ -28,7 +28,7 @@ namespace Cyrex {
 		Window(const Window&) = delete;
 		Window& operator = (const Window&) = delete;
 	public:
-		HWND GetHWnd() const { return m_hWnd; }
+		HWND GetWindowHandle() const { return m_hWnd; }
 		uint32_t GetWidth() const noexcept { return m_width; }
 		uint32_t GetHeight() const noexcept { return m_height; }
 		void ToggleFullScreen(bool fullscreen) noexcept;

@@ -1,15 +1,27 @@
 #include "Window.h"
 #include "Graphics/Graphics.h"
 #include "Core/Application.h"
+#include "Core/Logger.h"
+#include "Core/Utils/StringUtils.h"
 #include <cassert>
+#include <comdef.h>
 
 namespace Cyrex {
 	Window::WindowClass Window::WindowClass::wndClass;
 
-	Window::WindowClass::WindowClass() noexcept
+	Window::WindowClass::WindowClass()
 		:
 		hInst(GetModuleHandle(nullptr))
 	{
+		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+		if (FAILED(hr)) {
+			_com_error err(hr);
+			auto ErrorMsg = ToNarrow(std::wstring(err.ErrorMessage()));
+
+			crxlog::critical("CoInitialize failed: ", ErrorMsg);
+			throw std::exception(ErrorMsg.c_str());
+		}
+
 		WNDCLASSEX wc{ 0 };
 		wc.cbSize = sizeof(wc);
 		wc.style = CS_OWNDC;
