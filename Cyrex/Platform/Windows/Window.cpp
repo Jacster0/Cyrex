@@ -13,6 +13,7 @@ namespace Cyrex {
 		:
 		hInst(GetModuleHandle(nullptr))
 	{
+		//Try to initialize the com library
 		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 		if (FAILED(hr)) {
 			_com_error err(hr);
@@ -33,7 +34,7 @@ namespace Cyrex {
 		wc.hCursor = nullptr;
 		wc.hbrBackground = nullptr;
 		wc.lpszMenuName = nullptr;
-		wc.lpszClassName = L"MainWnd";
+		wc.lpszClassName = GetName();
 		wc.hIconSm = nullptr;
 
 		ATOM atom = RegisterClassEx(&wc);
@@ -41,6 +42,7 @@ namespace Cyrex {
 	}
 
 	Window::WindowClass::~WindowClass() {
+		CoUninitialize();
 		UnregisterClass(wndClassName, GetInstance());
 	}
 
@@ -85,6 +87,22 @@ namespace Cyrex {
 
 	LRESULT Window::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept {
 		switch (msg) {
+		case WM_ACTIVATE:
+			if (!m_mouse.cursor.IsEnabled()) {
+				if (wParam & WA_ACTIVE) {
+					m_mouse.cursor.Confine(m_hWnd);
+					m_mouse.cursor.Hide();
+				}
+				else {
+					m_mouse.cursor.Free();
+					m_mouse.cursor.Show();
+				}
+			}
+			break;
+		case WM_KILLFOCUS:
+			Kbd.ClearState();
+			break;
+		//Keyboard messages
 		case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
 			if (!(lParam & 0x40000000) || Kbd.AutorepeatIsEnabled()) {
@@ -98,24 +116,38 @@ namespace Cyrex {
 		case WM_CHAR:
 			Kbd.OnChar(static_cast<unsigned char>(wParam));
 			break;
-			//We won't handle any Alt+key combination (yet atleast)
+		//We won't handle any Alt+key combination (yet atleast)
 		case WM_SYSCHAR:
 			break;
 		case WM_MOUSEWHEEL:
-		{
-			//Negative value means we are scrolling down, positive value means we are scrolling up.
-			float delta = (static_cast<short>(HIWORD(wParam))) / static_cast<float>(WHEEL_DELTA);
-	
-			Gfx->OnMouseWheel(delta);
-		}
-		break;
+			MouseWheel(lParam, wParam);
+			break;
+		//Mouse messages
+		case WM_MOUSEMOVE:
+			MouseMove(lParam, wParam);
+			break;
+		case WM_LBUTTONDOWN:
+			MouseDown(lParam, MouseButton::Left);
+			break;
+		case WM_RBUTTONDOWN:
+			MouseDown(lParam, MouseButton::Right);
+			break;
+		case WM_LBUTTONUP:
+			MouseUp(lParam, MouseButton::Left);
+			break;
+		case WM_RBUTTONUP:
+			MouseUp(lParam, MouseButton::Right);
+			break;
+		//Raw mouse input
+		case WM_INPUT: 
+			RawMouseInput(lParam);
+			break;
 		case WM_SIZE:
-		{
 			Resize();
-		}
-		break;
+			break;
 		case WM_QUIT:
 		case WM_DESTROY:
+		case WM_CLOSE:
 			if (Gfx->IsInitialized()) {
 				Application::Get().Flush();
 			}
@@ -135,23 +167,31 @@ namespace Cyrex {
 		int height = r.bottom - r.top;
 
 		m_hWnd = CreateWindow(
-			L"MainWnd",
 			Window::WindowClass::GetName(),
+			L"Cyrex",
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,
 			width,
 			height,
-			NULL,
-			NULL,
+			nullptr,
+			nullptr,
 			Window::WindowClass::GetInstance(),
 			this);
 
-		if (!m_hWnd) {
+		if (m_hWnd) {
 			//In the future we might wanna throw an exception here. For now we just return from the function
 			//When we get to that point we will also have to remove the noexcept keyword
 			return;
 		}
+
+		RAWINPUTDEVICE rid;
+		rid.usUsagePage = 0x01;
+		rid.usUsage = 0x02;
+		rid.dwFlags = 0;
+		rid.hwndTarget = nullptr;
+		
+		RegisterRawInputDevices(&rid, 1, sizeof(rid));
 	}
 
 	void Window::Resize() const noexcept {
@@ -211,5 +251,112 @@ namespace Cyrex {
 	void Window::Show() noexcept {
 		ShowWindow(m_hWnd, SW_SHOW);
 		UpdateWindow(m_hWnd);
+	}
+
+	void Window::MouseMove(LPARAM lParam, WPARAM wParam) {
+		const auto point = MAKEPOINTS(lParam);
+		int x = point.x;
+		int y = point.y;
+
+		if (!m_mouse.cursor.IsEnabled()) {
+			if (!m_mouse.IsInWindow()) {
+				SetCapture(m_hWnd);
+				m_mouse.OnMouseEnter();
+				m_mouse.cursor.Hide();
+			}
+			return;
+		}
+
+		if (x >= 0 && x <= m_width && y >= 0 && y < m_height) {
+			m_mouse.OnMouseMove(x,y);
+
+			if (!m_mouse.IsInWindow()) {
+				SetCapture(m_hWnd);
+				m_mouse.OnMouseEnter();
+			}
+		}
+
+		else {
+			if (wParam & (MK_LBUTTON | MK_RBUTTON)) {
+				m_mouse.OnMouseMove(x, y);
+			}
+			else {
+				ReleaseCapture();
+				m_mouse.OnMouseLeave();
+			}
+		}
+	}
+
+	void Window::MouseWheel(LPARAM lParam, WPARAM wParam) {
+		const auto point = MAKEPOINTS(lParam);
+		const int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+
+		m_mouse.OnWheelDelta(point.x, point.y,delta);
+	}
+
+	void Window::MouseDown(LPARAM lParam, MouseButton buttonClicked) {
+		const auto point = MAKEPOINTS(lParam);
+
+		if (buttonClicked == MouseButton::Left) {
+			SetForegroundWindow(m_hWnd);
+
+			if (!m_mouse.cursor.m_cursorEnabled) {
+				m_mouse.cursor.Confine(m_hWnd);
+				m_mouse.cursor.Hide();
+			}
+			m_mouse.OnLeftPressed(point.x, point.y);
+		}
+		else {
+			m_mouse.OnRightPressed(point.x, point.y);
+		}
+	}
+
+	void Window::MouseUp(LPARAM lParam, MouseButton buttonClicked) {
+		const auto point = MAKEPOINTS(lParam);
+		int x = point.x;
+		int y = point.y;
+
+		(buttonClicked == MouseButton::Left)
+			? 
+			m_mouse.OnLeftReleased(point.x, point.y)
+			: 
+			m_mouse.OnRightReleased(point.x, point.y);
+		
+		if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+			ReleaseCapture();
+			m_mouse.OnMouseLeave();
+		}
+	}
+
+	void Window::RawMouseInput(LPARAM lParam) {
+		if (!m_mouse.m_rawEnabled) {
+			return;
+		}
+
+		uint32_t size;
+		auto hRawInput = reinterpret_cast<HRAWINPUT>(lParam);
+
+		//Get the size of the data
+		uint32_t result = GetRawInputData(hRawInput, RID_INPUT, nullptr, &size, sizeof(RAWINPUTHEADER));
+
+		if (result == -1) {
+			return;
+		}
+		m_rawInputBuffer.resize(size);
+
+		//read the data
+		result = GetRawInputData(hRawInput, RID_INPUT, m_rawInputBuffer.data(), &size, sizeof(RAWINPUTHEADER));
+
+		if (result != size) {
+			return;
+		}
+		//Process the data
+		const auto& rawInput = reinterpret_cast<const RAWINPUT&>(*m_rawInputBuffer.data());
+		int dx = rawInput.data.mouse.lLastX;
+		int dy = rawInput.data.mouse.lLastY;
+
+		if (rawInput.header.dwType == RIM_TYPEMOUSE && (dx != 0 || dy != 0)) {
+			m_mouse.OnRawDelta(dx, dy);
+		}
 	}
 }

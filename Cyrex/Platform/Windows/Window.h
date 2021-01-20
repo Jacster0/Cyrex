@@ -5,6 +5,8 @@
 #include "Core/Input/Keyboard.h"
 
 namespace Cyrex {
+	enum class MouseButton {Left, Right};
+
 	class Graphics;
 	class Window {
 	private:
@@ -17,7 +19,7 @@ namespace Cyrex {
 			~WindowClass();
 			WindowClass(const WindowClass&) = delete;
 			WindowClass& operator = (const WindowClass&) = delete;
-			static constexpr const wchar_t* wndClassName = L"Cyrex";
+			static constexpr const wchar_t* wndClassName = L"Cyrex Window";
 			static WindowClass wndClass;
 			HINSTANCE hInst;
 		};
@@ -27,29 +29,40 @@ namespace Cyrex {
 		~Window();
 		Window(const Window&) = delete;
 		Window& operator = (const Window&) = delete;
-	public:
+
 		HWND GetWindowHandle() const { return m_hWnd; }
 		uint32_t GetWidth() const noexcept { return m_width; }
 		uint32_t GetHeight() const noexcept { return m_height; }
 		void ToggleFullScreen(bool fullscreen) noexcept;
 		bool FullScreen() { return m_fullScreen; }
 		void Show() noexcept;
+
+		void MouseMove(LPARAM lParam, WPARAM wParam);
+		void MouseWheel(LPARAM lParam, WPARAM wParam);
+		void MouseDown(LPARAM lParam, MouseButton buttonClicked);
+		void MouseUp(LPARAM lParam, MouseButton buttonClicked);
+		void RawMouseInput(LPARAM lParam);
+
+		bool CursorEnabled() const noexcept { return m_mouse.cursor.m_cursorEnabled; }
+		void EnableCursor() noexcept { m_mouse.cursor.Enable(); }
+		void DisableCursor() noexcept { m_mouse.cursor.Disable(m_hWnd); }
 	private:
 		static LRESULT CALLBACK SetupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 		static LRESULT CALLBACK RedirectProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 		LRESULT MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
-	private:
+
 		void CreateMainWindow() noexcept;
 		void Resize() const noexcept;
-	private:
+	
 		HWND m_hWnd;
 		RECT m_windowRect;
 		int m_width{ 800 };
 		int m_height{ 600 };
-		Mouse m_mouse;
 		bool m_fullScreen;
+		std::vector<std::byte> m_rawInputBuffer;
 	public:
 		Keyboard Kbd;
+		Mouse m_mouse;
 		std::shared_ptr<Graphics> Gfx = nullptr;
 	};
 }

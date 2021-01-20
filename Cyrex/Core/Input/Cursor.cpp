@@ -2,33 +2,33 @@
 
 void Cyrex::Cursor::Enable() noexcept {
     m_cursorEnabled = true;
-    ShowCursor();
-    FreeCursor();
+    Show();
+    Free();
 }
 
 void Cyrex::Cursor::Disable(HWND hWnd) noexcept {
     m_cursorEnabled = false;
-    HideCursor();
-    ConfineCursor(hWnd);
+    Hide();
+    Confine(hWnd);
 }
 
 bool Cyrex::Cursor::IsEnabled() const noexcept { return m_cursorEnabled; }
 
-void Cyrex::Cursor::ConfineCursor(HWND hWnd) noexcept {
+void Cyrex::Cursor::Confine(HWND hWnd) noexcept {
     RECT rect;
     GetClientRect(hWnd, &rect);
     MapWindowPoints(hWnd, nullptr, reinterpret_cast<POINT*>(&rect), 2);
     ClipCursor(&rect);
 }
 
-void Cyrex::Cursor::FreeCursor() noexcept {
+void Cyrex::Cursor::Free() noexcept {
     ClipCursor(nullptr);
 }
 
-void Cyrex::Cursor::ShowCursor() noexcept {
+void Cyrex::Cursor::Show() noexcept {
     while (::ShowCursor(TRUE) < 0);
 }
 
-void Cyrex::Cursor::HideCursor() noexcept {
+void Cyrex::Cursor::Hide() noexcept {
     while (::ShowCursor(FALSE) >= 0);
 }

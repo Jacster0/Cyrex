@@ -47,4 +47,9 @@ namespace Cyrex::Math {
     inline bool IsAligned(T value, size_t alignment) {
         return 0 == (static_cast<size_t>(value) & (alignment - 1));
     }
+
+    template<Divisble T>
+    inline T DivideByMultiple(T value, size_t alignment) {
+        return (T)((value + alignment - 1) / alignment);
+    }
 }

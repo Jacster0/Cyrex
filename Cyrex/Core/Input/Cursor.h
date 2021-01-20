@@ -10,10 +10,10 @@ namespace Cyrex {
     public:
         bool IsInWindow() const noexcept { return m_isInWindow; }
     private:
-        void ConfineCursor(HWND hWnd) noexcept;
-        void FreeCursor() noexcept;
-        void ShowCursor() noexcept;
-        void HideCursor() noexcept;
+        void Confine(HWND hWnd) noexcept;
+        void Free() noexcept;
+        void Show() noexcept;
+        void Hide() noexcept;
     private:
         bool m_cursorEnabled = true;
         bool m_isInWindow = false;
