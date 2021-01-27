@@ -1,23 +1,34 @@
 #include "Application.h"
 #include "Exceptions/CyrexException.h"
 #include "Platform/Windows/MessageBox.h"
+#include "Graphics/API/DX12/Device.h"
 #include <exception>
+#include <dxgidebug.h>
 
-namespace crx = Cyrex;
+#define CRX_ERROR -1
+
+using namespace Cyrex;
 
 int main() {
     try {
-        crx::Application::Create();
-        return crx::Application::Get().Run();
+#ifdef _DEBUG
+        Device::EnableDebugLayer();
+#endif 
+        return Application{}.Run();
     }
-    catch (const crx::CyrexException& e) {
-        crx::MessageBox::Show(e.what(), e.GetType(), crx::MessageBox::OK, crx::MessageBox::Exclamation);
+    catch (const CyrexException& e) {
+        MessageBox::Show(e.what(), e.GetType(), MessageBox::OK, MessageBox::Exclamation);
+
+        return CRX_ERROR;
     }
     catch (const std::exception& e) {
-        crx::MessageBox::Show(e.what(), "Standard Exception", crx::MessageBox::OK, crx::MessageBox::Exclamation);
+        MessageBox::Show(e.what(), "Standard Exception", MessageBox::OK, MessageBox::Exclamation);
+
+        return CRX_ERROR;
     }
     catch (...) {
-        crx::MessageBox::Show("No details available", "Unknown Exception", crx::MessageBox::OK, crx::MessageBox::Exclamation);
+        MessageBox::Show("No details available", "Unknown Exception", MessageBox::OK, MessageBox::Exclamation);
+
+        return CRX_ERROR;
     }
-    return -1;
 }
