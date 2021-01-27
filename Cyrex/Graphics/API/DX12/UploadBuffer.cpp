@@ -2,14 +2,19 @@
 #include "d3dx12.h"
 #include "DXException.h"
 #include "Core/Math/Math.h"
-#include "Core/Application.h"
+#include "Device.h"
 
 namespace wrl = Microsoft::WRL;
 
-Cyrex::UploadBuffer::UploadBuffer(size_t pageSize)
+Cyrex::UploadBuffer::UploadBuffer(Device& device, size_t pageSize)
     :
+    m_device(device),
     m_pageSize(pageSize)
 {}
+
+Cyrex::UploadBuffer::~UploadBuffer()
+{
+}
 
 Cyrex::UploadBuffer::Allocation Cyrex::UploadBuffer::Allocate(size_t sizeInBytes, size_t alignment) {
     if (sizeInBytes > m_pageSize) {
@@ -40,25 +45,30 @@ std::shared_ptr<Cyrex::UploadBuffer::Page> Cyrex::UploadBuffer::RequestPage() {
         m_availablePages.pop_front();
     }
     else {
-        page = std::make_shared<Page>(m_pageSize);
+        page = std::make_shared<Page>(m_device, m_pageSize);
         m_pagePool.push_back(page);
     }
 
     return page;
 }
 
-Cyrex::UploadBuffer::Page::Page(size_t sizeInBytes)
+Cyrex::UploadBuffer::Page::Page(Device& device, size_t sizeInBytes)
     :
+    m_device(device),
     m_pageSize(sizeInBytes),
     m_offset(0),
     m_cpuPtr(nullptr),
     m_gpuPtr(D3D12_GPU_VIRTUAL_ADDRESS(0))
 {
-    auto device = Application::Get().GetDevice();
-    ThrowIfFailed(device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+    const auto& d3d12Device = m_device.GetD3D12Device();
+
+    auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    auto buffer = CD3DX12_RESOURCE_DESC::Buffer(m_pageSize);
+
+    ThrowIfFailed(d3d12Device->CreateCommittedResource(
+        &heapProps,
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(m_pageSize),
+        &buffer,
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS(&m_d3d12Resource)
@@ -77,7 +87,7 @@ Cyrex::UploadBuffer::Page::~Page() {
 }
 
 bool Cyrex::UploadBuffer::Page::HasSpace(size_t sizeInBytes, size_t alignment) const {
-    size_t alignedSize = Math::AlignUp(sizeInBytes, alignment);
+    size_t alignedSize   = Math::AlignUp(sizeInBytes, alignment);
     size_t alignedOffset = Math::AlignUp(m_offset, alignment);
 
     return alignedOffset + alignedSize <= m_pageSize;

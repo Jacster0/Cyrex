@@ -8,11 +8,12 @@
 
 namespace Cyrex {
     class CommandList;
+    class Device;
     class RootSignature;
 
     class DynamicDescriptorHeap {
     public:
-        DynamicDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
+        DynamicDescriptorHeap(Device& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
             uint32_t numDescriptorsPerHeap = 1024);
         ~DynamicDescriptorHeap();
     public:
@@ -31,7 +32,11 @@ namespace Cyrex {
 
         D3D12_GPU_DESCRIPTOR_HANDLE CopyDescriptor(CommandList& commandList, D3D12_CPU_DESCRIPTOR_HANDLE cpuDescriptor);
 
-        void ParseRootSignature(const RootSignature& rootSignature);
+        void StageInlineCBV(uint32_t rootParameterIndex, D3D12_GPU_VIRTUAL_ADDRESS bufferAddr);
+        void StageInlineSRV(uint32_t rootParameterIndex, D3D12_GPU_VIRTUAL_ADDRESS bufferAddr);
+        void StageInlineUAV(uint32_t rootParameterIndex, D3D12_GPU_VIRTUAL_ADDRESS bufferAddr);
+
+        void ParseRootSignature(const  std::shared_ptr<RootSignature>& rootSignature);
         void Reset();
     private:
         // Request a descriptor heap if one is available.
@@ -71,8 +76,15 @@ namespace Cyrex {
         std::unique_ptr<D3D12_CPU_DESCRIPTOR_HANDLE[]> m_descriptorHandleCache;
         DescriptorTableCache m_descriptorTableCache [MAX_DESCRIPTOR_TABLES];
 
+        D3D12_GPU_VIRTUAL_ADDRESS m_inlineCBV[MAX_DESCRIPTOR_TABLES];
+        D3D12_GPU_VIRTUAL_ADDRESS m_inlineSRV[MAX_DESCRIPTOR_TABLES];
+        D3D12_GPU_VIRTUAL_ADDRESS m_inlineUAV[MAX_DESCRIPTOR_TABLES];
+
         uint32_t m_descriptorTableBitMask;
         uint32_t m_staleDescriptorTableBitMask;
+        uint32_t m_staleCBVBitMask;
+        uint32_t m_staleSRVBitMask;
+        uint32_t m_staleUAVBitMask;
 
         using DescriptorHeapPool = std::queue<Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>>;
 
@@ -85,5 +97,6 @@ namespace Cyrex {
 
         uint32_t m_numFreeHandles;
 
+        Device& m_device;
     };
 }

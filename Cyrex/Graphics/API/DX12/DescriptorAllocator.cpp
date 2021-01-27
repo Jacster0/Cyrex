@@ -1,12 +1,16 @@
 #include "DescriptorAllocator.h"
 #include "DescriptorAllocatorPage.h"
+#include "Device.h"
 #include <algorithm>
 
-Cyrex::DescriptorAllocator::DescriptorAllocator(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptorPerHeap) 
-    :
-    m_heapType(type),
-    m_numDescriptorsPerHeap(numDescriptorPerHeap)
-{}
+class DescriptorAllocatorPageContext final : public Cyrex::DescriptorAllocatorPage {
+public:
+    DescriptorAllocatorPageContext(Cyrex::Device& device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors)
+        : DescriptorAllocatorPage(device, type, numDescriptors)
+    {}
+
+    ~DescriptorAllocatorPageContext() {}
+}; 
 
 Cyrex::DescriptorAllocation Cyrex::DescriptorAllocator::Allocate(uint32_t numDescriptors) {
     std::lock_guard<std::mutex> lock(m_allocationMutex);
@@ -44,13 +48,13 @@ Cyrex::DescriptorAllocation Cyrex::DescriptorAllocator::Allocate(uint32_t numDes
     return allocation;
 }
 
-void Cyrex::DescriptorAllocator::ReleaseStaleDescriptors(uint64_t frameNumber) {
+void Cyrex::DescriptorAllocator::ReleaseStaleDescriptors() {
     std::lock_guard<std::mutex> lock(m_allocationMutex);
 
     for (size_t i = 0; i < m_heapPool.size(); i++) {
         auto page = m_heapPool[i];
 
-        page->ReleaseStaleDescriptors(frameNumber);
+        page->ReleaseStaleDescriptors();
 
         if (page->NumFreeHandles() > 0) {
             m_availableHeaps.insert(i);
@@ -58,8 +62,17 @@ void Cyrex::DescriptorAllocator::ReleaseStaleDescriptors(uint64_t frameNumber) {
     }
 }
 
+Cyrex::DescriptorAllocator::DescriptorAllocator(Device& device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptorsPerHeap)
+    :
+    m_device(device),
+    m_heapType(type),
+    m_numDescriptorsPerHeap(numDescriptorsPerHeap)
+{}
+
+Cyrex::DescriptorAllocator::~DescriptorAllocator() {}
+
 std::shared_ptr<Cyrex::DescriptorAllocatorPage> Cyrex::DescriptorAllocator::CreateAllocatorPage() {
-    auto newPage = std::make_shared<DescriptorAllocatorPage>(m_heapType, m_numDescriptorsPerHeap);
+    auto newPage = std::make_shared<DescriptorAllocatorPageContext>(m_device, m_heapType, m_numDescriptorsPerHeap);
 
     m_heapPool.emplace_back(newPage);
     m_availableHeaps.insert(m_heapPool.size() - 1);

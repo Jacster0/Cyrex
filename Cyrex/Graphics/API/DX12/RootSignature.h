@@ -6,25 +6,16 @@
 #include <array>
 
 namespace Cyrex {
+    class Device;
     class RootSignature {
     public:
-        RootSignature() noexcept;
-        RootSignature(
-            const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc,
-            D3D_ROOT_SIGNATURE_VERSION rootSignatureVersion
-        );
-        ~RootSignature();
-    public:
         void Destroy();
-    public:
+
         Microsoft::WRL::ComPtr<ID3D12RootSignature> GetRootSignature() const {
             return m_rootSignature;
         }
 
-        void SetRootSignatureDesc(
-            const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc,
-            D3D_ROOT_SIGNATURE_VERSION rootSignatureVersion
-        );
+        void SetRootSignatureDesc(const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc);
 
         const D3D12_ROOT_SIGNATURE_DESC1& GetRootSignatureDesc() const {
             return m_rootSignatureDesc;
@@ -32,7 +23,11 @@ namespace Cyrex {
 
         uint32_t GetDescriptorTableBitMask(D3D12_DESCRIPTOR_HEAP_TYPE descriptorHeapType) const;
         uint32_t GetNumDescriptors(uint32_t rootIndex) const;
+    protected:
+        RootSignature(Device& device, const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc);
+        ~RootSignature();
     private:
+        Device& m_device;
         D3D12_ROOT_SIGNATURE_DESC1 m_rootSignatureDesc;
         Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
 

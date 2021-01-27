@@ -8,17 +8,19 @@
 #include <queue>
 
 namespace Cyrex {
+    class Device;
     class DescriptorAllocatorPage : public std::enable_shared_from_this<DescriptorAllocatorPage> {
-    public:
-        DescriptorAllocatorPage(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
     public:
         D3D12_DESCRIPTOR_HEAP_TYPE GetHeapType() const;
         bool HasSpace(uint32_t numDescriptors) const;
         uint32_t NumFreeHandles() const;
         DescriptorAllocation Allocate(uint32_t numDescriptors);
-        void Free(DescriptorAllocation&& descriptor, uint64_t frameNumber);
-        void ReleaseStaleDescriptors(uint64_t frameNumber);
-    public:
+        void Free(DescriptorAllocation&& descriptor);
+        void ReleaseStaleDescriptors();
+    protected:
+        DescriptorAllocatorPage(Device& device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
+        virtual ~DescriptorAllocatorPage() = default;
+
         uint32_t ComputeOffset(D3D12_CPU_DESCRIPTOR_HANDLE handle);
         void AddNewBlock(uint32_t offset, uint32_t numDescriptors);
         void FreeBlock(uint32_t offset, uint32_t numDescriptors);
@@ -43,19 +45,19 @@ namespace Cyrex {
         };
 
         struct StaleDescriptorInfo {
-            StaleDescriptorInfo(OffsetType offset, SizeType size, uint64_t frame)
-                : Offset(offset)
-                , Size(size)
-                , FrameNumber(frame)
+            StaleDescriptorInfo(OffsetType offset, SizeType size)
+                : 
+                Offset(offset), 
+                Size(size)
             {}
 
             // The offset within the descriptor heap.
             OffsetType Offset;
             // The number of descriptors
             SizeType Size;
-            // The frame number that the descriptor was freed.
-            uint64_t FrameNumber;
         };
+
+        Device& m_device;
 
         using StaleDescriptorQueue = std::queue<StaleDescriptorInfo>;
 

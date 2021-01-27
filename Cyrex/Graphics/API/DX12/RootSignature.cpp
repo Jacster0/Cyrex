@@ -1,28 +1,19 @@
 #include "RootSignature.h"
-#include "Core/Application.h"
 #include "DXException.h"
+#include "Device.h"
 #include <cassert>
 
 namespace wrl = Microsoft::WRL;
 
-Cyrex::RootSignature::RootSignature() noexcept
+Cyrex::RootSignature::RootSignature(Device& device, const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc) 
     :
-    m_rootSignatureDesc{},
-    m_numDescriptorsPerTable{ 0 },
-    m_samplerTableBitMask(0),
-    m_descriptorTableBitMask(0)
-{}
-
-Cyrex::RootSignature::RootSignature(
-    const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc, 
-    D3D_ROOT_SIGNATURE_VERSION rootSignatureVersion) 
-    :
+    m_device(device),
     m_rootSignatureDesc{},
     m_numDescriptorsPerTable{ 0 },
     m_samplerTableBitMask(0),
     m_descriptorTableBitMask(0)
 {
-    SetRootSignatureDesc(rootSignatureDesc, rootSignatureVersion);
+    SetRootSignatureDesc(rootSignatureDesc);
 }
 
 Cyrex::RootSignature::~RootSignature() {
@@ -52,15 +43,12 @@ void Cyrex::RootSignature::Destroy() {
     memset(m_numDescriptorsPerTable.data(), 0, sizeof(m_numDescriptorsPerTable));
 }
 
-void Cyrex::RootSignature::SetRootSignatureDesc(
-    const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc, 
-    D3D_ROOT_SIGNATURE_VERSION rootSignatureVersion)
+void Cyrex::RootSignature::SetRootSignatureDesc(const D3D12_ROOT_SIGNATURE_DESC1& rootSignatureDesc)
 {
     // Make sure any previously allocated root signature description is cleaned 
     // up first.
     Destroy();
 
-    const auto device = Application::Get().GetDevice();
     const auto numParams = rootSignatureDesc.NumParameters;
     D3D12_ROOT_PARAMETER1* pParams = numParams > 0 ? new D3D12_ROOT_PARAMETER1[numParams] : nullptr;
 
@@ -127,16 +115,20 @@ void Cyrex::RootSignature::SetRootSignatureDesc(
     CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC versionRootSignatureDesc;
     versionRootSignatureDesc.Init_1_1(numParams, pParams, numStaticSamplers, pStaticSamplers, flags);
 
+    D3D_ROOT_SIGNATURE_VERSION highestVersion = m_device.GetHighestRootSignatureVersion();
+
     // Serialize the root signature.
     wrl::ComPtr<ID3DBlob> rootSignatureBlob;
     wrl::ComPtr<ID3DBlob> errorBlob;
     ThrowIfFailed(D3DX12SerializeVersionedRootSignature(
         &versionRootSignatureDesc,
-        rootSignatureVersion,
+        highestVersion,
         &rootSignatureBlob,
         &errorBlob));
 
-    ThrowIfFailed(device->CreateRootSignature(
+    const auto d3d12Device = m_device.GetD3D12Device();
+
+    ThrowIfFailed(d3d12Device->CreateRootSignature(
         0,
         rootSignatureBlob->GetBufferPointer(),
         rootSignatureBlob->GetBufferSize(),

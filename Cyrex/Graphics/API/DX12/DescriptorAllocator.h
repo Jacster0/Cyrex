@@ -9,17 +9,22 @@
 
 namespace Cyrex {
     class DescriptorAllocatorPage;
+    class Device;
     class DescriptorAllocator {
     public:
-        DescriptorAllocator(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptorPerHeap = 256);
-    public:
         DescriptorAllocation Allocate(uint32_t numDescriptors = 1);
-        void ReleaseStaleDescriptors(uint64_t frameNumber);
+        void ReleaseStaleDescriptors();
+    protected:
+        friend class std::default_delete<DescriptorAllocator>;
+
+        DescriptorAllocator(Device& device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptorsPerHeap = 256);
+        virtual ~DescriptorAllocator();
     private:
         std::shared_ptr<DescriptorAllocatorPage> CreateAllocatorPage();
-    private:
+
         using DescriptorHeapPool = std::vector<std::shared_ptr<DescriptorAllocatorPage>>;
 
+        Device& m_device;
         D3D12_DESCRIPTOR_HEAP_TYPE m_heapType;
         uint32_t m_numDescriptorsPerHeap;
 

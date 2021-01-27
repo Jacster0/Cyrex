@@ -1,7 +1,7 @@
 #include "DynamicDescriptorHeap.h"
-#include "Core/Application.h"
 #include "DXException.h"
 #include "RootSignature.h"
+#include "Device.h"
 #include "CommandList.h"
 #include <stdexcept>
 #include <cassert>
@@ -9,9 +9,11 @@
 namespace wrl = Microsoft::WRL;
 
 Cyrex::DynamicDescriptorHeap::DynamicDescriptorHeap(
+    Device& device,
     D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
     uint32_t numDescriptorsPerHeap)
     :
+    m_device(device),
     m_descriptorHeapType(heapType),
     m_numDescriptorsPerHeap(numDescriptorsPerHeap),
     m_descriptorTableBitMask(0),
@@ -19,7 +21,7 @@ Cyrex::DynamicDescriptorHeap::DynamicDescriptorHeap(
     m_currentGPUDescriptorHandle(D3D12_DEFAULT),
     m_numFreeHandles(0)
 {
-    m_descriptorHandleIncrementSize = Application::Get().GetDevice()->GetDescriptorHandleIncrementSize(heapType);
+    m_descriptorHandleIncrementSize = m_device.GetD3D12Device()->GetDescriptorHandleIncrementSize(heapType);
     m_descriptorHandleCache         = std::make_unique<D3D12_CPU_DESCRIPTOR_HANDLE[]>(m_numDescriptorsPerHeap);
 }
 
@@ -72,8 +74,8 @@ void Cyrex::DynamicDescriptorHeap::CommitStagedDescriptors(
     auto numDescriptorToCommit = ComputeStaleDescriptorCount();
 
     if (numDescriptorToCommit > 0) {
-        const auto device = Application::Get().GetDevice();
-        const auto d3d12GraphicsCommandList = commandList.GetGraphicsCommandList().Get();
+        const auto device = m_device.GetD3D12Device();
+        const auto d3d12GraphicsCommandList = commandList.GetD3D12CommandList().Get();
         assert(d3d12GraphicsCommandList != nullptr);
 
         if (!m_currentDescriptorHeap || m_numFreeHandles < numDescriptorToCommit) {
@@ -132,7 +134,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE Cyrex::DynamicDescriptorHeap::CopyDescriptor(Command
         m_staleDescriptorTableBitMask = m_descriptorTableBitMask;
     }
 
-    const auto device = Application::Get().GetDevice();
+    const auto device = m_device.GetD3D12Device();
 
     D3D12_GPU_DESCRIPTOR_HANDLE hGpu = m_currentGPUDescriptorHandle;
     device->CopyDescriptorsSimple(1, m_currentCPUDescriptorHandle, cpuDescriptor, m_descriptorHeapType);
@@ -144,19 +146,40 @@ D3D12_GPU_DESCRIPTOR_HANDLE Cyrex::DynamicDescriptorHeap::CopyDescriptor(Command
     return hGpu;
 }
 
-void Cyrex::DynamicDescriptorHeap::ParseRootSignature(const RootSignature& rootSignature) {
+void Cyrex::DynamicDescriptorHeap::StageInlineCBV(uint32_t rootParameterIndex, D3D12_GPU_VIRTUAL_ADDRESS bufferAddr) {
+    assert(rootParameterIndex < MAX_DESCRIPTOR_TABLES);
+
+    m_inlineCBV[rootParameterIndex] = bufferAddr;
+    m_staleCBVBitMask |= (1 << rootParameterIndex);
+}
+
+void Cyrex::DynamicDescriptorHeap::StageInlineSRV(uint32_t rootParameterIndex, D3D12_GPU_VIRTUAL_ADDRESS bufferAddr) {
+    assert(rootParameterIndex < MAX_DESCRIPTOR_TABLES);
+
+    m_inlineSRV[rootParameterIndex] = bufferAddr;
+    m_staleSRVBitMask |= (1 << rootParameterIndex);
+}
+
+void Cyrex::DynamicDescriptorHeap::StageInlineUAV(uint32_t rootParameterIndex, D3D12_GPU_VIRTUAL_ADDRESS bufferAddr) {
+    assert(rootParameterIndex < MAX_DESCRIPTOR_TABLES);
+
+    m_inlineUAV[rootParameterIndex] = bufferAddr;
+    m_staleUAVBitMask |= (1 << rootParameterIndex);
+}
+
+void Cyrex::DynamicDescriptorHeap::ParseRootSignature(const std::shared_ptr<RootSignature>& rootSignature) {
     m_staleDescriptorTableBitMask = 0;
-    const auto& rootSignatureDesc = rootSignature.GetRootSignatureDesc();
+    const auto& rootSignatureDesc = rootSignature->GetRootSignatureDesc();
 
     // Get a bit mask that represents the root parameter indices that match the 
     // descriptor heap type for this dynamic descriptor heap.
-    m_descriptorTableBitMask = rootSignature.GetDescriptorTableBitMask(m_descriptorHeapType);
+    m_descriptorTableBitMask = rootSignature->GetDescriptorTableBitMask(m_descriptorHeapType);
     uint32_t descriptorTableBitMask = m_descriptorTableBitMask;
 
     uint32_t currentoffset = 0;
     DWORD rootIndex = 0;
     while (_BitScanForward(&rootIndex, descriptorTableBitMask) && rootIndex < rootSignatureDesc.NumParameters) {
-        uint32_t numDescriptors = rootSignature.GetNumDescriptors(rootIndex);
+        uint32_t numDescriptors = rootSignature->GetNumDescriptors(rootIndex);
 
         DescriptorTableCache& descriptorTableCache = m_descriptorTableCache[rootIndex];
         descriptorTableCache.NumDescriptors = numDescriptors;
@@ -203,7 +226,7 @@ wrl::ComPtr<ID3D12DescriptorHeap> Cyrex::DynamicDescriptorHeap::RequestDescripto
 }
 
 wrl::ComPtr<ID3D12DescriptorHeap> Cyrex::DynamicDescriptorHeap::CreateDescriptorHeap() {
-    const auto device = Application::Get().GetDevice();
+    const auto device = m_device.GetD3D12Device();
 
     D3D12_DESCRIPTOR_HEAP_DESC desciptorHeapDesk = {};
     desciptorHeapDesk.Type           = m_descriptorHeapType;

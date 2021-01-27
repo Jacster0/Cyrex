@@ -1,28 +1,7 @@
 #include "DescriptorAllocatorPage.h"
-#include "Core/Application.h"
 #include "DXException.h"
 #include "DescriptorAllocation.h"
-
-Cyrex::DescriptorAllocatorPage::DescriptorAllocatorPage(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors)
-:
-    m_heapType(type),
-    m_numDescriptorsInHeap(numDescriptors)
-{
-    auto device = Cyrex::Application::Get().GetDevice();
-
-    D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-    heapDesc.Type           = m_heapType;
-    heapDesc.NumDescriptors = m_numDescriptorsInHeap;
-
-    ThrowIfFailed(device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_d3d12DescriptorHeap)));
-
-    m_baseDescriptor = m_d3d12DescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-    m_descriptorHandleIncrementSize = device->GetDescriptorHandleIncrementSize(m_heapType);
-    m_numFreeHandles = m_numDescriptorsInHeap;
-
-    // Initialize the free lists
-    AddNewBlock(0, m_numFreeHandles);
-}
+#include "Device.h"
 
 D3D12_DESCRIPTOR_HEAP_TYPE Cyrex::DescriptorAllocatorPage::GetHeapType() const {
     return m_heapType;
@@ -82,28 +61,50 @@ Cyrex::DescriptorAllocation Cyrex::DescriptorAllocatorPage::Allocate(uint32_t nu
         shared_from_this());
 }
 
-void Cyrex::DescriptorAllocatorPage::Free(DescriptorAllocation&& descriptor, uint64_t frameNumber) {
+void Cyrex::DescriptorAllocatorPage::Free(DescriptorAllocation&& descriptor) {
     // Compute the offset of the descriptor within the descriptor heap.
     auto offset = ComputeOffset(descriptor.GetDescriptorHandle());
 
     std::lock_guard<std::mutex> lock(m_allocationMutex);
     // Don't add the block directly to the free list until the frame has completed.
-    m_staleDescriptors.emplace(offset, descriptor.GetNumHandles(), frameNumber);
+    m_staleDescriptors.emplace(offset, descriptor.GetNumHandles());
 }
 
-void Cyrex::DescriptorAllocatorPage::ReleaseStaleDescriptors(uint64_t frameNumber) {
+void Cyrex::DescriptorAllocatorPage::ReleaseStaleDescriptors() {
     std::lock_guard<std::mutex> lock(m_allocationMutex);
 
-    while (!m_staleDescriptors.empty() and m_staleDescriptors.front().FrameNumber <= frameNumber) {
+    while (!m_staleDescriptors.empty()) {
         auto& staleDescriptor = m_staleDescriptors.front();
 
-        auto offset = staleDescriptor.Offset;
+        auto offset         = staleDescriptor.Offset;
         auto numDescriptors = staleDescriptor.Size;
 
         FreeBlock(offset, numDescriptors);
 
         m_staleDescriptors.pop();
     }
+}
+
+Cyrex::DescriptorAllocatorPage::DescriptorAllocatorPage(Device& device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors)
+    :
+    m_device(device),
+    m_heapType(type),
+    m_numDescriptorsInHeap(numDescriptors)
+{
+    const auto d3d12Device = m_device.GetD3D12Device();
+
+    D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+    heapDesc.Type                       = m_heapType;
+    heapDesc.NumDescriptors             = m_numDescriptorsInHeap;
+
+    ThrowIfFailed(d3d12Device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_d3d12DescriptorHeap)));
+
+    m_baseDescriptor                = m_d3d12DescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    m_descriptorHandleIncrementSize = d3d12Device->GetDescriptorHandleIncrementSize(m_heapType);
+    m_numFreeHandles                = m_numDescriptorsInHeap;
+
+    // Initialize the free lists
+    AddNewBlock(0, m_numFreeHandles);
 }
 
 uint32_t Cyrex::DescriptorAllocatorPage::ComputeOffset(D3D12_CPU_DESCRIPTOR_HANDLE handle) {
