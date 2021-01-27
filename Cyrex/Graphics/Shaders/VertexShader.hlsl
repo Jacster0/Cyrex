@@ -1,28 +1,36 @@
-struct ModelViewProjection
+struct Mat
 {
-    matrix MVP;
+    matrix ModelMatrix;
+    matrix ModelViewMatrix;
+    matrix InverseTransposeModelViewMatrix;
+    matrix ModelViewProjectionMatrix;
 };
 
-ConstantBuffer<ModelViewProjection> ModelViewProjectionCB : register(b0);
+ConstantBuffer<Mat> MatCB : register(b0);
 
-struct VertexPosColor
+struct VertexPositionNormalTexture
 {
     float3 Position : POSITION;
-    float3 Color    : COLOR;
+    float3 Normal   : NORMAL;
+    float2 TexCoord : TEXCOORD;
 };
 
 struct VertexShaderOutput
 {
-    float4 Color    : COLOR;
-    float4 Position : SV_Position;
+    float4 ViewSpacePosition : POSITION;
+    float3 ViewSpaceNormal   : NORMAL;
+    float2 TexCoord          : TEXCOORD;
+    float4 Position          : SV_Position;
 };
 
-VertexShaderOutput main(VertexPosColor IN)
+VertexShaderOutput main(VertexPositionNormalTexture IN)
 {
     VertexShaderOutput OUT;
 
-    OUT.Position = mul(ModelViewProjectionCB.MVP, float4(IN.Position, 1.0f));
-    OUT.Color = float4(IN.Color, 1.0f);
+    OUT.Position          = mul(MatCB.ModelViewProjectionMatrix, float4(IN.Position, 1.0f));
+    OUT.ViewSpacePosition = mul(MatCB.ModelViewMatrix, float4(IN.Position, 1.0f));
+    OUT.ViewSpaceNormal   = mul((float3x3) MatCB.InverseTransposeModelViewMatrix, IN.Normal);
+    OUT.TexCoord          = IN.TexCoord;
 
     return OUT;
 }
