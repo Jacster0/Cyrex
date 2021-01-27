@@ -23,27 +23,27 @@ namespace Cyrex {
 			throw std::exception(ErrorMsg.c_str());
 		}
 
-		WNDCLASSEX wc{ 0 };
-		wc.cbSize = sizeof(wc);
-		wc.style = CS_OWNDC;
-		wc.lpfnWndProc = SetupProc;
-		wc.cbClsExtra = 0;
-		wc.cbWndExtra = 0;
-		wc.hInstance = GetInstance();
-		wc.hIcon = nullptr;
-		wc.hCursor = nullptr;
-		wc.hbrBackground = nullptr;
-		wc.lpszMenuName = nullptr;
-		wc.lpszClassName = GetName();
-		wc.hIconSm = nullptr;
+		WNDCLASSEX wc = {};
 
-		ATOM atom = RegisterClassEx(&wc);
+		wc.cbSize        = sizeof(wc);
+		wc.style         = CS_OWNDC;
+		wc.lpfnWndProc   = SetupProc;
+		wc.cbClsExtra    = 0;
+		wc.cbWndExtra    = 0;
+		wc.hInstance     = GetInstance();
+		wc.hIcon         = nullptr;
+		wc.hCursor       = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName  = nullptr;
+		wc.lpszClassName = GetName();
+		wc.hIconSm       = nullptr;
+
+		ATOM atom = RegisterClassExW(&wc);
 		assert(atom > 0);
 	}
 
 	Window::WindowClass::~WindowClass() {
-		CoUninitialize();
-		UnregisterClass(wndClassName, GetInstance());
+		UnregisterClassW(wndClassName, GetInstance());
 	}
 
 	const wchar_t* Window::WindowClass::GetName() noexcept { return wndClassName; }
@@ -145,18 +145,11 @@ namespace Cyrex {
 		case WM_SIZE:
 			Resize();
 			break;
-		case WM_QUIT:
-		case WM_DESTROY:
 		case WM_CLOSE:
-			if (Gfx->IsInitialized()) {
-				Application::Get().Flush();
-			}
 			PostQuitMessage(0);
-			break;
-		default:
-			return DefWindowProc(hWnd, msg, wParam, lParam);
+			return 0;
 		}
-		return DefWindowProc(hWnd, msg, wParam, lParam);
+		return DefWindowProcW(hWnd, msg, wParam, lParam);
 	}
 
 	void Window::CreateMainWindow() noexcept {
@@ -179,7 +172,7 @@ namespace Cyrex {
 			Window::WindowClass::GetInstance(),
 			this);
 
-		if (m_hWnd) {
+		if (!m_hWnd) {
 			//In the future we might wanna throw an exception here. For now we just return from the function
 			//When we get to that point we will also have to remove the noexcept keyword
 			return;
@@ -198,7 +191,7 @@ namespace Cyrex {
 		RECT rect;
 		GetClientRect(m_hWnd, &rect);
 
-		int width = rect.right - rect.left;
+		int width  = rect.right - rect.left;
 		int height = rect.bottom - rect.top;
 
 		if (Gfx) {
@@ -249,7 +242,7 @@ namespace Cyrex {
 		}
 	}
 	void Window::Show() noexcept {
-		ShowWindow(m_hWnd, SW_SHOW);
+		ShowWindow(m_hWnd, SW_SHOWDEFAULT);
 		UpdateWindow(m_hWnd);
 	}
 
