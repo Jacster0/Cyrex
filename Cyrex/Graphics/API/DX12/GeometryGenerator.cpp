@@ -46,7 +46,7 @@ inline void CreateCylinderCap(
             std::swap(i1, i2);
         }
 
-        size_t base = vertices.size();
+        const size_t base = vertices.size();
         indices.push_back(static_cast<uint16_t>(base + i2));
         indices.push_back(static_cast<uint16_t>(base + i1));
         indices.push_back(static_cast<uint16_t>(base));
@@ -62,9 +62,9 @@ inline void CreateCylinderCap(
 
     // Create cap vertices
     for (size_t i = 0; i < tesselation; i++) {
-        XMVECTOR circleVector = cx::Math::GetCircleVector(i, tesselation);
-        XMVECTOR pos = XMVectorAdd(XMVectorScale(circleVector, radius), XMVectorScale(normal, height));
-        XMVECTOR texCoord = XMVectorMultiplyAdd(XMVectorSwizzle<0, 2, 3, 3>(circleVector), texScale, g_XMOneHalf);
+        const XMVECTOR circleVector = cx::Math::GetCircleVector(i, tesselation);
+        const XMVECTOR pos = XMVectorAdd(XMVectorScale(circleVector, radius), XMVectorScale(normal, height));
+        const XMVECTOR texCoord = XMVectorMultiplyAdd(XMVectorSwizzle<0, 2, 3, 3>(circleVector), texScale, g_XMOneHalf);
 
         vertices.emplace_back(pos, normal, texCoord);
     }
@@ -77,22 +77,22 @@ std::shared_ptr<Scene> GeometryGenerator::CreateCube(
     using namespace DirectX;
     assert(commandList);
 
-    float s = size * 0.5f;
+    const float s = size * 0.5f;
 
     //8 edges
-    XMFLOAT3 p[8] = {
+    const XMFLOAT3 p[8] = {
         {s,s,-s}, {s,s,s}, {s,-s,s}, {s,-s,-s},
         {-s,s,s}, {-s,s,-s}, {-s,-s,-s}, {-s,-s,s}
     };
 
     // 6 face normals
-    XMFLOAT3 n[6] = { { 1, 0, 0 }, { -1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 }, { 0, 0, -1 } };
+    constexpr XMFLOAT3 n[6] = { { 1, 0, 0 }, { -1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 }, { 0, 0, -1 } };
 
     // 4 unique texcoords
-    XMFLOAT3 t[4] = { { 0, 0, 0 }, { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 0 } };
+    constexpr XMFLOAT3 t[4] = { { 0, 0, 0 }, { 1, 0, 0 }, { 1, 1, 0 }, { 0, 1, 0 } };
 
     // Indices for the vertex positions.
-    uint16_t i[24] = {
+    constexpr uint16_t i[24] = {
         0, 1, 2, 3,  // +X
         4, 5, 6, 7,  // -X
         4, 1, 0, 5,  // +Y
@@ -147,8 +147,8 @@ std::shared_ptr<Scene> GeometryGenerator::CreateSphere(
         throw std::out_of_range("Tessellation parameter out of range");
     }
 
-    size_t verticalSegments   = tessellation;
-    size_t horizontalSegments = tessellation * 2;
+    const size_t verticalSegments   = tessellation;
+    const size_t horizontalSegments = tessellation * 2;
 
     for (size_t i = 0; i <= verticalSegments; i++) {
         float v        = static_cast<float>(i) / verticalSegments;
@@ -179,7 +179,7 @@ std::shared_ptr<Scene> GeometryGenerator::CreateSphere(
     }
 
     // Fill the index buffer with triangles joining each pair of latitude rings.
-    size_t stride = horizontalSegments + 1;
+    const size_t stride = horizontalSegments + 1;
 
     for (size_t i = 0; i < verticalSegments; i++) {
         for (size_t j = 0; j <= horizontalSegments; j++) {
@@ -223,18 +223,18 @@ std::shared_ptr<Scene> GeometryGenerator::CreateCone(
 
     height /= 2;
 
-    XMVECTOR topOffset = XMVectorScale(g_XMIdentityR1, height);
-    size_t stride = tessellation + 1;
+    const XMVECTOR topOffset = XMVectorScale(g_XMIdentityR1, height);
+    const size_t stride = tessellation + 1;
 
     for (size_t i = 0; i <= tessellation; i++) {
-        XMVECTOR circleVector = cx::Math::GetCircleVector(i, tessellation);
-        XMVECTOR sideOffset   = XMVectorScale(circleVector, radius);
+       const XMVECTOR circleVector = cx::Math::GetCircleVector(i, tessellation);
+       const XMVECTOR sideOffset   = XMVectorScale(circleVector, radius);
 
-        float u = static_cast<float>(i) / static_cast<float>(tessellation);
+       const float u = static_cast<float>(i) / static_cast<float>(tessellation);
 
-        XMVECTOR texCoord = XMLoadFloat(&u);
-        XMVECTOR pt       = XMVectorSubtract(sideOffset,topOffset);
-        XMVECTOR normal   = XMVector3Cross(cx::Math::GetCircleTangent(i, tessellation), XMVectorSubtract(topOffset,pt));
+       const XMVECTOR texCoord = XMLoadFloat(&u);
+       const XMVECTOR pt       = XMVectorSubtract(sideOffset,topOffset);
+       XMVECTOR normal   = XMVector3Cross(cx::Math::GetCircleTangent(i, tessellation), XMVectorSubtract(topOffset,pt));
         normal            = XMVector3Normalize(normal);
 
         vertices.emplace_back(topOffset, normal, g_XMZero);
@@ -272,19 +272,19 @@ std::shared_ptr<Scene> GeometryGenerator::CreateTorus(
     if (tessellation < 3)
         throw std::out_of_range("tessellation parameter out of range");
 
-    size_t stride = tessellation + 1;
+   const size_t stride = tessellation + 1;
 
     //loop around the main ring of the torus
     for (size_t i = 0; i <= tessellation; i++) {
-        float u           = static_cast<float>(i) / tessellation;
-        float outerAngle = i * MathConstants::pi_mul2 / tessellation - MathConstants::pi_div2;
+        const float u           = static_cast<float>(i) / tessellation;
+        const float outerAngle = i * MathConstants::pi_mul2 / tessellation - MathConstants::pi_div2;
 
-        XMMATRIX transform = XMMatrixTranslation(radius, 0, 0) * XMMatrixRotationY(outerAngle);
+        const XMMATRIX transform = XMMatrixTranslation(radius, 0, 0) * XMMatrixRotationY(outerAngle);
 
         //loop along the other axis
         for (size_t j = 0; j <= tessellation; j++) {
-            float v          = 1 - static_cast<float>(j) / tessellation;
-            float innerAngle = j * MathConstants::pi_mul2 / tessellation + MathConstants::pi_float;
+            const float v          = 1 - static_cast<float>(j) / tessellation;
+            const float innerAngle = j * MathConstants::pi_mul2 / tessellation + MathConstants::pi_float;
 
             float dx;
             float dy;
@@ -302,8 +302,8 @@ std::shared_ptr<Scene> GeometryGenerator::CreateTorus(
             vertices.emplace_back(pos, normal, texCoord);
 
             //create indices for two triangles
-            size_t nextI = (i + 1) % stride;
-            size_t nextJ = (j + 1) % stride;
+            const size_t nextI = (i + 1) % stride;
+            const size_t nextJ = (j + 1) % stride;
 
             indices.push_back(nextI * stride + j);
             indices.push_back(i * stride + nextJ);
