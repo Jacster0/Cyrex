@@ -3,35 +3,49 @@
 #include <wrl.h>
 #include <queue>
 #include <memory>
+#include <atomic>
+#include <condition_variable>
+#include "Core/ThreadSafeQueue.h"
 
 namespace Cyrex {
     class CommandList;
+    class Device;
+
     class CommandQueue {
-    public:
-        CommandQueue(D3D12_COMMAND_LIST_TYPE type);
     public:
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> GetD3D12CommandQueue() const;
         std::shared_ptr<CommandList> GetCommandList();
-        [[nodiscard]] uint64_t ExecuteCommandList(std::shared_ptr<CommandList> commandList);
-    public:
+
+       uint64_t ExecuteCommandList(std::shared_ptr<CommandList> commandList);
+       uint64_t ExecuteCommandLists(const std::vector<std::shared_ptr<CommandList>>& commandLists);
+        
         [[nodiscard]] uint64_t Signal();
         void WaitForFenceValue(uint64_t fenceValue);
         void Flush();
         bool IsFenceComplete(uint64_t fenceValue);
+        void Wait(const CommandQueue& rhs);
+    protected:
+        friend class std::default_delete<CommandQueue>;
+
+        CommandQueue(Device& device, D3D12_COMMAND_LIST_TYPE type);
+        virtual ~CommandQueue();
     private:
-        struct CommandListEntry {
-            uint64_t FenceValue;
-            std::shared_ptr<CommandList> CommandList;
-        };
+        void ProccessInFlightCommandLists();
+    private:
+        using CommandListEntry = std::tuple<uint64_t, std::shared_ptr<CommandList>>;
 
-        using CommandListQueue = std::queue<CommandListEntry>;
-
+        Device& m_device;
         D3D12_COMMAND_LIST_TYPE m_commandListType;
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_d3d12CommandQueue;
         Microsoft::WRL::ComPtr<ID3D12Fence> m_d3d12Fence;
-        HANDLE m_fenceEvent;
-        uint64_t m_fenceValue;
+        std::atomic_uint64_t  m_fenceValue;
 
-        CommandListQueue m_commandListQueue;
+        ThreadSafeQueue<CommandListEntry> m_inFlightCommandLists;
+        ThreadSafeQueue<std::shared_ptr<CommandList>> m_availableCommandLists;
+
+        std::thread m_processInFlightCommandListsThread;
+        std::atomic_bool m_processInFlightCommandListsBool = true;
+        std::mutex m_processInFlightCommandListsThreadMutex;
+        std::condition_variable m_processInFlightCommandListsThreadCV;
     };
 }
