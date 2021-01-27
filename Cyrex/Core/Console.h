@@ -20,7 +20,7 @@ namespace Cyrex {
         Console(const Console& rhs) = delete;
         Console& operator = (const Console rhs) = delete;
     public:
-        ~Console() noexcept;
+        ~Console() = default;
     public:
         static void Hide() noexcept;
         static void Show() noexcept;

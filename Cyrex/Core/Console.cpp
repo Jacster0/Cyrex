@@ -1,22 +1,15 @@
-#include <stdio.h>
 #include "Console.h"
 #include "Platform/Windows/CrxWindow.h"
+#include <stdio.h>
+#include <io.h>
+#include <stdlib.h>
+#include <fcntl.h>
 
 Cyrex::Console* Cyrex::Console::console(new Console);
 
 Cyrex::Console::Console() noexcept {
     Create();
     Hide();
-}
-
-Cyrex::Console::~Console() {
-    Hide();
-    FreeConsole();
-
-    if (!Cyrex::Console::console) {
-        delete Cyrex::Console::console;
-        Cyrex::Console::console = nullptr;
-    }
 }
 
 void Cyrex::Console::Hide() noexcept {
@@ -32,7 +25,13 @@ bool Cyrex::Console::IsVisible() noexcept {
 }
 
 void Cyrex::Console::Destroy() noexcept {
-    Cyrex::Console::console->~Console();
+    Hide();
+    FreeConsole();
+
+    if (!Cyrex::Console::console) {
+        delete Cyrex::Console::console;
+        Cyrex::Console::console = nullptr;
+    }
 }
 
 void Cyrex::Console::SetOpacity(uint8_t alpha) noexcept {
@@ -80,9 +79,8 @@ void Cyrex::Console::Create() noexcept {
         freopen("CONOUT$", "w", stderr);
     }
 
-    SMALL_RECT size = { 0,0,96,19 };
-    auto handle = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    SetConsoleWindowInfo(handle, true, &size);
-    SetConsoleTitle(L"Cyrex Console");
+    SMALL_RECT cmdSize = { 0,0,96,19 };
+    HANDLE hCmd = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleWindowInfo(hCmd, true, &cmdSize);
+    SetConsoleTitleW(L"Cyrex Console");
 }
