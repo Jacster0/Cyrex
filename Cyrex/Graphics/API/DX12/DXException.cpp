@@ -13,12 +13,14 @@ Cyrex::DxException::DxException(HRESULT hr, const std::string& functionName, con
 
 const char* Cyrex::DxException::what() const noexcept {
     _com_error err(ErrorCode);
-    std::string msg = Cyrex::ToNarrow(err.ErrorMessage());
+    std::ostringstream oss;
 
-    return (std::stringstream{} 
-        << FunctionName << "failed in " << CyrexException::GetFile() << "\n"
+    oss << FunctionName << "failed in " << CyrexException::GetFile() << "\n"
         << "Line: " << CyrexException::GetLine() << "\n"
-        << "Error messsage: " << msg).str().c_str();
+        << "Error messsage: " << Cyrex::ToNarrow(err.ErrorMessage());
+
+    message = oss.str();
+    return message.c_str();
 }
 
 const std::string Cyrex::DxException::GetType() const noexcept {
