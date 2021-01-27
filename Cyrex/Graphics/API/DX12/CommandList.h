@@ -1,29 +1,47 @@
 #pragma once
+#include "VertexTypes.h"
+
 #include <d3d12.h>
 #include <wrl.h>
+#include <DirectXMath.h>
 
 #include <map>
 #include <memory>
 #include <vector>
 #include <functional>
+#include <mutex>
 
 namespace Cyrex {
+    class Buffer;
+    class ByteAddressBuffer;
+    class ConstantBuffer;
+    class ConstantBufferView;
+    class Device;
     class DynamicDescriptorHeap;
+    class GenerateMipsPSO;
+    class IndexBuffer;
+    class PipelineStateObject;
+    class RenderTarget;
     class Resource;
     class ResourceStateTracker;
     class RootSignature;
+    class Scene;
+    class ShaderResourceView;
+    class StructuredBuffer;
+    class Texture;
+    class UnorderedAccessView;
     class UploadBuffer;
+    class VertexBuffer;
 
-    class CommandList {
-    public:
-        CommandList(D3D12_COMMAND_LIST_TYPE type);
-        ~CommandList();
+    class CommandList : public std::enable_shared_from_this<CommandList>{
     public:
         D3D12_COMMAND_LIST_TYPE GetCommandListType() const noexcept { return m_d3d12CommandListType; }
-        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> GetGraphicsCommandList() const noexcept { return m_d3d12CommandList; }
-    public:
+        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> GetD3D12CommandList() const noexcept { return m_d3d12CommandList; }
+        std::shared_ptr<CommandList> GetGenerateMipsCommandList() const noexcept { return m_computeCommandList; }
+        Device& GetDevice() const noexcept { return m_device; };
+
         void TransitionBarrier(
-            const Resource& resource,
+            const std::shared_ptr<Resource>& resource,
             D3D12_RESOURCE_STATES stateAfter,
             uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
             bool flushBarriers = false);
@@ -33,10 +51,13 @@ namespace Cyrex {
             uint32_t subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
             bool flushBarriers = false);
 
-        void UAVBarrier(const Resource& resource, bool flushBarriers = false);
+        void UAVBarrier(const std::shared_ptr<Resource>& resource, bool flushBarriers = false);
         void UAVBarrier(Microsoft::WRL::ComPtr<ID3D12Resource> resource, bool flushBarriers = false);
 
-        void AliasingBarrier(const Resource& beforeResource, const Resource& afterResource, bool flushBarriers = false);
+        void AliasingBarrier(
+            const std::shared_ptr<Resource>& beforeResource, 
+            const std::shared_ptr<Resource>& afterResource, 
+            bool flushBarriers = false);
         void AliasingBarrier(
             Microsoft::WRL::ComPtr<ID3D12Resource> beforeResource,
             Microsoft::WRL::ComPtr<ID3D12Resource> afterResource,
@@ -44,11 +65,60 @@ namespace Cyrex {
 
         void FlushResourceBarriers();
 
-        void CopyResource(Resource& dstRes, const Resource& srcRes);
+        void CopyResource(const std::shared_ptr<Resource>& dstRes, const std::shared_ptr<Resource>& srcRes);
         void CopyResource(Microsoft::WRL::ComPtr<ID3D12Resource> dstRes, Microsoft::WRL::ComPtr<ID3D12Resource> srcRes);
 
+        std::shared_ptr<VertexBuffer> CopyVertexBuffer(size_t numVertices, size_t vertexStride,
+            const void* vertexBufferData);
+
+        template<typename T>
+        std::shared_ptr<VertexBuffer> CopyVertexBuffer(const std::vector<T>& vertexBufferData) {
+            return CopyVertexBuffer(vertexBufferData.size(), sizeof(T), vertexBufferData.data());
+        }
+
+        std::shared_ptr<IndexBuffer> CopyIndexBuffer(
+            size_t numIndicies, 
+            DXGI_FORMAT indexFormat,
+            const void* indexBufferData);
+
+        template<typename T>
+        std::shared_ptr<IndexBuffer> CopyIndexBuffer(const std::vector<T>& indexBufferData)
+        {
+            assert(sizeof(T) == 2 || sizeof(T) == 4);
+
+            DXGI_FORMAT indexFormat = (sizeof(T) == 2) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+            return CopyIndexBuffer(indexBufferData.size(), indexFormat, indexBufferData.data());
+        }
+
+        std::shared_ptr<ConstantBuffer> CopyConstantBuffer(size_t bufferSize, const void* bufferData);
+
+        template<typename T>
+        std::shared_ptr<ConstantBuffer> CopyConstantBuffer(const T& data) {
+            return CopyConstantBuffer(sizeof(T), &data);
+        }
+
+        std::shared_ptr<ByteAddressBuffer> CopyByteAddressBuffer(size_t bufferSize, const void* bufferData);
+        template<typename T>
+        std::shared_ptr<ByteAddressBuffer> CopyByteAddressBuffer(const T& data) {
+            return CopyByteAddressBuffer(sizeof(T), &data);
+        }
+
+        std::shared_ptr<StructuredBuffer> CopyStructuredBuffer(size_t numElements, size_t elementSize,
+            const void* bufferData);
+        template<typename T>
+        std::shared_ptr<StructuredBuffer> CopyStructuredBuffer(const std::vector<T>& bufferData) {
+            return CopyStructuredBuffer(bufferData.size(), sizeof(T), bufferData.data());
+        }
+
         void SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY primitiveTopology);
-    public:
+
+        void GenerateMips(const std::shared_ptr<Texture>& texture);
+     
+        void CopyTextureSubresource(const std::shared_ptr<Texture>& texture, 
+            uint32_t firstSubresource,
+            uint32_t numSubresources, 
+            D3D12_SUBRESOURCE_DATA* subresourceData);
+
         void SetGraphicsDynamicConstantBuffer(uint32_t rootParameterIndex, size_t sizeInBytes, const void* bufferData);
         template<typename T>
         void SetGraphicsDynamicConstantBuffer(uint32_t rootParameterIndex, const T& data) {
@@ -69,36 +139,101 @@ namespace Cyrex {
             SetCompute32BitConstants(rootParameterIndex, sizeof(T) / sizeof(uint32_t), &constants);
         }
 
+        void SetVertexBuffer(uint32_t slot, const std::shared_ptr<VertexBuffer>& vertexBuff);
+        void SetVertexBuffers(uint32_t startSlot, const std::vector<std::shared_ptr<VertexBuffer>>& vertexBuffers);
+       
+        void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexSize, const void* vertexBufferData);
+        template<typename T>
+        void SetDynamicVertexBuffer(uint32_t slot, const std::vector<T>& vertexBufferData) {
+            SetDynamicVertexBuffer(slot, vertexBufferData.size(), sizeof(T), vertexBufferData.data());
+        }
+
+        void SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer);
+
+        void SetDynamicIndexBuffer(size_t numIndicies, DXGI_FORMAT indexFormat, const void* indexBufferData);
+
+        template<typename T>
+        void SetDynamicIndexBuffer(const std::vector<T>& indexBufferData)
+        {
+            static_assert(sizeof(T) == 2 || sizeof(T) == 4);
+
+            DXGI_FORMAT indexFormat = (sizeof(T) == 2) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+            SetDynamicIndexBuffer(indexBufferData.size(), indexFormat, indexBufferData.data());
+        }
+
+        void SetGraphicsDynamicStructuredBuffer(uint32_t slot, size_t numElements, size_t elementSize,
+            const void* bufferData);
+
+        template<typename T>
+        void SetGraphicsDynamicStructuredBuffer(uint32_t slot, const std::vector<T>& bufferData)
+        {
+            SetGraphicsDynamicStructuredBuffer(slot, bufferData.size(), sizeof(T), bufferData.data());
+        }
+
         void SetViewport(const D3D12_VIEWPORT& viewport);
         void SetViewports(const std::vector<D3D12_VIEWPORT>& viewports);
 
         void SetScissorRect(const D3D12_RECT& scissorRect);
         void SetScissorRects(const std::vector<D3D12_RECT>& scissorRects);
 
-        void SetPipelineState(Microsoft::WRL::ComPtr<ID3D12PipelineState> pipelineState);
-        void SetGraphicsRootSignature(const RootSignature& rootSignature);
-        void SetComputeRootSignature(const RootSignature& rootSignature);
+        void SetPipelineState(const std::shared_ptr<PipelineStateObject>& pipelineState);
+
+        void SetGraphicsRootSignature(const std::shared_ptr<RootSignature>& rootSignature);
+        void SetComputeRootSignature(const std::shared_ptr<RootSignature>& rootSignature);
+
+        void SetConstantBufferView(uint32_t rootParameterIndex, 
+            const std::shared_ptr<ConstantBuffer>& buffer,
+            D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+            size_t bufferOffset = 0);
+
+        void SetShaderResourceView(
+            uint32_t rootParameterIndex, 
+            const std::shared_ptr<Buffer>& buffer,
+            D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+            size_t bufferOffset = 0);
+      
+        void SetUnorderedAccessView(
+            uint32_t rootParameterIndex, 
+            const std::shared_ptr<Buffer>& buffer,
+            D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+            size_t                bufferOffset = 0);
+
+      
+        void SetConstantBufferView(
+            uint32_t rootParameterIndex, 
+            uint32_t descriptorOffset,
+            const std::shared_ptr<ConstantBufferView>& cbv,
+            D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+
+       
+        void SetShaderResourceView(
+            uint32_t rootParameterIndex, 
+            uint32_t descriptorOffset,
+            const std::shared_ptr<ShaderResourceView>& texture,
+            D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
+            D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+            uint32_t firstSubresource = 0,
+            uint32_t numSubresources = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
         void SetShaderResourceView(
             uint32_t rootParameterIndex,
             uint32_t descriptorOffset,
-            const Resource& resource,
+            const std::shared_ptr<Texture>& texture,
             D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE |
             D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
-            UINT firstSubresource = 0,
-            UINT numSubresources = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-            const D3D12_SHADER_RESOURCE_VIEW_DESC* srv = nullptr
-        );
+            uint32_t firstSubresource = 0,
+            uint32_t numSubresources = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
         void SetUnorderedAccessView(
-            uint32_t rootParameterIndex,
+            uint32_t rootParameterIndex, 
             uint32_t descrptorOffset,
-            const Resource& resource,
+            const std::shared_ptr<UnorderedAccessView>& uav,
             D3D12_RESOURCE_STATES stateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-            UINT firstSubresource = 0,
-            UINT numSubresources = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-            const D3D12_UNORDERED_ACCESS_VIEW_DESC* uav = nullptr
-        );
+            uint32_t firstSubresource = 0,
+            uint32_t numSubresources = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+
+        void SetRenderTarget(const RenderTarget& renderTarget);
 
         void Draw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t startVertex = 0, uint32_t startInstance = 0);
         void DrawIndexed(
@@ -108,7 +243,24 @@ namespace Cyrex {
             int32_t baseVertex = 0,
             uint32_t startInstance = 0);
 
-        bool Close(CommandList& pendingCommandList);
+        void Dispatch(uint32_t numGroupsX, uint32_t numGroupsY = 1, uint32_t numGroupsZ = 1);
+
+        void ResolveSubresource(
+            const std::shared_ptr<Resource>& dstResource,
+            const std::shared_ptr<Resource>& srcResource,
+            uint32_t dstSubresource = 0,
+            uint32_t srcSubresource = 0);
+
+        void TrackResource(const std::shared_ptr<Resource>& res);
+    protected:
+        friend class CommandQueue;
+        friend class DynamicDescriptorHeap;
+        friend class std::default_delete<CommandList>;
+
+        CommandList(Device& device, D3D12_COMMAND_LIST_TYPE type);
+        virtual ~CommandList();
+
+        bool Close(const std::shared_ptr<CommandList>&);
         void Close();
 
         void Reset();
@@ -116,26 +268,39 @@ namespace Cyrex {
 
         void SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeap* heap);
     private:
-        void TrackResource(Microsoft::WRL::ComPtr<ID3D12Object> object);
-        void TrackResource(const Resource& res);
+        void GenerateMips_UAV(const std::shared_ptr<Texture>& texture, bool isSRGB);
 
+        using RootSignatureCallback = std::function<void()>;
+        void SetRootSignature(const std::shared_ptr<RootSignature>& rootSignature, RootSignatureCallback rootSignatureCB);
         void BindDescriptorHeaps();
 
-        void SetRootSignature(const RootSignature& rootSignature, std::function<void(void)> pred);
+        Microsoft::WRL::ComPtr<ID3D12Resource> CopyBuffer(
+            size_t bufferSize, const void* bufferData,
+            D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE);
     private:
+        void TrackResource(Microsoft::WRL::ComPtr<ID3D12Object> object);
+
         using TrackedObjects = std::vector <Microsoft::WRL::ComPtr<ID3D12Object>>;
 
+        Device& m_device;
         D3D12_COMMAND_LIST_TYPE m_d3d12CommandListType;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> m_d3d12CommandList;
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_d3d12CommandAllocator;
 
+        std::shared_ptr<CommandList> m_computeCommandList;
+
         ID3D12RootSignature* m_rootSignature;
+        ID3D12PipelineState* m_pipelineState;
 
         std::unique_ptr<UploadBuffer> m_uploadBuffer;
         std::unique_ptr<ResourceStateTracker> m_resourceStateTracker;
         std::unique_ptr<DynamicDescriptorHeap> m_dynamicDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
 
         ID3D12DescriptorHeap* m_descriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
+
+        std::unique_ptr<GenerateMipsPSO> m_generateMipsPSO;
+        //std::unique_ptr<PanoToCubemapPSO> m_panoToCubemapPSO;
+
         TrackedObjects m_trackedObjects;
     };
 }
