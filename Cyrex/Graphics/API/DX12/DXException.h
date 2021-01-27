@@ -20,7 +20,7 @@ namespace Cyrex {
 #define ThrowIfFailed(x)                                                 \
 {                                                                        \
     HRESULT hr = (x);                                                    \
-    if(FAILED(hr)) { throw DxException(hr, #x, __FILE__, __LINE__); }  \
+    if(FAILED(hr)) { throw DxException(hr, #x, __FILE__, __LINE__); }    \
 }
 #endif
 }
