@@ -3,9 +3,10 @@
 #include "CommandList.h"
 #include <cassert>
 
-std::mutex Cyrex::ResourceStateTracker::ms_globalMutex;
-bool Cyrex::ResourceStateTracker::ms_isLocked = false;
+std::mutex                                    Cyrex::ResourceStateTracker::ms_globalMutex;
+bool                                          Cyrex::ResourceStateTracker::ms_isLocked = false;
 Cyrex::ResourceStateTracker::ResourceStateMap Cyrex::ResourceStateTracker::ms_globalResourceState;
+Cyrex::ResourceStateTracker::ResourceList     Cyrex::ResourceStateTracker::ms_garbageResources;
 
 Cyrex::ResourceStateTracker::ResourceStateTracker()
 {}
@@ -55,8 +56,8 @@ void Cyrex::ResourceStateTracker::ResourceBarrier(const D3D12_RESOURCE_BARRIER& 
             m_pendingResourceBarriers.push_back(barrier);
         }
 
-        m_finalResourceState[transitionBarrier.pResource].SetSubResource(
-            transitionBarrier.Subresource, transitionBarrier.StateAfter);
+        m_finalResourceState[transitionBarrier.pResource].SetSubResource(transitionBarrier.Subresource, 
+                                                                         transitionBarrier.StateAfter);
     }
 
     else {
@@ -94,12 +95,12 @@ void Cyrex::ResourceStateTracker::UAVBarrier(const Resource* resource) {
 
 void Cyrex::ResourceStateTracker::AliasBarrier(const Resource* resourceBefore, const Resource* resourceAfter) {
     ID3D12Resource* pResourceBefore = resourceBefore != nullptr ? resourceBefore->GetD3D12Resource().Get() : nullptr;
-    ID3D12Resource* pResourceAfter = resourceAfter != nullptr ? resourceAfter->GetD3D12Resource().Get() : nullptr;
+    ID3D12Resource* pResourceAfter  = resourceAfter  != nullptr ? resourceAfter->GetD3D12Resource().Get() : nullptr;
 
     ResourceBarrier(CD3DX12_RESOURCE_BARRIER::Aliasing(pResourceBefore, pResourceAfter));
 }
 
-uint32_t Cyrex::ResourceStateTracker::FlushPendingResourceBarriers(CommandList& commandList) {
+uint32_t Cyrex::ResourceStateTracker::FlushPendingResourceBarriers(const std::shared_ptr<CommandList>& commandList) {
     assert(ms_isLocked);
 
     // Resolve the pending resource barriers by checking the global state of the 
@@ -149,7 +150,7 @@ uint32_t Cyrex::ResourceStateTracker::FlushPendingResourceBarriers(CommandList& 
     const auto numBarriers = static_cast<uint32_t>(resourceBarriers.size());
 
     if (numBarriers > 0) {
-        const auto d3d12CommandList = commandList.GetGraphicsCommandList();
+        const auto d3d12CommandList = commandList->GetD3D12CommandList();
         d3d12CommandList->ResourceBarrier(numBarriers, resourceBarriers.data());
     }
 
@@ -157,11 +158,11 @@ uint32_t Cyrex::ResourceStateTracker::FlushPendingResourceBarriers(CommandList& 
     return numBarriers;
 }
 
-void Cyrex::ResourceStateTracker::FlushResourceBarriers(CommandList& commandList) {
+void Cyrex::ResourceStateTracker::FlushResourceBarriers(const std::shared_ptr<CommandList> commandList) {
     const auto numBarriers = static_cast<uint32_t>(m_resourceBarriers.size());
 
     if (numBarriers > 0) {
-        const auto d3d12CommandList = commandList.GetGraphicsCommandList();
+        const auto d3d12CommandList = commandList->GetD3D12CommandList();
         d3d12CommandList->ResourceBarrier(numBarriers, m_resourceBarriers.data());
         m_resourceBarriers.clear();
     }
@@ -201,9 +202,39 @@ void Cyrex::ResourceStateTracker::AddGlobalResourceState(ID3D12Resource* resourc
     }
 }
 
-void Cyrex::ResourceStateTracker::RemoveGlobalResourceState(ID3D12Resource* resource) {
+void Cyrex::ResourceStateTracker::RemoveGlobalResourceState(ID3D12Resource* resource, bool immediate) {
     if (resource) {
         std::lock_guard<std::mutex> lock(ms_globalMutex);
-        ms_globalResourceState.erase(resource);
+
+        if (immediate) {
+            ms_globalResourceState.erase(resource);
+        }
+        else {
+            resource->AddRef();
+            ms_garbageResources.push_back(resource);
+        }
+    }
+}
+
+inline bool IsUnique(ID3D12Resource* resource)
+{
+    resource->AddRef();
+    return resource->Release() == 1;
+}
+
+void Cyrex::ResourceStateTracker::RemoveGarbageResources() {
+    std::lock_guard<std::mutex> lock(ms_globalMutex);
+    auto iter = ms_garbageResources.begin();
+
+    while (iter != ms_garbageResources.end()) {
+        auto resource = *iter;
+        if (IsUnique(resource)) {
+            resource->Release();
+            ms_globalResourceState.erase(resource);
+            iter = ms_garbageResources.erase(iter);
+        }
+        else {
+            iter++;
+        }
     }
 }

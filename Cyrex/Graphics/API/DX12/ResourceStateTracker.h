@@ -26,8 +26,8 @@ namespace Cyrex {
         void UAVBarrier(const Resource* resource = nullptr);
         void AliasBarrier(const Resource* resourceBefore = nullptr, const Resource* resourceAfter = nullptr);
 
-        uint32_t FlushPendingResourceBarriers(CommandList& commandList);
-        void FlushResourceBarriers(CommandList& commandList);
+        uint32_t FlushPendingResourceBarriers(const std::shared_ptr<CommandList>& commandList);
+        void FlushResourceBarriers(const std::shared_ptr<CommandList> commandList);
 
         void CommitFinalResourceStates();
         void Reset();
@@ -35,7 +35,8 @@ namespace Cyrex {
         static void Lock();
         static void Unlock();
         static void AddGlobalResourceState(ID3D12Resource* resource, D3D12_RESOURCE_STATES state);
-        static void RemoveGlobalResourceState(ID3D12Resource* resource);
+        static void RemoveGlobalResourceState(ID3D12Resource* resource, bool immediate = false);
+        static void RemoveGarbageResources();
     private:
         using ResourceBarriers = std::vector<D3D12_RESOURCE_BARRIER>;
 
@@ -58,6 +59,7 @@ namespace Cyrex {
                     SubresourceState[subresource] = state;
                 }
             }
+
             D3D12_RESOURCE_STATES GetSubresourceState(uint32_t subresource) const {
                 D3D12_RESOURCE_STATES state = State;
                 const auto iter = SubresourceState.find(subresource);
@@ -71,6 +73,7 @@ namespace Cyrex {
             std::map<UINT, D3D12_RESOURCE_STATES> SubresourceState;
         };
 
+        using ResourceList = std::vector<ID3D12Resource*>;
         using ResourceStateMap = std::unordered_map<ID3D12Resource*, ResourceState>;
 
 
@@ -82,6 +85,7 @@ namespace Cyrex {
         // The global resource state array stores the state of a resource
         // between command list execution.
         static ResourceStateMap ms_globalResourceState;
+        static ResourceList ms_garbageResources;
 
         static std::mutex ms_globalMutex;
         static bool ms_isLocked;
