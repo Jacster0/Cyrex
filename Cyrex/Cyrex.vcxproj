@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -81,6 +81,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <MultiProcFXC>true</MultiProcFXC>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -89,16 +90,19 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>D:\Cyrex\Cyrex\Cyrex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Cyrex\Cyrex\Cyrex\Extern\Assimp\include;D:\Cyrex\Cyrex\Cyrex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/ENTRY:mainCRTStartup %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>D:\Cyrex\Cyrex\Cyrex\Extern\Assimp\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc142-mtd.lib;zlibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <FxCompile>
       <ShaderModel>5.1</ShaderModel>
-      <ObjectFileOutput>$(OutDir)%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput>D:\Cyrex\Cyrex\Cyrex\Graphics\Shaders\Compiled\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -110,7 +114,8 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>D:\Cyrex\Cyrex\Cyrex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Cyrex\Cyrex\Cyrex\Extern\Assimp\include;D:\Cyrex\Cyrex\Cyrex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -118,10 +123,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/ENTRY:mainCRTStartup %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>D:\Cyrex\Cyrex\Cyrex\Extern\Assimp\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc142-mtd.lib;zlibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <FxCompile>
       <ShaderModel>5.1</ShaderModel>
-      <ObjectFileOutput>$(OutDir)%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput>D:\Cyrex\Cyrex\Cyrex\Graphics\Shaders\Compiled\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -131,16 +138,19 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>D:\Cyrex\Cyrex\Cyrex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Cyrex\Cyrex\Cyrex\Extern\Assimp\include;D:\Cyrex\Cyrex\Cyrex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/ENTRY:mainCRTStartup %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>D:\Cyrex\Cyrex\Cyrex\Extern\Assimp\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc142-mtd.lib;zlibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <FxCompile>
       <ShaderModel>5.1</ShaderModel>
-      <ObjectFileOutput>$(OutDir)%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput>D:\Cyrex\Cyrex\Cyrex\Graphics\Shaders\Compiled\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -152,7 +162,8 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>D:\Cyrex\Cyrex\Cyrex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Cyrex\Cyrex\Cyrex\Extern\Assimp\include;D:\Cyrex\Cyrex\Cyrex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -160,10 +171,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>/ENTRY:mainCRTStartup %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>D:\Cyrex\Cyrex\Cyrex\Extern\Assimp\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc142-mtd.lib;zlibd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <FxCompile>
       <ShaderModel>5.1</ShaderModel>
-      <ObjectFileOutput>$(OutDir)%(Filename).cso</ObjectFileOutput>
+      <ObjectFileOutput>D:\Cyrex\Cyrex\Cyrex\Graphics\Shaders\Compiled\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -176,23 +189,142 @@
     <ClInclude Include="Core\Input\Keyboard.h" />
     <ClInclude Include="Core\Input\Mouse.h" />
     <ClInclude Include="Core\Logger.h" />
+    <ClInclude Include="Core\ThreadSafeQueue.h" />
     <ClInclude Include="Core\Time\GameTimer.h" />
     <ClInclude Include="Core\Time\Time.h" />
     <ClInclude Include="Core\Utils\StringUtils.h" />
+    <ClInclude Include="Core\Utils\ThreadUtils.h" />
+    <ClInclude Include="Core\Visitor.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\aabb.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\ai_assert.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\anim.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\BaseImporter.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Bitmap.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\BlobIOSystem.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\ByteSwapper.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\camera.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\cexport.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\cfileio.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\cimport.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\color4.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Compiler\poppack1.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Compiler\pstdint.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Compiler\pushpack1.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\config.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\CreateAnimMesh.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\DefaultIOStream.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\DefaultIOSystem.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\DefaultLogger.hpp" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Defines.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\defs.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Exceptional.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Exporter.hpp" />
+    <ClInclude Include="Extern\Assimp\include\assimp\fast_atof.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\GenericProperty.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Hash.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Importer.hpp" />
+    <ClInclude Include="Extern\Assimp\include\assimp\importerdesc.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\IOStream.hpp" />
+    <ClInclude Include="Extern\Assimp\include\assimp\IOStreamBuffer.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\IOSystem.hpp" />
+    <ClInclude Include="Extern\Assimp\include\assimp\irrXMLWrapper.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\light.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\LineSplitter.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\LogAux.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Logger.hpp" />
+    <ClInclude Include="Extern\Assimp\include\assimp\LogStream.hpp" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Macros.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\material.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\MathFunctions.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\matrix3x3.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\matrix4x4.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\MemoryIOWrapper.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\mesh.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\metadata.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\NullLogger.hpp" />
+    <ClInclude Include="Extern\Assimp\include\assimp\ParsingUtils.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\pbrmaterial.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\port\AndroidJNI\AndroidJNIIOSystem.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\postprocess.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Profiler.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\ProgressHandler.hpp" />
+    <ClInclude Include="Extern\Assimp\include\assimp\qnan.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\quaternion.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\RemoveComments.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\scene.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\SceneCombiner.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\SGSpatialSort.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\SkeletonMeshBuilder.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\SmoothingGroups.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\SpatialSort.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\StandardShapes.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\StreamReader.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\StreamWriter.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\StringComparison.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\StringUtils.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Subdivision.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\texture.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\TinyFormatter.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\types.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\vector2.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\vector3.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\version.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\Vertex.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\XMLTools.h" />
+    <ClInclude Include="Extern\Assimp\include\assimp\ZipArchiveIOSystem.h" />
+    <ClInclude Include="Extern\DirectXTex\DDSTextureLoader\DDSTextureLoader.h" />
+    <ClInclude Include="Extern\DirectXTex\DDSTextureLoader\DDSTextureLoader12.h" />
+    <ClInclude Include="Extern\DirectXTex\DirectXTex\BC.h" />
+    <ClInclude Include="Extern\DirectXTex\DirectXTex\BCDirectCompute.h" />
+    <ClInclude Include="Extern\DirectXTex\DirectXTex\d3dx12.h" />
+    <ClInclude Include="Extern\DirectXTex\DirectXTex\DDS.h" />
+    <ClInclude Include="Extern\DirectXTex\DirectXTex\DirectXTex.h" />
+    <ClInclude Include="Extern\DirectXTex\DirectXTex\DirectXTexP.h" />
+    <ClInclude Include="Extern\DirectXTex\DirectXTex\Filters.h" />
+    <ClInclude Include="Extern\DirectXTex\DirectXTex\scoped.h" />
+    <ClInclude Include="Extern\DirectXTex\WICTextureLoader\WICTextureLoader.h" />
+    <ClInclude Include="Extern\DirectXTex\WICTextureLoader\WICTextureLoader12.h" />
+    <ClInclude Include="Graphics\API\DX12\Adapter.h" />
+    <ClInclude Include="Graphics\API\DX12\Buffer.h" />
+    <ClInclude Include="Graphics\API\DX12\ByteAddressBuffer.h" />
     <ClInclude Include="Graphics\API\DX12\CommandList.h" />
     <ClInclude Include="Graphics\API\DX12\CommandQueue.h" />
     <ClInclude Include="Graphics\API\DX12\Common.h" />
+    <ClInclude Include="Graphics\API\DX12\ConstantBuffer.h" />
+    <ClInclude Include="Graphics\API\DX12\ConstantBufferView.h" />
     <ClInclude Include="Graphics\API\DX12\d3dx12.h" />
     <ClInclude Include="Graphics\API\DX12\DescriptorAllocation.h" />
     <ClInclude Include="Graphics\API\DX12\DescriptorAllocator.h" />
     <ClInclude Include="Graphics\API\DX12\DescriptorAllocatorPage.h" />
+    <ClInclude Include="Graphics\API\DX12\Device.h" />
     <ClInclude Include="Graphics\API\DX12\DXException.h" />
     <ClInclude Include="Graphics\API\DX12\DynamicDescriptorHeap.h" />
+    <ClInclude Include="Graphics\API\DX12\GenerateMipsPSO.h" />
+    <ClInclude Include="Graphics\API\DX12\GeometryGenerator.h" />
+    <ClInclude Include="Graphics\API\DX12\IndexBuffer.h" />
+    <ClInclude Include="Graphics\API\DX12\Mesh.h" />
+    <ClInclude Include="Graphics\API\DX12\PipeLineStateObject.h" />
+    <ClInclude Include="Graphics\API\DX12\RenderTarget.h" />
     <ClInclude Include="Graphics\API\DX12\Resource.h" />
     <ClInclude Include="Graphics\API\DX12\ResourceStateTracker.h" />
     <ClInclude Include="Graphics\API\DX12\RootSignature.h" />
+    <ClInclude Include="Graphics\API\DX12\ShaderResourceView.h" />
+    <ClInclude Include="Graphics\API\DX12\StructuredBuffer.h" />
+    <ClInclude Include="Graphics\API\DX12\Swapchain.h" />
+    <ClInclude Include="Graphics\API\DX12\Texture.h" />
+    <ClInclude Include="Graphics\API\DX12\UnorderedAccessView.h" />
     <ClInclude Include="Graphics\API\DX12\UploadBuffer.h" />
+    <ClInclude Include="Graphics\API\DX12\VertexBuffer.h" />
+    <ClInclude Include="Graphics\API\DX12\VertexTypes.h" />
+    <ClInclude Include="Graphics\Camera.h" />
     <ClInclude Include="Graphics\Graphics.h" />
+    <ClInclude Include="Graphics\Lights.h" />
+    <ClInclude Include="Graphics\Managers\SceneManager.h" />
+    <ClInclude Include="Graphics\Managers\TextureManager.h" />
+    <ClInclude Include="Graphics\Material.h" />
+    <ClInclude Include="Graphics\Scene.h" />
+    <ClInclude Include="Graphics\SceneNode.h" />
+    <ClInclude Include="Graphics\SceneVisitor.h" />
     <ClInclude Include="Platform\Windows\CrxWindow.h" />
     <ClInclude Include="Platform\Windows\MessageBox.h" />
     <ClInclude Include="Platform\Windows\Window.h" />
@@ -207,23 +339,90 @@
     <ClCompile Include="Core\Logger.cpp" />
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="Core\Time\GameTimer.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DDSTextureLoader\DDSTextureLoader.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DDSTextureLoader\DDSTextureLoader12.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\BC.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\BC4BC5.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\BC6HBC7.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\BCDirectCompute.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexCompress.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexCompressGPU.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexConvert.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexD3D11.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexD3D12.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexDDS.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexFlipRotate.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexHDR.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexImage.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexMipmaps.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexMisc.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexNormalMaps.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexPMAlpha.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexResize.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexTGA.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexUtil.cpp" />
+    <ClCompile Include="Extern\DirectXTex\DirectXTex\DirectXTexWIC.cpp" />
+    <ClCompile Include="Extern\DirectXTex\WICTextureLoader\WICTextureLoader.cpp" />
+    <ClCompile Include="Extern\DirectXTex\WICTextureLoader\WICTextureLoader12.cpp" />
+    <ClCompile Include="Graphics\API\DX12\Adapter.cpp" />
+    <ClCompile Include="Graphics\API\DX12\Buffer.cpp" />
+    <ClCompile Include="Graphics\API\DX12\ByteAddressBuffer.cpp" />
     <ClCompile Include="Graphics\API\DX12\CommandList.cpp" />
     <ClCompile Include="Graphics\API\DX12\CommandQueue.cpp" />
+    <ClCompile Include="Graphics\API\DX12\ConstantBuffer.cpp" />
+    <ClCompile Include="Graphics\API\DX12\ConstantBufferView.cpp" />
     <ClCompile Include="Graphics\API\DX12\DescriptorAllocation.cpp" />
     <ClCompile Include="Graphics\API\DX12\DescriptorAllocator.cpp" />
     <ClCompile Include="Graphics\API\DX12\DescriptorAllocatorPage.cpp" />
+    <ClCompile Include="Graphics\API\DX12\Device.cpp" />
     <ClCompile Include="Graphics\API\DX12\DXException.cpp" />
     <ClCompile Include="Graphics\API\DX12\DynamicDescriptorHeap.cpp" />
+    <ClCompile Include="Graphics\API\DX12\GenerateMipsPSO.cpp" />
+    <ClCompile Include="Graphics\API\DX12\GeometryGenerator.cpp" />
+    <ClCompile Include="Graphics\API\DX12\IndexBuffer.cpp" />
+    <ClCompile Include="Graphics\API\DX12\Mesh.cpp" />
+    <ClCompile Include="Graphics\API\DX12\PipeLineStateObject.cpp" />
+    <ClCompile Include="Graphics\API\DX12\RenderTarget.cpp" />
     <ClCompile Include="Graphics\API\DX12\Resource.cpp" />
     <ClCompile Include="Graphics\API\DX12\ResourceStateTracker.cpp" />
     <ClCompile Include="Graphics\API\DX12\RootSignature.cpp" />
+    <ClCompile Include="Graphics\API\DX12\ShaderResourceView.cpp" />
+    <ClCompile Include="Graphics\API\DX12\StructuredBuffer.cpp" />
+    <ClCompile Include="Graphics\API\DX12\Swapchain.cpp" />
+    <ClCompile Include="Graphics\API\DX12\Texture.cpp" />
+    <ClCompile Include="Graphics\API\DX12\UnorderedAccessView.cpp" />
     <ClCompile Include="Graphics\API\DX12\UploadBuffer.cpp" />
+    <ClCompile Include="Graphics\API\DX12\VertexBuffer.cpp" />
+    <ClCompile Include="Graphics\API\DX12\VertexTypes.cpp" />
+    <ClCompile Include="Graphics\Camera.cpp" />
     <ClCompile Include="Graphics\Graphics.cpp" />
+    <ClCompile Include="Graphics\Managers\SceneManager.cpp" />
+    <ClCompile Include="Graphics\Managers\TextureManager.cpp" />
+    <ClCompile Include="Graphics\Material.cpp" />
+    <ClCompile Include="Graphics\Scene.cpp" />
+    <ClCompile Include="Graphics\SceneNode.cpp" />
+    <ClCompile Include="Graphics\SceneVisitor.cpp" />
     <ClCompile Include="Platform\Windows\MessageBox.cpp" />
     <ClCompile Include="Platform\Windows\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Graphics\Shaders\GenerateMips_CS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.1</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.1</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
+    </FxCompile>
     <FxCompile Include="Graphics\Shaders\PixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Graphics\Shaders\UnlitPixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
@@ -235,6 +434,32 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Extern\Assimp\include\assimp\color4.inl" />
+    <None Include="Extern\Assimp\include\assimp\material.inl" />
+    <None Include="Extern\Assimp\include\assimp\matrix3x3.inl" />
+    <None Include="Extern\Assimp\include\assimp\matrix4x4.inl" />
+    <None Include="Extern\Assimp\include\assimp\quaternion.inl" />
+    <None Include="Extern\Assimp\include\assimp\SmoothingGroups.inl" />
+    <None Include="Extern\Assimp\include\assimp\vector2.inl" />
+    <None Include="Extern\Assimp\include\assimp\vector3.inl" />
+    <None Include="Extern\DirectXTex\DirectXTex\DirectXTex.inl" />
+    <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC6HEncode_EncodeBlockCS.inc" />
+    <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC6HEncode_TryModeG10CS.inc" />
+    <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC6HEncode_TryModeLE10CS.inc" />
+    <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC7Encode_EncodeBlockCS.inc" />
+    <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC7Encode_TryMode02CS.inc" />
+    <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC7Encode_TryMode137CS.inc" />
+    <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC7Encode_TryMode456CS.inc" />
+    <None Include="Graphics\Shaders\Compiled\GenerateMips_CS.cso" />
+    <None Include="Graphics\Shaders\Compiled\PixelShader.cso" />
+    <None Include="Graphics\Shaders\Compiled\UnlitPixelShader.cso" />
+    <None Include="Graphics\Shaders\Compiled\VertexShader.cso" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="Extern\Assimp\Lib\assimp-vc142-mtd.lib" />
+    <Library Include="Extern\Assimp\Lib\zlibd.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
