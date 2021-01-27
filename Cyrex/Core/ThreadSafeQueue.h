@@ -42,7 +42,7 @@ bool ThreadSafeQueue<T>::TryPop(T& value) {
     value = m_queue.front();
     m_queue.pop();
 
-    return true;;
+    return true;
 }
 
 template<class T>
