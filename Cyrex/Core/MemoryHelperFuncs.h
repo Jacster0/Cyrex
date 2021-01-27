@@ -2,7 +2,7 @@
 
 namespace Cyrex {
     constexpr inline auto KB(size_t size) noexcept { return size * 1024; }
-    constexpr inline auto MB(size_t size) noexcept { return size * 1024 * 1024; }
+    constexpr inline auto MB(size_t size) noexcept { return KB(size) * 1024; }
 
     static constexpr auto _64KB  = KB(64);
     static constexpr auto _1MB   = MB(1);
