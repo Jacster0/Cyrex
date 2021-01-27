@@ -74,7 +74,7 @@ std::shared_ptr< Cyrex::DescriptorAllocatorPage>  Cyrex::DescriptorAllocation::G
 
 void Cyrex::DescriptorAllocation::Free() {
     if (!IsNull() and m_page) {
-        m_page->Free(std::move(*this), Application::FrameCount());
+        m_page->Free(std::move(*this));
 
         m_descriptor.ptr = 0;
         m_numHandles = 0;
