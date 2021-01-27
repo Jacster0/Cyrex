@@ -1,5 +1,6 @@
 #pragma once
 #include <numbers>
+#include <DirectXMath.h>
 
 namespace Cyrex::Math {
     template<typename T>
@@ -24,32 +25,55 @@ namespace Cyrex::Math {
     };
 
     template<typename T>
-    inline T AlignUpWithMask(T value, size_t mask) {
+    inline T AlignUpWithMask(T value, size_t mask) noexcept {
         return static_cast<T>((static_cast<size_t>(value + mask) & ~mask));
     }
 
     template <typename T>
-    inline T AlignDownWithMask(T value, size_t mask) {
+    inline T AlignDownWithMask(T value, size_t mask) noexcept {
         return static_cast<T>((static_cast<size_t>(value) & ~mask));
     }
 
     template <typename T>
-    inline T AlignUp(T value, size_t alignment) {
+    inline T AlignUp(T value, size_t alignment) noexcept {
         return AlignUpWithMask(value, alignment - 1);
     }
 
     template <typename T>
-    inline T AlignDown(T value, size_t alignment) {
+    inline T AlignDown(T value, size_t alignment) noexcept  {
         return AlignDownWithMask(value, alignment - 1);
     }
 
     template<typename T>
-    inline bool IsAligned(T value, size_t alignment) {
+    inline bool IsAligned(T value, size_t alignment) noexcept  {
         return 0 == (static_cast<size_t>(value) & (alignment - 1));
     }
 
     template<Divisble T>
     inline T DivideByMultiple(T value, size_t alignment) {
         return (T)((value + alignment - 1) / alignment);
+    }
+
+    inline DirectX::XMVECTOR GetCircleTangent(size_t i, size_t tesselation) noexcept {
+        float angle = (static_cast<float>(i) * MathConstants::pi_mul2 / static_cast<float>(tesselation)) + MathConstants::pi_div2;
+        float dx;
+        float dz;
+
+        DirectX::XMScalarSinCos(&dx, &dz, angle);
+
+        DirectX::XMVECTORF32 vec = { { { dx, 0, dz, 0 } } };
+        return vec;
+    }
+
+    inline DirectX::XMVECTOR GetCircleVector(size_t i, size_t tesselation) noexcept {
+        float angle = static_cast<float>(i) * MathConstants::pi_mul2 / static_cast<float>(tesselation);
+        float dx;
+        float dz;
+
+        DirectX::XMScalarSinCos(&dx, &dz, angle);
+
+        DirectX::XMVECTORF32 vec = { { { dx, 0, dz, 0 } } };
+
+        return vec;
     }
 }
