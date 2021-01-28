@@ -92,7 +92,7 @@ Cyrex::Graphics::Graphics()
 
 Cyrex::Graphics::~Graphics() {
     delete m_cameraData;
-    UnoadContent();
+    UnLoadContent();
 }
 
 void Cyrex::Graphics::Initialize(uint32_t width, uint32_t height) {
@@ -346,7 +346,7 @@ void Cyrex::Graphics::LoadContent() {
     commandQueue.Flush();
 }
 
-void Cyrex::Graphics::UnoadContent() noexcept {
+void Cyrex::Graphics::UnLoadContent() noexcept {
     m_cube.reset();
     m_sphere.reset();
     m_cone.reset();

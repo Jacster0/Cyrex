@@ -37,7 +37,7 @@ namespace Cyrex {
         void Render();
         void Resize(uint32_t width, uint32_t height);
         void LoadContent();
-        void UnoadContent() noexcept;
+        void UnLoadContent() noexcept;
 
         void OnMouseWheel(float delta) noexcept;
         void OnMouseMoved(int dx, int dy) noexcept;

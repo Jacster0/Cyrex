@@ -47,7 +47,7 @@ int Cyrex::Application::Run() {
 	while (true) {
 		if (const auto ecode = MessagePump()) {
 			//return exit code
-			m_gfx->UnoadContent();
+			m_gfx->UnLoadContent();
 			return *ecode;
 		}
 		else {
