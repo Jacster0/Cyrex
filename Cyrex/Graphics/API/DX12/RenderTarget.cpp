@@ -47,7 +47,7 @@ D3D12_VIEWPORT Cyrex::RenderTarget::GetViewPort(
     for (int i = AttachmentPoint::Color0; i <= AttachmentPoint::Color7; i++) {
         if (const auto texture = m_textures.at(i)) {
             const auto desc = texture->GetD3D12ResourceDesc();
-            width = std::max(width, desc.Width);
+            width  = std::max(width, desc.Width);
             height = std::max(height, desc.Height);
         }
     }
