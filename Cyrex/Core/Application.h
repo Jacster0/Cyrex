@@ -25,11 +25,11 @@ namespace Cyrex {
  
         int Run();
     private:
-        void Initialize();
+        void Initialize() noexcept;
         void HandleInput() noexcept;
         void KeyboardInput() noexcept;
         void MouseInput() noexcept;
-        std::optional<int> MessagePump();
+        std::optional<int> MessagePump() noexcept;
 
         std::unique_ptr<Window> m_window = nullptr;
         std::shared_ptr<Graphics> m_gfx = nullptr;

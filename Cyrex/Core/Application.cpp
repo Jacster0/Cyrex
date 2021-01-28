@@ -31,16 +31,16 @@ Cyrex::Application::~Application() {
 }
 
 int Cyrex::Application::Run() {
-	if (m_isInitialized) {
+	if (m_isInitialized) [[likely]] {
 		m_gfx->Initialize(m_window->GetWidth(), m_window->GetHeight());
 
-		if (!m_gfx->IsInitialized()) {
+		if (!m_gfx->IsInitialized()) [[unlikely]] {
 			crxlog::critical("Cannot render to screen because no Graphics object have been intialized");
 		}
 
 		m_window->Show();
 	}
-	else {
+	else [[unlikely]] {
 		crxlog::critical("Application is not intialized");
 	}
 
@@ -61,7 +61,7 @@ int Cyrex::Application::Run() {
 	}
 }
 
-void Cyrex::Application::Initialize() {
+void Cyrex::Application::Initialize() noexcept {
 	m_window->Gfx = m_gfx;
 	m_gfx->SetHwnd(m_window->GetWindowHandle());
 
@@ -125,7 +125,7 @@ void Cyrex::Application::MouseInput() noexcept {
 	}
 }
 
-std::optional<int> Cyrex::Application::MessagePump() {
+std::optional<int> Cyrex::Application::MessagePump() noexcept {
 	MSG msg{ 0 };
 
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
