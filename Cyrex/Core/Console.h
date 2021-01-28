@@ -4,7 +4,7 @@
 #include <iostream>
 
 namespace Cyrex {
-    enum class Color { 
+    enum class Color : std::uint16_t { 
         Red     = (0x0004 | 0x0008), 
         Green   = (0x0002 | 0x0008),
         Blue    = (0x0001 | 0x0008),

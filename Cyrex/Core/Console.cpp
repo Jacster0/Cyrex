@@ -1,9 +1,7 @@
 #include "Console.h"
 #include "Platform/Windows/CrxWindow.h"
 #include <stdio.h>
-#include <io.h>
 #include <stdlib.h>
-#include <fcntl.h>
 
 Cyrex::Console* Cyrex::Console::console(new Console);
 
@@ -28,7 +26,7 @@ void Cyrex::Console::Destroy() noexcept {
     Hide();
     FreeConsole();
 
-    if (!Cyrex::Console::console) {
+    if (Cyrex::Console::console) {
         delete Cyrex::Console::console;
         Cyrex::Console::console = nullptr;
     }
