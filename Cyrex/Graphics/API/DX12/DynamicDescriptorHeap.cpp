@@ -5,7 +5,6 @@
 #include "CommandList.h"
 #include <stdexcept>
 #include <cassert>
-#include <bitset>
 
 namespace wrl = Microsoft::WRL;
 
@@ -91,17 +90,16 @@ void Cyrex::DynamicDescriptorHeap::CommitStagedDescriptors(
         }
         
         constexpr auto numBits = sizeof(m_staleDescriptorTableBitMask) * 8;
-        std::bitset<numBits> bitset(m_staleDescriptorTableBitMask);
 
         //Only enter the loop if any of the bits are set
-        if (bitset.any()) [[likely]] {
-            for (int i = 0; i < bitset.size(); i++) {
+        if(m_staleDescriptorTableBitMask > 0) [[likely]] {
+            for (int i = 0; i < numBits; i++) {
                 //if no bits are set we exit the loop
-                if (bitset.none()) {
+                if (m_staleDescriptorTableBitMask == 0) {
                     break;
                 }
-                else if (bitset[i]) {
-                    uint32_t numDescriptors = m_descriptorTableCache[i].NumDescriptors;
+                else if ((m_staleDescriptorTableBitMask >> i) & 1) {
+                    uint32_t numDescriptors                            = m_descriptorTableCache[i].NumDescriptors;
                     D3D12_CPU_DESCRIPTOR_HANDLE* pSrcDescriptorHandles = m_descriptorTableCache[i].BaseDescriptor;
 
                     D3D12_CPU_DESCRIPTOR_HANDLE pDestDescriptorRangeStarts[] = {
@@ -128,7 +126,7 @@ void Cyrex::DynamicDescriptorHeap::CommitStagedDescriptors(
                     m_numFreeHandles -= numDescriptors;
 
                     //Flip the bit in order to reduce the number of iterations.
-                    bitset[i].flip();
+                    m_staleDescriptorTableBitMask ^= (1 << i);
                 }
             }
        }
@@ -192,26 +190,25 @@ void Cyrex::DynamicDescriptorHeap::ParseRootSignature(const std::shared_ptr<Root
     uint32_t currentoffset = 0;
 
     constexpr auto numBits = sizeof(descriptorTableBitMask) * 8;
-    std::bitset<numBits> bitset(descriptorTableBitMask);
 
     //Only enter the loop if any of the bits are set
-    if (bitset.any()) [[likely]] {
-        for (int i = 0; i < bitset.size(); i++) {
+     if(descriptorTableBitMask > 0) [[likely]] {
+        for (int i = 0; i < numBits; i++) {
             //If no bits are set, break the loop
-            if (bitset.none()) {
+            if (descriptorTableBitMask == 0) {
                 break;
             }
-            else if (bitset[i] && (i < rootSignatureDesc.NumParameters)) {
+            else if (((descriptorTableBitMask >> i) & 1) && (i < rootSignatureDesc.NumParameters)) {
                 uint32_t numDescriptors = rootSignature->GetNumDescriptors(i);
 
                 DescriptorTableCache& descriptorTableCache = m_descriptorTableCache[i];
-                descriptorTableCache.NumDescriptors = numDescriptors;
-                descriptorTableCache.BaseDescriptor = m_descriptorHandleCache.get() + currentoffset;
+                descriptorTableCache.NumDescriptors        = numDescriptors;
+                descriptorTableCache.BaseDescriptor        = m_descriptorHandleCache.get() + currentoffset;
 
                 currentoffset += numDescriptors;
 
                 //Flip the bit in order to reduce the number of iterations
-                bitset[i].flip();
+                descriptorTableBitMask ^= (1 << i);
             }
         }
     }
@@ -266,23 +263,22 @@ wrl::ComPtr<ID3D12DescriptorHeap> Cyrex::DynamicDescriptorHeap::CreateDescriptor
 
 uint32_t Cyrex::DynamicDescriptorHeap::ComputeStaleDescriptorCount() const noexcept {
     uint32_t numStaleDescriptors = 0;
-    const auto staleDescriptorBitMask = m_staleDescriptorTableBitMask;
+    uint32_t staleDescriptorBitMask = m_staleDescriptorTableBitMask;
 
     constexpr auto numBits = sizeof(staleDescriptorBitMask) * 8;
-    std::bitset<numBits> bitset(staleDescriptorBitMask);
-
+   
     //only enter the loop if any of the bits are set 
-    if (bitset.any()) [[likely]] {
-        for (int i = 0; i < bitset.size(); i++) {
+    if (staleDescriptorBitMask > 0) [[likely]] {
+        for (int i = 0; i < numBits; i++) {
             //if no bits are set, break the loop.
-            if (bitset.none()) {
+            if (staleDescriptorBitMask == 0) {
                 break;
             }
-            else if (bitset[i]) {
+            else if ((staleDescriptorBitMask >> i) & 1) {
                 numStaleDescriptors += m_descriptorTableCache[i].NumDescriptors;
 
                 //Flip the bit in order to reduce the number of iterations
-                bitset[i].flip();
+                staleDescriptorBitMask ^= (1 << i);
             }
         }
     }
