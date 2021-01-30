@@ -33,12 +33,11 @@ Cyrex::Application::~Application() {
 int Cyrex::Application::Run() {
 	if (m_isInitialized) [[likely]] {
 		m_gfx->Initialize(m_window->GetWidth(), m_window->GetHeight());
-
+	
 		if (!m_gfx->IsInitialized()) [[unlikely]] {
 			crxlog::critical("Cannot render to screen because no Graphics object have been intialized");
 		}
-
-		m_window->Show();
+	    m_window->Show();
 	}
 	else [[unlikely]] {
 		crxlog::critical("Application is not intialized");
