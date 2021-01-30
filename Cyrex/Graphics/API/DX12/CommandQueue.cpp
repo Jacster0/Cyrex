@@ -1,4 +1,5 @@
-#include "Core/Utils/ThreadUtils.h"
+import ThreadUtils;
+
 #include "CommandQueue.h"
 #include "DXException.h"
 #include "CommandList.h"

@@ -1,8 +1,10 @@
+import ThreadUtils;
+import StringUtils;
+
 #include "Window.h"
 #include "Graphics/Graphics.h"
 #include "Core/Application.h"
 #include "Core/Logger.h"
-#include "Core/Utils/StringUtils.h"
 #include <cassert>
 #include <comdef.h>
 

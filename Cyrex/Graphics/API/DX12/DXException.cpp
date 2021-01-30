@@ -1,5 +1,6 @@
+import StringUtils;
+
 #include "DXException.h"
-#include "Core/Utils/StringUtils.h"
 #include <comdef.h>
 #include <sstream>
 

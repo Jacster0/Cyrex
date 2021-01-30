@@ -192,8 +192,6 @@
     <ClInclude Include="Core\ThreadSafeQueue.h" />
     <ClInclude Include="Core\Time\GameTimer.h" />
     <ClInclude Include="Core\Time\Time.h" />
-    <ClInclude Include="Core\Utils\StringUtils.h" />
-    <ClInclude Include="Core\Utils\ThreadUtils.h" />
     <ClInclude Include="Core\Visitor.h" />
     <ClInclude Include="Extern\Assimp\include\assimp\aabb.h" />
     <ClInclude Include="Extern\Assimp\include\assimp\ai_assert.h" />
@@ -339,6 +337,8 @@
     <ClCompile Include="Core\Logger.cpp" />
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="Core\Time\GameTimer.cpp" />
+    <ClCompile Include="Core\Utils\StringUtils.ixx" />
+    <ClCompile Include="Core\Utils\ThreadUtils.ixx" />
     <ClCompile Include="Extern\DirectXTex\DDSTextureLoader\DDSTextureLoader.cpp" />
     <ClCompile Include="Extern\DirectXTex\DDSTextureLoader\DDSTextureLoader12.cpp" />
     <ClCompile Include="Extern\DirectXTex\DirectXTex\BC.cpp" />
