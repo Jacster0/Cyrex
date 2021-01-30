@@ -72,8 +72,8 @@ namespace Cyrex {
             const void* vertexBufferData);
 
         template<typename T>
-        std::shared_ptr<VertexBuffer> CopyVertexBuffer(const std::vector<T>& vertexBufferData) {
-            return CopyVertexBuffer(vertexBufferData.size(), sizeof(T), vertexBufferData.data());
+        std::shared_ptr<VertexBuffer> CopyVertexBuffer(const T& vertexBufferData) {
+            return CopyVertexBuffer(vertexBufferData.size(), sizeof(T::value_type), vertexBufferData.data());
         }
 
         std::shared_ptr<IndexBuffer> CopyIndexBuffer(
@@ -82,11 +82,10 @@ namespace Cyrex {
             const void* indexBufferData);
 
         template<typename T>
-        std::shared_ptr<IndexBuffer> CopyIndexBuffer(const std::vector<T>& indexBufferData)
-        {
-            assert(sizeof(T) == 2 || sizeof(T) == 4);
+        std::shared_ptr<IndexBuffer> CopyIndexBuffer(const T& indexBufferData) {
+            assert(sizeof(T::value_type) == 2 || sizeof(T::value_type) == 4);
 
-            DXGI_FORMAT indexFormat = (sizeof(T) == 2) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+            DXGI_FORMAT indexFormat = (sizeof(T::value_type) == 2) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
             return CopyIndexBuffer(indexBufferData.size(), indexFormat, indexBufferData.data());
         }
 
@@ -103,11 +102,14 @@ namespace Cyrex {
             return CopyByteAddressBuffer(sizeof(T), &data);
         }
 
-        std::shared_ptr<StructuredBuffer> CopyStructuredBuffer(size_t numElements, size_t elementSize,
+        std::shared_ptr<StructuredBuffer> CopyStructuredBuffer(
+            size_t numElements, 
+            size_t elementSize,
             const void* bufferData);
+
         template<typename T>
-        std::shared_ptr<StructuredBuffer> CopyStructuredBuffer(const std::vector<T>& bufferData) {
-            return CopyStructuredBuffer(bufferData.size(), sizeof(T), bufferData.data());
+        std::shared_ptr<StructuredBuffer> CopyStructuredBuffer(const T& bufferData) {
+            return CopyStructuredBuffer(bufferData.size(), sizeof(T::value_type), bufferData.data());
         }
 
         void SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY primitiveTopology);
@@ -144,8 +146,8 @@ namespace Cyrex {
        
         void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexSize, const void* vertexBufferData);
         template<typename T>
-        void SetDynamicVertexBuffer(uint32_t slot, const std::vector<T>& vertexBufferData) {
-            SetDynamicVertexBuffer(slot, vertexBufferData.size(), sizeof(T), vertexBufferData.data());
+        void SetDynamicVertexBuffer(uint32_t slot, const T& vertexBufferData) {
+            SetDynamicVertexBuffer(slot, vertexBufferData.size(), sizeof(T::value_type), vertexBufferData.data());
         }
 
         void SetIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer);
@@ -153,11 +155,11 @@ namespace Cyrex {
         void SetDynamicIndexBuffer(size_t numIndicies, DXGI_FORMAT indexFormat, const void* indexBufferData);
 
         template<typename T>
-        void SetDynamicIndexBuffer(const std::vector<T>& indexBufferData)
+        void SetDynamicIndexBuffer(const T& indexBufferData)
         {
-            static_assert(sizeof(T) == 2 || sizeof(T) == 4);
+            static_assert(sizeof(T::value_type) == 2 || sizeof(T::value_type) == 4);
 
-            DXGI_FORMAT indexFormat = (sizeof(T) == 2) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+            DXGI_FORMAT indexFormat = (sizeof(T::value_type) == 2) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
             SetDynamicIndexBuffer(indexBufferData.size(), indexFormat, indexBufferData.data());
         }
 
@@ -165,9 +167,9 @@ namespace Cyrex {
             const void* bufferData);
 
         template<typename T>
-        void SetGraphicsDynamicStructuredBuffer(uint32_t slot, const std::vector<T>& bufferData)
+        void SetGraphicsDynamicStructuredBuffer(uint32_t slot, const T& bufferData)
         {
-            SetGraphicsDynamicStructuredBuffer(slot, bufferData.size(), sizeof(T), bufferData.data());
+            SetGraphicsDynamicStructuredBuffer(slot, bufferData.size(), sizeof(T::value_type), bufferData.data());
         }
 
         void SetViewport(const D3D12_VIEWPORT& viewport);
