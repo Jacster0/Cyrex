@@ -25,12 +25,12 @@ Cyrex::Application::Application() {
 	}
 
 	auto cpuInfo = CPUInfo{}.Info;
-	crxlog::normal("\nCPU INFO:       ",                  Logger::NewLine(),
-		"Active CPU:          ", cpuInfo.BrandString,     Logger::NewLine(),
-		"CPU Vendor:          ", cpuInfo.Vendor,          Logger::NewLine(),
-		"CPU architecture:    ", cpuInfo.Architecture,    Logger::NewLine(),
-		"Physical processors: ", cpuInfo.NumberOfCores,   Logger::NewLine(),
-		"Logical processors:  ", cpuInfo.NumberOfThreads, Logger::NewLine());
+	crxlog::normal("\nCPU INFO: ",                              Logger::NewLine(),
+		"Active CPU:          ", cpuInfo.BrandString,           Logger::NewLine(),
+		"CPU Vendor:          ", cpuInfo.Vendor,                Logger::NewLine(),
+		"CPU architecture:    ", cpuInfo.Architecture,          Logger::NewLine(),
+		"Physical processors: ", cpuInfo.NumPhysicalProcessors, Logger::NewLine(),
+		"Logical processors:  ", cpuInfo.NumLogicalProcessors,  Logger::NewLine());
 
 	Initialize();
 }

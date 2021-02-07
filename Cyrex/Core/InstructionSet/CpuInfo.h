@@ -15,21 +15,21 @@ namespace Cyrex {
             std::string BrandString;
             std::string Vendor;
             std::string Architecture;
-            int NumberOfThreads;
-            int NumberOfCores;
+            int NumLogicalProcessors;
+            int NumPhysicalProcessors;
             std::map<std::string, bool> InstructionSetFeatures;
         } Info;
     private:
-        const std::string GetBrandString()  const noexcept { return ins.Brandstring(); }
-        const std::string GetVendor()       const noexcept { return ins.Vendor(); }
-        const std::string GetArchitecture() const noexcept { return architectures.at(sysInfo.wProcessorArchitecture); }
+        const std::string GetBrandString()  const noexcept { return m_instructionSet.Brandstring(); }
+        const std::string GetVendor()       const noexcept { return m_instructionSet.Vendor(); }
+        const std::string GetArchitecture() const noexcept { return m_architectures.at(m_sysInfo.wProcessorArchitecture); }
 
         const int GetNumberOfLogicalProcessors() const noexcept { return std::thread::hardware_concurrency(); }
         const int GetNumberOfPhysicalProcessors() const noexcept;
 
-        SYSTEM_INFO sysInfo;
-        InstructionSet ins;
-        std::unordered_map<int, std::string> architectures{
+        SYSTEM_INFO m_sysInfo;
+        InstructionSet m_instructionSet;
+        std::unordered_map<int, std::string> m_architectures{
             {9, "x86-64"},
             {5, "ARM"},
             {12, "ARM64"},
