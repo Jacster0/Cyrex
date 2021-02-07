@@ -8,6 +8,7 @@
 #include "Graphics/API/DX12/Device.h"
 #include "Graphics/API/DX12/Adapter.h"
 #include "Graphics/API/DX12/Swapchain.h"
+#include <Core/InstructionSet/CpuInfo.h>
 
 using namespace Cyrex;
 namespace wrl = Microsoft::WRL;
@@ -22,6 +23,14 @@ Cyrex::Application::Application() {
 	if (Console::Instance()) {
 		Console::Show();
 	}
+
+	auto cpuInfo = CPUInfo{}.Info;
+	crxlog::normal("\nCPU INFO:       ",                  Logger::NewLine(),
+		"Active CPU:          ", cpuInfo.BrandString,     Logger::NewLine(),
+		"CPU Vendor:          ", cpuInfo.Vendor,          Logger::NewLine(),
+		"CPU architecture:    ", cpuInfo.Architecture,    Logger::NewLine(),
+		"Physical processors: ", cpuInfo.NumberOfCores,   Logger::NewLine(),
+		"Logical processors:  ", cpuInfo.NumberOfThreads, Logger::NewLine());
 
 	Initialize();
 }
