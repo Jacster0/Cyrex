@@ -11,7 +11,7 @@ https://github.com/CRYTEK/CRYENGINE \
 The 3D fundamentals and Dx11 tutorials found on https://www.youtube.com/channel/UCsyHonfwHi4fLb2lkq0DEAA \
 The Game Engine tutorials found on https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw \
 
-Books:
+Books:\
 Introduction to 3D Game Programming with DirectX 12 by Frank Luna\
 Game Engine Architecture by Jason Gregory\
 Real-Time Rendering by Tomas Akenine-Mo Ller, Eric Haines and Naty Hoffman
