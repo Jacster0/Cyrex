@@ -1,4 +1,4 @@
-Game engine written in modern C++ and DirectX 12.
+## Game engine written in modern C++ and DirectX 12.
 
 Resources I used to build this Engine:
 
