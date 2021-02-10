@@ -14,6 +14,6 @@ The Game Engine tutorials found on https://www.youtube.com/channel/UCQ-W1KE9EYfd
 Books:\
 Introduction to 3D Game Programming with DirectX 12 by Frank Luna\
 Game Engine Architecture by Jason Gregory\
-Real-Time Rendering by Tomas Akenine-Mo Ller, Eric Haines and Naty Hoffman
+Real-Time Rendering by Tomas Akenine-Möller, Eric Haines and Naty Hoffman
 
 
