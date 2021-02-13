@@ -10,7 +10,7 @@ Cyrex::CPUInfo::CPUInfo() {
     Info.Vendor                = GetVendor();
     Info.Architecture          = GetArchitecture();
     Info.NumLogicalProcessors  = GetNumberOfLogicalProcessors();
-    Info.NumPhysicalProcessors = GetNumberOfPhysicalProcessors();
+    Info.NumCores              = GetNumberOfCores();
 
     Info.InstructionSetFeatures = {
         {"SSE3",        m_instructionSet.SSE3()},
@@ -67,7 +67,7 @@ Cyrex::CPUInfo::CPUInfo() {
     };
 }
 
-const int Cyrex::CPUInfo::GetNumberOfPhysicalProcessors() const noexcept {
+const int Cyrex::CPUInfo::GetNumberOfCores() const noexcept {
     DWORD length{ 0 };
     size_t offset{ 0 };
     int numCores{ 0 };

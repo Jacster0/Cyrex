@@ -16,8 +16,8 @@ namespace Cyrex {
             std::string Vendor;
             std::string Architecture;
             int NumLogicalProcessors;
-            int NumPhysicalProcessors;
-            std::map<std::string, bool> InstructionSetFeatures;
+            int NumCores;
+            std::unordered_map<std::string, bool> InstructionSetFeatures;
         } Info;
     private:
         const std::string GetBrandString()  const noexcept { return m_instructionSet.Brandstring(); }
@@ -25,7 +25,7 @@ namespace Cyrex {
         const std::string GetArchitecture() const noexcept { return m_architectures.at(m_sysInfo.wProcessorArchitecture); }
 
         const int GetNumberOfLogicalProcessors() const noexcept { return std::thread::hardware_concurrency(); }
-        const int GetNumberOfPhysicalProcessors() const noexcept;
+        const int GetNumberOfCores() const noexcept;
 
         SYSTEM_INFO m_sysInfo;
         InstructionSet m_instructionSet;

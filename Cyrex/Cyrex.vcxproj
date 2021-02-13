@@ -182,6 +182,7 @@
   <ItemGroup>
     <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Core\Console.h" />
+    <ClInclude Include="Core\InstructionSet\CpuInfo.h" />
     <ClInclude Include="Core\Math\Math.h" />
     <ClInclude Include="Core\MemoryHelperFuncs.h" />
     <ClInclude Include="Core\Exceptions\CyrexException.h" />
@@ -334,6 +335,9 @@
     <ClCompile Include="Core\Input\Cursor.cpp" />
     <ClCompile Include="Core\Input\Keyboard.cpp" />
     <ClCompile Include="Core\Input\Mouse.cpp" />
+    <ClCompile Include="Core\InstructionSet\CpuInfo.cpp" />
+    <ClCompile Include="Core\InstructionSet\InstructionSet.cpp" />
+    <ClCompile Include="Core\InstructionSet\InstructionSet.h" />
     <ClCompile Include="Core\Logger.cpp" />
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="Core\Time\GameTimer.cpp" />

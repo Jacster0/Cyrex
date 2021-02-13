@@ -25,11 +25,11 @@ Cyrex::Application::Application() {
 	}
 
 	auto cpuInfo = CPUInfo{}.Info;
-	crxlog::normal("\nCPU INFO: ",                              Logger::NewLine(),
+	crxlog::log("\nCPU INFO: ",                                 Logger::NewLine(),
 		"Active CPU:          ", cpuInfo.BrandString,           Logger::NewLine(),
 		"CPU Vendor:          ", cpuInfo.Vendor,                Logger::NewLine(),
 		"CPU architecture:    ", cpuInfo.Architecture,          Logger::NewLine(),
-		"Physical processors: ", cpuInfo.NumPhysicalProcessors, Logger::NewLine(),
+		"Cores:               ", cpuInfo.NumCores,              Logger::NewLine(),
 		"Logical processors:  ", cpuInfo.NumLogicalProcessors,  Logger::NewLine());
 
 	Initialize();
@@ -116,13 +116,14 @@ void Cyrex::Application::KeyboardInput() noexcept {
 }
 
 void Cyrex::Application::MouseInput() noexcept {
+	using mouseEvent = Mouse::Event::Type;
 	while (const auto e = m_window->m_mouse.Read()) {
 		switch (e->GetType())
 		{
-		case Mouse::Event::Type::WheelUp:
+		case mouseEvent::WheelUp:
 			m_gfx->OnMouseWheel(m_window->m_mouse.GetWheelDelta());
 			break;
-		case Mouse::Event::Type::WheelDown:
+		case mouseEvent::WheelDown:
 			m_gfx->OnMouseWheel(m_window->m_mouse.GetWheelDelta());
 			break;
 		}

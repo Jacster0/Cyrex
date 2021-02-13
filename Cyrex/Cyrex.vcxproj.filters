@@ -453,6 +453,9 @@
     <ClInclude Include="Graphics\Managers\TextureManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Core\InstructionSet\CpuInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Platform\Windows\Window.cpp">
@@ -681,6 +684,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Core\Utils\ThreadUtils.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\InstructionSet\InstructionSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\InstructionSet\CpuInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\InstructionSet\InstructionSet.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
