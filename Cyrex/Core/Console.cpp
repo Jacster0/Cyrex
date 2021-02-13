@@ -42,7 +42,7 @@ void Cyrex::Console::Reset() noexcept {
 }
 
 void Cyrex::Console::ResetTextColor() noexcept {
-    SetTextColor(Color::White);
+    SetTextColor(ConsoleColor::White);
 }
 
 void Cyrex::Console::WriteLine(std::string_view message) noexcept {
@@ -66,7 +66,7 @@ void Cyrex::Console::Flush() noexcept {
     *Console::GetStandardStream() << std::flush;
 }
 
-void Cyrex::Console::SetTextColor(Color clr) noexcept {
+void Cyrex::Console::SetTextColor(ConsoleColor clr) noexcept {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), static_cast<WORD>(clr));
 }
 
