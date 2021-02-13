@@ -127,7 +127,7 @@ void Cyrex::Graphics::Update() noexcept {
 
     if (m_timer.GetElapsedSeconds() > 1.0) {
         const auto fps = frameCount / m_timer.GetElapsedSeconds();
-        crxlog::normal(fps, " fps");
+        crxlog::log(fps, " fps");
         frameCount = 0;
         m_timer.ResetElapsedTime();
     }
