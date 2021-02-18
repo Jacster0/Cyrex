@@ -116,8 +116,7 @@ void Cyrex::Application::KeyboardInput() noexcept {
 void Cyrex::Application::MouseInput() noexcept {
 	using mouseEvent = Mouse::Event::Type;
 	while (const auto e = m_window->m_mouse.Read()) {
-		switch (e->GetType())
-		{
+		switch (e->GetType()) {
 		case mouseEvent::Move:
 			m_gfx->OnMouseMoved(m_window->m_mouse);
 			break;

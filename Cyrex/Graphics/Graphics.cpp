@@ -602,7 +602,7 @@ void Cyrex::Graphics::UpdateLights() noexcept {
                                      static_cast<float>(std::cos(lighAnimationTime + pointLightoffset * i + spotLightOffset)) * radius, 1.0f };
 
         XMVECTOR worldSpacePos = XMLoadFloat4(&light.WorldSpacePosition);
-        XMVECTOR viewSpacePos = XMVector3TransformCoord(worldSpacePos, view);
+        XMVECTOR viewSpacePos  = XMVector3TransformCoord(worldSpacePos, view);
         XMStoreFloat4(&light.ViewSpacePosition, viewSpacePos);
 
         light.Color                = XMFLOAT4(lightColors[numPointLights + i]);

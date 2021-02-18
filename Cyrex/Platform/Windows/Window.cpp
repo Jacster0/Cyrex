@@ -246,6 +246,7 @@ namespace Cyrex {
 			}
 		}
 	}
+
 	void Window::Show() noexcept {
 		ShowWindow(m_hWnd, SW_SHOWNORMAL);
 		UpdateWindow(m_hWnd);
