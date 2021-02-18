@@ -13,6 +13,8 @@ namespace Cyrex {
         DirectX::XMFLOAT3 Color;
     };
 
+    class Keyboard;
+    class Mouse;
     class CommandQueue;
     class Device;
     class Mesh;
@@ -41,11 +43,16 @@ namespace Cyrex {
 
         void OnMouseWheel(float delta) noexcept;
         void OnMouseMoved(int dx, int dy) noexcept;
+        void OnMouseMoved(const Mouse& mouse) noexcept;
+
+        void KeyboardInput(const Keyboard& kbd) noexcept;
 
         void SetHwnd(HWND hWnd) noexcept { m_hWnd = hWnd; }
         bool IsInitialized() const noexcept { return m_isIntialized; }
         void ToggleVsync();
     private:
+        void UpdateCamera() noexcept;
+        void UpdateLights() noexcept;
         static constexpr uint8_t m_bufferCount = 3;
 
         Camera m_camera;
@@ -53,22 +60,23 @@ namespace Cyrex {
         struct alignas(16) CameraData {
             DirectX::XMVECTOR InitialCamPos;
             DirectX::XMVECTOR InitialCamRot;
+           float InitialCamFov;
         };
 
         CameraData* m_cameraData;
 
         struct CameraControls {
-            float Forward;
-            float Backward;
-            float Left;
-            float Right;
-            float Up;
-            float Down;
+            float Forward  = 0;
+            float Backward = 0;
+            float Left     = 0;
+            float Right    = 0;
+            float Up       = 0;
+            float Down     = 0;
 
-            float Pitch;
-            float Yaw;
+            float Pitch    = 0;
+            float Yaw      = 0;
 
-            float Sneak;
+            bool Sneak = false;
         };
 
         CameraControls m_cameraControls;

@@ -3,8 +3,13 @@
 #include "Scene.h"
 #include "SceneVisitor.h"
 #include "Managers/TextureManager.h"
-#include "API/DX12/DXException.h"
+
 #include "Core/Logger.h"
+#include "Core/Input/Keyboard.h"
+#include "Core/Input/Mouse.h"
+#include "Core/Math/Math.h"
+
+#include "API/DX12/DXException.h"
 #include "Graphics/API/DX12/CommandQueue.h"
 #include "Graphics/API/DX12/CommandList.h"
 #include "Graphics/API/DX12/RootSignature.h"
@@ -15,8 +20,8 @@
 #include "API/DX12/RenderTarget.h"
 #include "API/DX12/Texture.h"
 #include "API/DX12/ShaderResourceView.h"
-#include "Core/Math/Math.h"
 #include "API/DX12/VertexTypes.h"
+
 #include <chrono>
 #include <cstdlib>
 
@@ -88,6 +93,7 @@ Cyrex::Graphics::Graphics()
    
     m_cameraData->InitialCamPos = m_camera.GetTranslation();
     m_cameraData->InitialCamRot = m_camera.GetRotation();
+    m_cameraData->InitialCamFov = m_camera.GetFov();
 }
 
 Cyrex::Graphics::~Graphics() {
@@ -131,81 +137,11 @@ void Cyrex::Graphics::Update() noexcept {
         frameCount = 0;
         m_timer.ResetElapsedTime();
     }
-
+     //Wait for the swapchain before updating the camera in order to reduce input lag
     m_swapChain->WaitForSwapChain();
 
-    float speedMultiPlier = m_cameraControls.Sneak ? 4.0f : 16.0f;
-
-    XMVECTOR translate = XMVectorSet(
-        0,
-        0.0f,
-        0.0f,
-        1.0f) * speedMultiPlier * static_cast<float>(m_timer.GetDeltaSeconds());
-
-    XMVECTOR pan = XMVectorSet(0.0f, -0.0f, 0.0f, 1.0f) 
-                   * speedMultiPlier * static_cast<float>(m_timer.GetDeltaSeconds());
-
-    m_camera.Translate(translate, Space::Local);
-    m_camera.Translate(pan, Space::Local);
-
-   /* XMVECTOR rotation = XMQuaternionRotationRollPitchYaw(
-        XMConvertToRadians(m_cameraControls.Pitch), 
-        XMConvertToRadians(m_cameraControls.Yaw), 0.0f);
-
-    m_camera.SetRotation(rotation);*/
-
-    XMMATRIX view = m_camera.GetView();
-
-    constexpr int numPointLights = 4;
-    constexpr int numSpotLights  = 4;
-
-    static const std::array lightColors = { Colors::White, Colors::Orange, Colors::Yellow, Colors::Green,
-                                            Colors::Blue, Colors::Indigo, Colors::Violet, Colors::White };
-
-    static float lighAnimationTime = 0.0f;
-
-    if (m_animateLights) {
-        lighAnimationTime += static_cast<float>(m_timer.GetDeltaSeconds()) * 0.5f * Math::MathConstants::pi_float;
-    }
-
-    constexpr float radius = 8.0f;
-    constexpr float pointLightoffset = 2.0f * Math::MathConstants::pi_float / numPointLights;
-    constexpr float spotLightOffset = pointLightoffset + (pointLightoffset / 2.0f);
-
-    m_pointLights.resize(numPointLights);
-    for (int i = 0; i < numPointLights; i++) {
-        PointLight& light = m_pointLights[i];
-
-        light.WorldSpacePosition = { static_cast<float>(std::sin(lighAnimationTime + pointLightoffset * i)) * radius, 9.0f,
-                                     static_cast<float>(std::cos(lighAnimationTime + pointLightoffset * i)) * radius, 1.0f };
-
-        XMVECTOR worldSpacePos = XMLoadFloat4(&light.WorldSpacePosition);
-        XMVECTOR viewSpacePos  = XMVector3TransformCoord(worldSpacePos, view);
-        XMStoreFloat4(&light.ViewSpacePosition, viewSpacePos);
-
-        light.Color                = XMFLOAT4(lightColors[i]);
-        light.ConstantAttenuation  = 1.0f;
-        light.LinearAttenuation    = 0.08f;
-        light.QuadraticAttenuation = 0.0f;
-    }
-
-    m_spotLights.resize(numSpotLights);
-    for (int i = 0; i < numSpotLights; i++) {
-        SpotLight& light = m_spotLights[i];
-
-        light.WorldSpacePosition = { static_cast<float>(std::sin(lighAnimationTime + pointLightoffset * i + spotLightOffset)) * radius, 9.0f,
-                                     static_cast<float>(std::cos(lighAnimationTime + pointLightoffset * i + spotLightOffset)) * radius, 1.0f };
-
-        XMVECTOR worldSpacePos = XMLoadFloat4(&light.WorldSpacePosition);
-        XMVECTOR viewSpacePos  = XMVector3TransformCoord(worldSpacePos, view);
-        XMStoreFloat4(&light.ViewSpacePosition, viewSpacePos);
-
-        light.Color                = XMFLOAT4(lightColors[numPointLights + i]);
-        light.SpotAngle            = XMConvertToRadians(45.0f);
-        light.ConstantAttenuation  = 1.0f;
-        light.LinearAttenuation    = 0.08f;
-        light.QuadraticAttenuation = 0.0f;
-    }
+    UpdateCamera();
+    UpdateLights();
 }
 
 void Cyrex::Graphics::LoadContent() {
@@ -595,6 +531,88 @@ void Cyrex::Graphics::ToggleVsync() {
     m_swapChain->ToggleVsync();
 }
 
+void Cyrex::Graphics::UpdateCamera() noexcept {
+    using namespace DirectX;
+
+    const float speedMultiPlier = m_cameraControls.Sneak ? 4.0f : 16.0f;
+    const float dt = static_cast<float>(m_timer.GetDeltaSeconds());
+
+    auto translate = XMVectorSet(
+        m_cameraControls.Right - m_cameraControls.Left,
+        0.0f,
+        m_cameraControls.Forward - m_cameraControls.Backward,
+        1.0f) * speedMultiPlier * dt;
+
+    auto pan = XMVectorSet(0.0f, m_cameraControls.Up - m_cameraControls.Down, 0.0f, 1.0f) * speedMultiPlier * dt;
+
+    m_camera.Translate(translate);
+    m_camera.Translate(pan);
+
+    auto cameraRotation = XMQuaternionRotationRollPitchYaw(
+        XMConvertToRadians(m_cameraControls.Pitch),
+        XMConvertToRadians(m_cameraControls.Yaw),
+        0.0f);
+
+    m_camera.SetRotation(cameraRotation);
+}
+
+void Cyrex::Graphics::UpdateLights() noexcept {
+    using namespace DirectX;
+
+    const auto view = m_camera.GetView();
+
+    constexpr int numPointLights = 4;
+    constexpr int numSpotLights  = 4;
+
+    static const std::array lightColors = { Colors::White, Colors::Orange, Colors::Yellow, Colors::Green,
+                                            Colors::Blue, Colors::Indigo, Colors::Violet, Colors::White };
+
+    static float lighAnimationTime = 0.0f;
+
+    if (m_animateLights) {
+        lighAnimationTime += static_cast<float>(m_timer.GetDeltaSeconds()) * 0.5f * Math::MathConstants::pi_float;
+    }
+
+    constexpr float radius           = 8.0f;
+    constexpr float pointLightoffset = 2.0f * Math::MathConstants::pi_float / numPointLights;
+    constexpr float spotLightOffset  = pointLightoffset + (pointLightoffset / 2.0f);
+
+    m_pointLights.resize(numPointLights);
+    for (int i = 0; i < numPointLights; i++) {
+        PointLight& light = m_pointLights[i];
+
+        light.WorldSpacePosition = { static_cast<float>(std::sin(lighAnimationTime + pointLightoffset * i)) * radius, 9.0f,
+                                     static_cast<float>(std::cos(lighAnimationTime + pointLightoffset * i)) * radius, 1.0f };
+
+        XMVECTOR worldSpacePos = XMLoadFloat4(&light.WorldSpacePosition);
+        XMVECTOR viewSpacePos  = XMVector3TransformCoord(worldSpacePos, view);
+        XMStoreFloat4(&light.ViewSpacePosition, viewSpacePos);
+
+        light.Color                = XMFLOAT4(lightColors[i]);
+        light.ConstantAttenuation  = 1.0f;
+        light.LinearAttenuation    = 0.08f;
+        light.QuadraticAttenuation = 0.0f;
+    }
+
+    m_spotLights.resize(numSpotLights);
+    for (int i = 0; i < numSpotLights; i++) {
+        SpotLight& light = m_spotLights[i];
+
+        light.WorldSpacePosition = { static_cast<float>(std::sin(lighAnimationTime + pointLightoffset * i + spotLightOffset)) * radius, 9.0f,
+                                     static_cast<float>(std::cos(lighAnimationTime + pointLightoffset * i + spotLightOffset)) * radius, 1.0f };
+
+        XMVECTOR worldSpacePos = XMLoadFloat4(&light.WorldSpacePosition);
+        XMVECTOR viewSpacePos = XMVector3TransformCoord(worldSpacePos, view);
+        XMStoreFloat4(&light.ViewSpacePosition, viewSpacePos);
+
+        light.Color                = XMFLOAT4(lightColors[numPointLights + i]);
+        light.SpotAngle            = XMConvertToRadians(45.0f);
+        light.ConstantAttenuation  = 1.0f;
+        light.LinearAttenuation    = 0.08f;
+        light.QuadraticAttenuation = 0.0f;
+    }
+}
+
 void Cyrex::Graphics::OnMouseWheel(float delta) noexcept {
     float fov = m_camera.GetFov();
 
@@ -607,5 +625,44 @@ void Cyrex::Graphics::OnMouseWheel(float delta) noexcept {
 }
 
 void Cyrex::Graphics::OnMouseMoved(int dx, int dy) noexcept {
-    //TODO: implement this
+    //Represent a fps camera
+    constexpr auto mouseSpeed = 0.1f;
+
+    m_cameraControls.Pitch += dy * mouseSpeed;
+    m_cameraControls.Pitch = std::clamp(m_cameraControls.Pitch, -90.0f, 90.0f);
+
+    m_cameraControls.Yaw += dx * mouseSpeed;
+}
+
+void Cyrex::Graphics::OnMouseMoved(const Mouse& mouse) noexcept {
+    //What kind of camera is this? Inverted fps camera? Whatever.
+    //When we are not reading raw mouse movements and our 
+    //cursor is present, we are using this camera.
+    constexpr auto mouseSpeed = 0.1f;
+
+    if (mouse.LeftIsPressed()) {
+        m_cameraControls.Pitch -= mouse.GetDeltaY() * mouseSpeed;
+        m_cameraControls.Pitch = std::clamp(m_cameraControls.Pitch, -90.0f, 90.0f);
+
+        m_cameraControls.Yaw -= mouse.GetDeltaX() * mouseSpeed;
+    }
+}
+
+void Cyrex::Graphics::KeyboardInput(const Keyboard& kbd) noexcept {
+    m_cameraControls.Forward  = (kbd.KeyIsPressed('W')) ? 1.0f : 0.0f;
+    m_cameraControls.Left     = (kbd.KeyIsPressed('A')) ? 1.0f : 0.0f;
+    m_cameraControls.Backward = (kbd.KeyIsPressed('S')) ? 1.0f : 0.0f;
+    m_cameraControls.Right    = (kbd.KeyIsPressed('D')) ? 1.0f : 0.0f;
+    m_cameraControls.Down     = (kbd.KeyIsPressed('Q')) ? 1.0f : 0.0f;
+    m_cameraControls.Up       = (kbd.KeyIsPressed('E')) ? 1.0f : 0.0f;
+    m_cameraControls.Sneak    = (kbd.KeyIsPressed(VK_SHIFT));
+
+    if (kbd.KeyIsPressed('R')) {
+        m_camera.SetTranslation(m_cameraData->InitialCamPos);
+        m_camera.SetRotation(m_cameraData->InitialCamRot);
+        m_camera.SetFov(m_cameraData->InitialCamFov);
+
+        m_cameraControls.Pitch = 0.0f;
+        m_cameraControls.Yaw   = 0.0f;
+    }
 }

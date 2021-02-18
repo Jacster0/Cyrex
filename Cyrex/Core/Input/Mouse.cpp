@@ -110,6 +110,14 @@ int Cyrex::Mouse::GetPosY() const noexcept {
     return m_y;
 }
 
+int Cyrex::Mouse::GetDeltaX() const noexcept {
+    return m_deltaX;
+}
+
+int Cyrex::Mouse::GetDeltaY() const noexcept {
+    return m_deltaY;
+}
+
 bool Cyrex::Mouse::LeftIsPressed() const noexcept {
     return m_leftIsPressed;
 }

@@ -72,7 +72,7 @@ int Cyrex::Application::Run() {
 void Cyrex::Application::Initialize() noexcept {
 	m_window->Gfx = m_gfx;
 	m_gfx->SetHwnd(m_window->GetWindowHandle());
-
+	m_window->Kbd.EnableAutorepeat();
 	m_isInitialized = true;
 }
 
@@ -105,14 +105,12 @@ void Cyrex::Application::KeyboardInput() noexcept {
 		}
 	}
 
-	if (!m_window->CursorEnabled()) {}
-
-	while (const auto e = m_window->Kbd.ReadChar()) {
-		if (e.value() == 'v') {
-			crxlog::info("Toggled VSync");
-			m_gfx->ToggleVsync();
-		}
+	if (m_window->Kbd.KeyIsPressed('V')) {
+		crxlog::info("Toggled VSync");
+		m_gfx->ToggleVsync();
 	}
+
+	m_gfx->KeyboardInput(m_window->Kbd);
 }
 
 void Cyrex::Application::MouseInput() noexcept {
@@ -120,6 +118,9 @@ void Cyrex::Application::MouseInput() noexcept {
 	while (const auto e = m_window->m_mouse.Read()) {
 		switch (e->GetType())
 		{
+		case mouseEvent::Move:
+			m_gfx->OnMouseMoved(m_window->m_mouse);
+			break;
 		case mouseEvent::WheelUp:
 			m_gfx->OnMouseWheel(m_window->m_mouse.GetWheelDelta());
 			break;
@@ -130,7 +131,9 @@ void Cyrex::Application::MouseInput() noexcept {
 	}
 
 	while (const auto delta = m_window->m_mouse.ReadRawDelta()) {
-		if (!m_window->m_mouse.cursor.IsEnabled()) {}
+		if (!m_window->m_mouse.cursor.IsEnabled()) {
+			m_gfx->OnMouseMoved(delta->X, delta->Y);
+		}
 	}
 }
 

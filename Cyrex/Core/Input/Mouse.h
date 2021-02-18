@@ -58,6 +58,9 @@ namespace Cyrex {
       
         int GetPosX() const noexcept;
         int GetPosY() const noexcept;
+
+        int GetDeltaX() const noexcept;
+        int GetDeltaY() const noexcept;
  
         bool LeftIsPressed() const noexcept;
         bool RightIsPressed() const noexcept;
@@ -95,6 +98,8 @@ namespace Cyrex {
         static constexpr unsigned int m_bufferSize = 16u;
         int m_x = 0;
         int m_y = 0;
+        float m_deltaX = 0;
+        float m_deltaY = 0;
         bool m_leftIsPressed = false;
         bool m_rightIsPressed = false;
         bool m_isInWindow = false;

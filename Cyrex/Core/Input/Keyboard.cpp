@@ -62,7 +62,7 @@ void Cyrex::Keyboard::OnKeyPressed(uint8_t keycode) noexcept {
 }
 
 void Cyrex::Keyboard::OnKeyReleased(uint8_t keycode) noexcept {
-    m_keystates[keycode] = true;
+    m_keystates[keycode] = false;
     m_keybuffer.push(Keyboard::Event(Keyboard::Event::Type::Release, keycode));
     TrimBuffer(m_keybuffer);
 }

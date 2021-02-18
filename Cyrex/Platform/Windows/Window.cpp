@@ -17,7 +17,8 @@ namespace Cyrex {
 	{
 		//Try to initialize the com library
 		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-		if (FAILED(hr)) {
+		if (FAILED(hr)) [[unlikely]] {
+			//It is not a good sign if we are in this branch
 			_com_error err(hr);
 			auto ErrorMsg = ToNarrow(std::wstring(err.ErrorMessage()));
 
@@ -216,8 +217,10 @@ namespace Cyrex {
 				// This is required to set the fullscreen dimensions of the window
 				// when using a multi-monitor setup.
 				HMONITOR hMonitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+
 				MONITORINFOEX monitorInfo = {};
-				monitorInfo.cbSize = sizeof(MONITORINFOEX);
+				monitorInfo.cbSize        = sizeof(MONITORINFOEX);
+
 				GetMonitorInfo(hMonitor, &monitorInfo);
 
 				SetWindowPos(m_hWnd, HWND_TOP,
@@ -235,7 +238,7 @@ namespace Cyrex {
 				SetWindowPos(m_hWnd, HWND_NOTOPMOST,
 					m_windowRect.left,
 					m_windowRect.top,
-					m_windowRect.right - m_windowRect.left,
+					m_windowRect.right  - m_windowRect.left,
 					m_windowRect.bottom - m_windowRect.top,
 					SWP_FRAMECHANGED | SWP_NOACTIVATE);
 
@@ -244,7 +247,7 @@ namespace Cyrex {
 		}
 	}
 	void Window::Show() noexcept {
-		ShowWindow(m_hWnd, SW_SHOWDEFAULT);
+		ShowWindow(m_hWnd, SW_SHOWNORMAL);
 		UpdateWindow(m_hWnd);
 	}
 
@@ -252,6 +255,15 @@ namespace Cyrex {
 		const auto point = MAKEPOINTS(lParam);
 		int x = point.x;
 		int y = point.y;
+
+		int deltaX = x - m_lastMousePosX;
+		int deltaY = y - m_lastMousePosY;
+
+		m_mouse.m_deltaX = deltaX;
+		m_mouse.m_deltaY = deltaY;
+
+		m_lastMousePosX = x;
+		m_lastMousePosY = y;
 
 		if (!m_mouse.cursor.IsEnabled()) {
 			if (!m_mouse.IsInWindow()) {
@@ -284,7 +296,7 @@ namespace Cyrex {
 
 	void Window::MouseWheel(LPARAM lParam, WPARAM wParam) {
 		const auto point = MAKEPOINTS(lParam);
-		const int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		const int delta  = GET_WHEEL_DELTA_WPARAM(wParam);
 
 		m_mouse.OnWheelDelta(point.x, point.y,delta);
 	}
@@ -345,6 +357,7 @@ namespace Cyrex {
 		if (result != size) {
 			return;
 		}
+
 		//Process the data
 		const auto& rawInput = reinterpret_cast<const RAWINPUT&>(*m_rawInputBuffer.data());
 		int dx = rawInput.data.mouse.lLastX;
