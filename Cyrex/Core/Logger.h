@@ -116,104 +116,104 @@ namespace Cyrex {
 
 namespace Cyrex::crxlog {
     template<typename ...Args>
-    inline void info(Args&& ...args) {
+    inline void info(Args&& ...args) noexcept {
         Logger::Get().Log(Level::crx_info, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void err(Args&& ...args) {
+    inline void err(Args&& ...args) noexcept {
         Logger::Get().Log(Level::crx_error, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void warn(Args&& ...args) {
+    inline void warn(Args&& ...args) noexcept {
         Logger::Get().Log(Level::crx_warn, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void critical(Args&& ...args) {
+    inline void critical(Args&& ...args) noexcept {
         Logger::Get().Log(Level::crx_critical, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void log(Args&& ...args) {
+    inline void log(Args&& ...args) noexcept {
         Logger::Get().Log(Level::crx_default, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void winfo(Args&& ...args) {
+    inline void winfo(Args&& ...args) noexcept {
         Logger::Get().WLog(Level::crx_winfo, args..., Logger::WNewLine());
     }
 
     template<typename ...Args>
-    inline void werr(Args&& ...args) {
+    inline void werr(Args&& ...args) noexcept {
         Logger::Get().WLog(Level::crx_werror, args..., Logger::WNewLine());
     }
 
     template<typename ...Args>
-    inline void wwarn(Args&& ...args) {
+    inline void wwarn(Args&& ...args) noexcept {
         Logger::Get().WLog(Level::crx_wwarn, args..., Logger::WNewLine());
     }
 
     template<typename ...Args>
-    inline void wcritical(Args&& ...args) {
+    inline void wcritical(Args&& ...args) noexcept {
         Logger::Get().WLog(Level::crx_wcritical, args..., Logger::WNewLine());
     }
 
     template<typename ...Args>
-    inline void wlog(Args&& ...args) {
+    inline void wlog(Args&& ...args) noexcept {
         Logger::Get().WLog(Level::crx_wdefault, args..., Logger::WNewLine());
     }
 }
 
 namespace Cyrex::crxdebuglog {
     template<typename ...Args>
-    inline void info(Args&& ...args) {
+    inline void info(Args&& ...args) noexcept {
         Logger::Get().DebugLog(Level::crx_info, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void err(Args&& ...args) {
+    inline void err(Args&& ...args) noexcept {
         Logger::Get().DebugLog(Level::crx_error, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void warn(Args&& ...args) {
+    inline void warn(Args&& ...args) noexcept {
         Logger::Get().DebugLog(Level::crx_warn, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void critical(Args&& ...args) {
+    inline void critical(Args&& ...args) noexcept {
         Logger::Get().DebugLog(Level::crx_critical, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void log(Args&& ...args) {
+    inline void log(Args&& ...args) noexcept {
         Logger::Get().DebugLog(Level::crx_default, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void winfo(Args&& ...args) {
+    inline void winfo(Args&& ...args) noexcept {
         Logger::Get().WDebugLog(Level::crx_winfo, args..., Logger::WNewLine());
     }
 
     template<typename ...Args>
-    inline void werr(Args&& ...args) {
+    inline void werr(Args&& ...args) noexcept {
         Logger::Get().WDebugLog(Level::crx_werror, args..., Logger::WNewLine());
     }
 
     template<typename ...Args>
-    inline void wwarn(Args&& ...args) {
+    inline void wwarn(Args&& ...args) noexcept {
         Logger::Get().WDebugLog(Level::crx_wwarn, args..., Logger::WNewLine());
     }
 
     template<typename ...Args>
-    inline void wcritical(Args&& ...args) {
+    inline void wcritical(Args&& ...args) noexcept {
         Logger::Get().WDebugLog(Level::crx_wcritical, args..., Logger::WNewLine());
     }
 
     template<typename ...Args>
-    inline void wlog(Args&& ...args) {
+    inline void wlog(Args&& ...args) noexcept {
         Logger::Get().WDebugLog(Level::crx_wdefault, args..., Logger::WNewLine());
     }
 }

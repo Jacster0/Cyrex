@@ -69,26 +69,25 @@ Cyrex::CPUInfo::CPUInfo() {
 
 const int Cyrex::CPUInfo::GetNumberOfCores() const noexcept {
     DWORD length{ 0 };
-    size_t offset{ 0 };
     int numCores{ 0 };
 
     //retrieve the buffer length
     GetLogicalProcessorInformationEx(RelationProcessorCore, nullptr, &length);
 
-    std::unique_ptr<std::byte[]> buffer(new std::byte[length]);
+    std::vector<std::byte> buffer;
+    buffer.reserve(length);
 
     if (GetLogicalProcessorInformationEx(
         RelationProcessorCore,
-        reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(buffer.get()),
-        &length))
+        reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(buffer.data()),
+        &length)) [[likely]]
     {
-        do {
-            const auto processorInformation = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(buffer.get() + offset);
+        for (int i = 0; i < length;) {
+            const auto processorInformation = reinterpret_cast<PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX>(buffer.data() + i);
 
-            offset += processorInformation->Size;
+            i += processorInformation->Size;
             numCores++;
-
-        } while (offset < length);
+        }
     }
     return numCores;
 }
