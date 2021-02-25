@@ -1,6 +1,7 @@
 #include "Camera.h"
 
 namespace dx = DirectX;
+using namespace Cyrex;
 
 Camera::Camera() {
     m_data = new AlignedData();
