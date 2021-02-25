@@ -8,16 +8,16 @@ namespace Cyrex {
     class Texture;
     struct alignas(16) MaterialProperties {
         MaterialProperties(
-            const DirectX::XMFLOAT4 diffuse = { 1.0f, 1.0f, 1.0f, 1.0f },
-            const DirectX::XMFLOAT4 specular = { 1.0f, 1.0f, 1.0f, 1.0f },
-            const float specularPower = 128.0f,
-            const DirectX::XMFLOAT4 ambient = { 0.0f, 0.0f, 0.0f, 1.0f },
-            const DirectX::XMFLOAT4 emissive = { 0.0f, 0.0f, 0.0f, 1.0f },
+            const DirectX::XMFLOAT4 diffuse     = { 1.0f, 1.0f, 1.0f, 1.0f },
+            const DirectX::XMFLOAT4 specular    = { 1.0f, 1.0f, 1.0f, 1.0f },
+            const float specularPower           = 128.0f,
+            const DirectX::XMFLOAT4 ambient     = { 0.0f, 0.0f, 0.0f, 1.0f },
+            const DirectX::XMFLOAT4 emissive    = { 0.0f, 0.0f, 0.0f, 1.0f },
             const DirectX::XMFLOAT4 reflectance = { 0.0f, 0.0f, 0.0f, 0.0f },
-            const float opacity = 1.0f,
-            const float indexOfRefraction = 0.0f,
-            const float bumpIntensity = 1.0f,
-            const float alphaThreshHold = 0.1f
+            const float opacity                 = 1.0f,
+            const float indexOfRefraction       = 0.0f,
+            const float bumpIntensity           = 1.0f,
+            const float alphaThreshHold         = 0.1f
         )
             :
             Diffuse(diffuse),
@@ -64,7 +64,7 @@ namespace Cyrex {
 
     class Material {
     public:
-        enum class TextureType {
+        enum TextureType {
             Ambient,
             Emissive,
             Diffuse,
@@ -102,16 +102,16 @@ namespace Cyrex {
         void SetOpacity(float opacity) noexcept;
 
         float GetIndexOfRefraction() const noexcept;
-        void SetIndexOFRefraction(float indexOfRefraction) noexcept;
+        void SetIndexOfRefraction(float indexOfRefraction) noexcept;
 
         float GetBumbIntensity() const;
-        void SetBumpIntenisty(float bumbIntensity);
+        void SetBumpIntensity(float bumbIntensity);
 
 
         std::shared_ptr<Texture> GetTexture(TextureType ID) const noexcept;
         void SetTexture(TextureType type, std::shared_ptr<Texture> texture) noexcept;
 
-        bool IsTransaprent() const noexcept;
+        bool IsTransparent() const noexcept;
 
         const MaterialProperties GetMaterialProperties() const noexcept;
         void SetMaterialProperties(const MaterialProperties& materialProperties) noexcept;
@@ -153,9 +153,8 @@ namespace Cyrex {
         static const MaterialProperties YellowRubber;
     private:
         using TextureMap = std::map<TextureType, std::shared_ptr<Texture>>;
-        using MaterialPropertiesPtr = std::unique_ptr<MaterialProperties, void(*)(MaterialProperties*)>;
 
-        MaterialPropertiesPtr m_materialProperties;
+        std::unique_ptr<MaterialProperties> m_materialProperties;
         TextureMap m_textures;
     };
 }

@@ -1,25 +1,14 @@
 #include "Material.h"
 
-static Cyrex::MaterialProperties* NewMaterialProperties(const Cyrex::MaterialProperties& props) {
-    Cyrex::MaterialProperties* materialProperties = 
-        static_cast<Cyrex::MaterialProperties*>(_aligned_malloc(sizeof(Cyrex::MaterialProperties), 16));
-
-    return materialProperties;
-}
-
-static void DeleteMaterialProperties(Cyrex::MaterialProperties* materialProperties) {
-    _aligned_free(materialProperties);
-}
-
 Cyrex::Material::Material(const MaterialProperties& materialProperties)
     :
-    m_materialProperties(NewMaterialProperties(materialProperties), &DeleteMaterialProperties)
+    m_materialProperties(std::make_unique<MaterialProperties>(materialProperties))
 {
 }
 
 Cyrex::Material::Material(const Material& rhs)
     :
-    m_materialProperties(NewMaterialProperties(*rhs.m_materialProperties), &DeleteMaterialProperties),
+    m_materialProperties(std::make_unique<MaterialProperties>(*rhs.m_materialProperties)),
     m_textures(rhs.m_textures)
 {
 }
@@ -84,7 +73,7 @@ float Cyrex::Material::GetIndexOfRefraction() const noexcept {
     return m_materialProperties->IndexOfRefraction;
 }
 
-void Cyrex::Material::SetIndexOFRefraction(float indexOfRefraction) noexcept {
+void Cyrex::Material::SetIndexOfRefraction(float indexOfRefraction) noexcept {
     m_materialProperties->IndexOfRefraction = indexOfRefraction;
 }
 
@@ -92,7 +81,7 @@ float Cyrex::Material::GetBumbIntensity() const {
     return m_materialProperties->BumpIntensity;
 }
 
-void Cyrex::Material::SetBumpIntenisty(float bumbIntensity) {
+void Cyrex::Material::SetBumpIntensity(float bumbIntensity) {
     m_materialProperties->BumpIntensity = bumbIntensity;
 }
 
@@ -139,8 +128,8 @@ void Cyrex::Material::SetTexture(TextureType type, std::shared_ptr<Texture> text
     }
 }
 
-bool Cyrex::Material::IsTransaprent() const noexcept {
-    return (m_materialProperties->Opacity < 1.0f || m_materialProperties->HasOpacityTexture);
+bool Cyrex::Material::IsTransparent() const noexcept {
+    return(m_materialProperties->Opacity < 1.0f || m_materialProperties->HasOpacityTexture);
 }
 
 const Cyrex::MaterialProperties Cyrex::Material::GetMaterialProperties() const noexcept {

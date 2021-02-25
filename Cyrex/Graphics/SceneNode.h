@@ -36,7 +36,7 @@ namespace Cyrex {
         size_t AddMesh(std::shared_ptr<Mesh> mesh);
         void RemoveMesh(std::shared_ptr<Mesh> mesh);
 
-        std::shared_ptr<Mesh> GetMesh(size_t index) noexcept;
+        std::shared_ptr<Mesh> GetMesh(size_t index = 0) noexcept;
 
         const DirectX::BoundingBox& GetAABB() const noexcept;
 

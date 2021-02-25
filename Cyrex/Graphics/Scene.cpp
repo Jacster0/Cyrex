@@ -201,13 +201,13 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
         pMaterial->SetOpacity(opacity);
     }
     if (material.Get(AI_MATKEY_REFRACTI, indexOfRefraction) == aiReturn_SUCCESS) {
-        pMaterial->SetIndexOFRefraction(indexOfRefraction);
+        pMaterial->SetIndexOfRefraction(indexOfRefraction);
     }
     if (material.Get(AI_MATKEY_REFLECTIVITY, reflectivity) == aiReturn_SUCCESS) {
         pMaterial->SetReflectance({ reflectivity, reflectivity, reflectivity, reflectivity });
     }
     if (material.Get(AI_MATKEY_BUMPSCALING, bumpIntensity) == aiReturn_SUCCESS) {
-        pMaterial->SetBumpIntenisty(bumpIntensity);
+        pMaterial->SetBumpIntensity(bumpIntensity);
     }
 
     //Load ambient texture
@@ -217,8 +217,8 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
     {
         fs::path texturePath(aiTexturePath.C_Str());
 
-        auto textue = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
-        pMaterial->SetTexture(Material::TextureType::Ambient, textue);
+        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
+        pMaterial->SetTexture(Material::TextureType::Ambient, texture);
     }
 
     //Load emissive texture
@@ -228,8 +228,8 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
     {
         fs::path texturePath(aiTexturePath.C_Str());
 
-        auto textue = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
-        pMaterial->SetTexture(Material::TextureType::Emissive, textue);
+        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
+        pMaterial->SetTexture(Material::TextureType::Emissive, texture);
     }
 
     //Load diffuse texture
@@ -239,8 +239,8 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
     {
         fs::path texturePath(aiTexturePath.C_Str());
 
-        auto textue = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
-        pMaterial->SetTexture(Material::TextureType::Diffuse, textue);
+        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
+        pMaterial->SetTexture(Material::TextureType::Diffuse, texture);
     }
 
     //Load specular texture
@@ -250,8 +250,8 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
     {
         fs::path texturePath(aiTexturePath.C_Str());
 
-        auto textue = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
-        pMaterial->SetTexture(Material::TextureType::Specular, textue);
+        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
+        pMaterial->SetTexture(Material::TextureType::Specular, texture);
     }
 
     //Load specular power texture
@@ -261,8 +261,8 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
     {
         fs::path texturePath(aiTexturePath.C_Str());
 
-        auto textue = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, false);
-        pMaterial->SetTexture(Material::TextureType::SpecularPower, textue);
+        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, false);
+        pMaterial->SetTexture(Material::TextureType::SpecularPower, texture);
     }
 
     //Load opacity texture
@@ -272,8 +272,8 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
     {
         fs::path texturePath(aiTexturePath.C_Str());
 
-        auto textue = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, false);
-        pMaterial->SetTexture(Material::TextureType::Opacity, textue);
+        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, false);
+        pMaterial->SetTexture(Material::TextureType::Opacity, texture);
     }
 
     //Load normal map texture
@@ -283,8 +283,8 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
     {
         fs::path texturePath(aiTexturePath.C_Str());
 
-        auto textue = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, false);
-        pMaterial->SetTexture(Material::TextureType::Normal, textue);
+        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, false);
+        pMaterial->SetTexture(Material::TextureType::Normal, texture);
     }
 
     //If there is no normal map, load bump map texture
