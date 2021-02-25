@@ -57,7 +57,6 @@ namespace Cyrex {
         };
 
         EffectPSO(std::shared_ptr<Device> device, EnableLighting enableLighting, EnableDecal enableDecal);
-        virtual ~EffectPSO();
 
         [[nodiscard]] const std::vector<PointLight>& GetPointLights() const noexcept { return m_pointLights; }
         void SetPointLights(const std::vector<PointLight>& pointLights) noexcept {
@@ -85,21 +84,21 @@ namespace Cyrex {
             m_dirtyFlags |= DF_Material;
         }
 
-        [[nodiscard]] DirectX::XMMATRIX GetWorldMatrix() const noexcept { return m_pAlignedMVP->World; }
+        [[nodiscard]] DirectX::XMMATRIX GetWorldMatrix() const noexcept { return m_pMVP->World; }
         void XM_CALLCONV SetWorldMatrix(DirectX::FXMMATRIX worldMatrix)  noexcept {
-            m_pAlignedMVP->World = worldMatrix;
+            m_pMVP->World = worldMatrix;
             m_dirtyFlags |= DF_Matrices;
         }
        
-        [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const noexcept { return m_pAlignedMVP->View; }
+        [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const noexcept { return m_pMVP->View; }
         void XM_CALLCONV SetViewMatrix(DirectX::FXMMATRIX viewMatrix) noexcept {
-            m_pAlignedMVP->View = viewMatrix;
+            m_pMVP->View = viewMatrix;
             m_dirtyFlags |= DF_Matrices;
         }
        
-        [[nodiscard]] DirectX::XMMATRIX GetProjectionMatrix() const noexcept  { return m_pAlignedMVP->Projection; }
+        [[nodiscard]] DirectX::XMMATRIX GetProjectionMatrix() const noexcept  { return m_pMVP->Projection; }
         void XM_CALLCONV SetProjectionMatrix(DirectX::FXMMATRIX projectionMatrix) noexcept {
-            m_pAlignedMVP->Projection = projectionMatrix;
+            m_pMVP->Projection = projectionMatrix;
             m_dirtyFlags |= DF_Matrices;
         }
 
@@ -134,7 +133,7 @@ namespace Cyrex {
         std::shared_ptr<Material> m_material;
         std::shared_ptr<ShaderResourceView> m_defaultSRV;
 
-        MVP* m_pAlignedMVP;
+        std::unique_ptr<MVP> m_pMVP;
         CommandList* m_pPreviousCommandList{ nullptr };
 
         uint32_t m_dirtyFlags{ DF_All };

@@ -19,7 +19,7 @@ Cyrex::EffectPSO::EffectPSO(std::shared_ptr<Device> device, EnableLighting enabl
     m_enableLighting(static_cast<bool>(enableLighting)),
     m_enableDecal(static_cast<bool>(enableDecal))
 {
-    m_pAlignedMVP = new MVP;
+    m_pMVP = std::make_unique<MVP>();
 
     wrl::ComPtr<ID3DBlob> vertexShaderBlob;
     ThrowIfFailed(D3DReadFileToBlob(L"Graphics/Shaders/Compiled/VertexShader.cso", &vertexShaderBlob));
@@ -121,19 +121,15 @@ Cyrex::EffectPSO::EffectPSO(std::shared_ptr<Device> device, EnableLighting enabl
     m_defaultSRV = m_device->CreateShaderResourceView(nullptr, &defaultSRV);
 }
 
-Cyrex::EffectPSO::~EffectPSO() {
-    delete m_pAlignedMVP;
-}
-
 void Cyrex::EffectPSO::Apply(CommandList& commandList) {
     commandList.SetPipelineState(m_pipelineStateObject);
     commandList.SetGraphicsRootSignature(m_rootSignature);
 
     if (m_dirtyFlags & DF_Matrices) {
         Matrices matrices;
-        matrices.ModelMatrix                     = m_pAlignedMVP->World;
-        matrices.ModelViewMatrix                 = matrices.ModelMatrix * m_pAlignedMVP->View;
-        matrices.ModelViewProjectionMatrix       = matrices.ModelViewMatrix * m_pAlignedMVP->Projection;
+        matrices.ModelMatrix                     = m_pMVP->World;
+        matrices.ModelViewMatrix                 = matrices.ModelMatrix * m_pMVP->View;
+        matrices.ModelViewProjectionMatrix       = matrices.ModelViewMatrix * m_pMVP->Projection;
         matrices.InverseTransposeModelViewMatrix = dx::XMMatrixTranspose(dx::XMMatrixInverse(nullptr, matrices.ModelViewMatrix));
 
         commandList.SetGraphicsDynamicConstantBuffer(RootParameters::MatricesCB, matrices);
