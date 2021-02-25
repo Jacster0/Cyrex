@@ -69,7 +69,7 @@ wrl::ComPtr<ID3D12CommandQueue> Cyrex::CommandQueue::GetD3D12CommandQueue() cons
     return m_d3d12CommandQueue;
 }
 
-std::shared_ptr<Cyrex::CommandList> Cyrex::CommandQueue::GetCommandList() {
+std::shared_ptr<Cyrex::CommandList> Cyrex::CommandQueue::GetCommandList() const {
     std::shared_ptr<CommandList> commandList;
 
     if (!m_availableCommandLists.Empty()) {

@@ -16,7 +16,7 @@ namespace Cyrex::Math {
     concept Multipliable = requires (T x) { x * x; };
 
     template<typename T>
-    concept MathematicallyOperational = Divisble<T> || Subtractable<T> || Divisble<T> || Multipliable<T>;
+    concept Arithmethic = Divisble<T> || Subtractable<T> || Divisble<T> || Multipliable<T>;
 
     struct MathConstants {
         static constexpr auto pi_float = std::numbers::pi_v<float>;
@@ -49,9 +49,8 @@ namespace Cyrex::Math {
         return 0 == (static_cast<size_t>(value) & (alignment - 1));
     }
 
-    template<Divisble T>
-    inline T DivideByMultiple(T value, size_t alignment) {
-        return (T)((value + alignment - 1) / alignment);
+    auto DivideByMultiple(Divisble auto value, Divisble auto alignment) {
+        return (value + alignment - 1) / alignment;
     }
 
     inline DirectX::XMVECTOR GetCircleTangent(size_t i, size_t tesselation) noexcept {

@@ -998,7 +998,7 @@ void Cyrex::CommandList::GenerateMips_UAV(const std::shared_ptr<Texture>& textur
                 m_generateMipsPSO->GetDefaultUAV());
         }
 
-        Dispatch(Math::DivideByMultiple(dstWidth, 8), Math::DivideByMultiple(dstHeight, 8));
+        Dispatch(Math::DivideByMultiple(dstWidth, 8u), Math::DivideByMultiple(dstHeight, 8u));
 
         UAVBarrier(texture);
         srcMip += mipCount;

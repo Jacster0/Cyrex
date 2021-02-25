@@ -25,12 +25,13 @@ Cyrex::Application::Application() {
 	}
 
 	auto cpuInfo = CPUInfo{}.Info;
+
 	crxlog::log("\nCPU INFO: ",                                 Logger::NewLine(),
 		"Active CPU:          ", cpuInfo.BrandString,           Logger::NewLine(),
 		"CPU Vendor:          ", cpuInfo.Vendor,                Logger::NewLine(),
 		"CPU architecture:    ", cpuInfo.Architecture,          Logger::NewLine(),
 		"Cores:               ", cpuInfo.NumCores,              Logger::NewLine(),
-		"Logical processors:  ", cpuInfo.NumLogicalProcessors,  Logger::NewLine());
+		"Logical processors:  ", cpuInfo.NumLogicalProcessors);
 
 	Initialize();
 }
@@ -73,6 +74,7 @@ void Cyrex::Application::Initialize() noexcept {
 	m_window->Gfx = m_gfx;
 	m_gfx->SetHwnd(m_window->GetWindowHandle());
 	m_window->Kbd.EnableAutorepeat();
+
 	m_isInitialized = true;
 }
 
@@ -102,12 +104,16 @@ void Cyrex::Application::KeyboardInput() noexcept {
 			crxlog::info("Toggled fullscreen mode");
 			m_window->ToggleFullScreen(!m_window->FullScreen());
 			break;
+		case VK_SPACE:
+			m_gfx->AnimateLights() = !m_gfx->AnimateLights();
 		}
 	}
-
-	if (m_window->Kbd.KeyIsPressed('V')) {
-		crxlog::info("Toggled VSync");
-		m_gfx->ToggleVsync();
+	
+	while (const auto e = m_window->Kbd.ReadChar()) {
+		if (e.value() == 'v') {
+			crxlog::info("Toggled VSync");
+			m_gfx->ToggleVsync();
+		}
 	}
 
 	m_gfx->KeyboardInput(m_window->Kbd);
@@ -121,8 +127,6 @@ void Cyrex::Application::MouseInput() noexcept {
 			m_gfx->OnMouseMoved(m_window->m_mouse);
 			break;
 		case mouseEvent::WheelUp:
-			m_gfx->OnMouseWheel(m_window->m_mouse.GetWheelDelta());
-			break;
 		case mouseEvent::WheelDown:
 			m_gfx->OnMouseWheel(m_window->m_mouse.GetWheelDelta());
 			break;

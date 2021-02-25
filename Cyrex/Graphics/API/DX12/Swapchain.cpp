@@ -131,6 +131,7 @@ uint32_t Cyrex::SwapChain::Present(const std::shared_ptr<Texture>& texture) {
 
     uint32_t syncInterval = m_vSync ? 1 : 0;
     uint32_t presentFlags = m_tearingSupported && !m_fullscreen && !m_vSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
+
     ThrowIfFailed(m_dxgiSwapChain->Present(syncInterval, presentFlags));
 
     m_fenceValues.at(m_currentBackBufferIndex) = m_commandQueue.Signal();

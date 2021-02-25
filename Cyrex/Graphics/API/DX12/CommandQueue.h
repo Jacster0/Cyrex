@@ -14,7 +14,7 @@ namespace Cyrex {
     class CommandQueue {
     public:
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> GetD3D12CommandQueue() const;
-        std::shared_ptr<CommandList> GetCommandList();
+        std::shared_ptr<CommandList> GetCommandList() const;
 
        uint64_t ExecuteCommandList(std::shared_ptr<CommandList> commandList);
        uint64_t ExecuteCommandLists(const std::vector<std::shared_ptr<CommandList>>& commandLists);
@@ -41,7 +41,7 @@ namespace Cyrex {
         std::atomic_uint64_t  m_fenceValue;
 
         ThreadSafeQueue<CommandListEntry> m_inFlightCommandLists;
-        ThreadSafeQueue<std::shared_ptr<CommandList>> m_availableCommandLists;
+        mutable ThreadSafeQueue<std::shared_ptr<CommandList>> m_availableCommandLists;
 
         std::thread m_processInFlightCommandListsThread;
         std::atomic_bool m_processInFlightCommandListsBool = true;
