@@ -18,7 +18,7 @@ namespace Cyrex {
         static std::shared_ptr<Scene> LoadSceneFromFile(
             CommandList& commandList, 
             const std::string& fileName, 
-            const std::function<bool(float)>& loadingProgress) noexcept;
+            const std::function<bool(float)>& loadingProgres = std::function<bool(float)>()) noexcept;
 
         [[nodiscard("Loading a scene without using it is a waste of time and memory.")]] 
         static std::shared_ptr<Scene> LoadSceneFromString(
