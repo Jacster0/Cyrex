@@ -88,7 +88,7 @@ void main(ComputeShaderInput IN) {
     {
         case WIDTH_HEIGHT_EVEN:
         {
-            float UV = TexelSize * (IN.DispatchThreadID.xy + 0.5);
+            float2 UV = TexelSize * (IN.DispatchThreadID.xy + 0.5);
 
             Src1 = SrcMip.SampleLevel(LinearClampSampler, UV, SrcMipLevel);
         }
@@ -103,7 +103,7 @@ void main(ComputeShaderInput IN) {
             float2 Off = TexelSize * float2(0.5, 0.0);
 
             Src1 = 0.5 * (SrcMip.SampleLevel(LinearClampSampler, UV1, SrcMipLevel) +
-                SrcMip.SampleLevel(LinearClampSampler, UV1 + Off, SrcMipLevel));
+                          SrcMip.SampleLevel(LinearClampSampler, UV1 + Off, SrcMipLevel));
         }
         break;
 
@@ -116,7 +116,7 @@ void main(ComputeShaderInput IN) {
             float2 Off = TexelSize * float2(0.0, 0.5);
 
             Src1 = 0.5 * (SrcMip.SampleLevel(LinearClampSampler, UV1, SrcMipLevel) +
-                SrcMip.SampleLevel(LinearClampSampler, UV1 + Off, SrcMipLevel));
+                          SrcMip.SampleLevel(LinearClampSampler, UV1 + Off, SrcMipLevel));
         }
         break;
         case WIDTH_HEIGHT_ODD:
@@ -138,8 +138,16 @@ void main(ComputeShaderInput IN) {
 
     OutMip1[IN.DispatchThreadID.xy] = PackColor(Src1);
 
+    if (NumMipLevels == 1)
+        return;
+
+    // Without lane swizzle operations, the only way to share data with other
+    // threads is through LDS.
     StoreColor(IN.GroupIndex, Src1);
 
+    // This guarantees all LDS writes are complete and that all threads have
+    // executed all instructions so far (and therefore have issued their LDS
+    // write instructions.)
     GroupMemoryBarrierWithGroupSync();
 
     if ((IN.GroupIndex & 0x9) == 0)
@@ -174,13 +182,13 @@ void main(ComputeShaderInput IN) {
 
     GroupMemoryBarrierWithGroupSync();
 
-    if (IN.GroupIndex == 0)
+    if ( IN.GroupIndex == 0 )
     {
-        float4 Src2 = LoadColor(IN.GroupIndex + 0x04);
-        float4 Src3 = LoadColor(IN.GroupIndex + 0x20);
-        float4 Src4 = LoadColor(IN.GroupIndex + 0x24);
-        Src1 = 0.25 * (Src1 + Src2 + Src3 + Src4);
+        float4 Src2 = LoadColor( IN.GroupIndex + 0x04 );
+        float4 Src3 = LoadColor( IN.GroupIndex + 0x20 );
+        float4 Src4 = LoadColor( IN.GroupIndex + 0x24 );
+        Src1 = 0.25 * ( Src1 + Src2 + Src3 + Src4 );
 
-        OutMip4[IN.DispatchThreadID.xy / 8] = PackColor(Src1);
+        OutMip4[IN.DispatchThreadID.xy / 8] = PackColor( Src1 );
     }
 }

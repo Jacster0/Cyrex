@@ -8,29 +8,35 @@ struct Mat
 
 ConstantBuffer<Mat> MatCB : register(b0);
 
-struct VertexPositionNormalTexture
+struct VertexPositionNormalTangentBitangentTexture
 {
-    float3 Position : POSITION;
-    float3 Normal   : NORMAL;
-    float2 TexCoord : TEXCOORD;
+    float3 Position  : POSITION;
+    float3 Normal    : NORMAL;
+    float3 Tangent   : TANGENT;
+    float3 Bitangent : BITANGENT;
+    float3 TexCoord  : TEXCOORD;
 };
 
 struct VertexShaderOutput
 {
-    float4 ViewSpacePosition : POSITION;
-    float3 ViewSpaceNormal   : NORMAL;
-    float2 TexCoord          : TEXCOORD;
-    float4 Position          : SV_Position;
+    float4 ViewSpacePosition  : POSITION;
+    float3 ViewSpaceNormal    : NORMAL;
+    float3 ViewSpaceTangent   : TANGENT;
+    float3 ViewSpaceBitangent : BITANGENT;
+    float2 TexCoord           : TEXCOORD;
+    float4 Position           : SV_Position;
 };
 
-VertexShaderOutput main(VertexPositionNormalTexture IN)
+VertexShaderOutput main(VertexPositionNormalTangentBitangentTexture IN)
 {
     VertexShaderOutput OUT;
 
-    OUT.Position          = mul(MatCB.ModelViewProjectionMatrix, float4(IN.Position, 1.0f));
-    OUT.ViewSpacePosition = mul(MatCB.ModelViewMatrix, float4(IN.Position, 1.0f));
-    OUT.ViewSpaceNormal   = mul((float3x3) MatCB.InverseTransposeModelViewMatrix, IN.Normal);
-    OUT.TexCoord          = IN.TexCoord;
+    OUT.ViewSpacePosition  = mul(MatCB.ModelViewMatrix, float4(IN.Position, 1.0f));
+    OUT.ViewSpaceNormal    = mul((float3x3)MatCB.InverseTransposeModelViewMatrix, IN.Normal);
+    OUT.ViewSpaceTangent   = mul((float3x3)MatCB.InverseTransposeModelViewMatrix, IN.Tangent);
+    OUT.ViewSpaceBitangent = mul((float3x3)MatCB.InverseTransposeModelViewMatrix, IN.Bitangent);
+    OUT.TexCoord           = IN.TexCoord.xy;
+    OUT.Position           = mul(MatCB.ModelViewProjectionMatrix, float4(IN.Position, 1.0f));
 
     return OUT;
 }

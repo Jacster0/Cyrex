@@ -33,7 +33,7 @@ Cyrex::GenerateMipsPSO::GenerateMipsPSO(Device& device) {
 
     //Read the shader into the generateMipsBlob
     wrl::ComPtr<ID3DBlob> generateMipsBlob;
-    ThrowIfFailed(D3DReadFileToBlob(LR"(Graphics\Shaders\Compiled\GenerateMips_CS.cso)", &generateMipsBlob));
+    ThrowIfFailed(D3DReadFileToBlob(LR"(Graphics\Shaders\Compiled\GenerateMipsCS.cso)", &generateMipsBlob));
 
     // Create the PSO for the GenerateMips compute shader
     struct PipelineStateStream {
