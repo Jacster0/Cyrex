@@ -316,6 +316,7 @@
     <ClInclude Include="Graphics\API\DX12\VertexBuffer.h" />
     <ClInclude Include="Graphics\API\DX12\VertexTypes.h" />
     <ClInclude Include="Graphics\Camera.h" />
+    <ClInclude Include="Graphics\EffectPSO.h" />
     <ClInclude Include="Graphics\Graphics.h" />
     <ClInclude Include="Graphics\Lights.h" />
     <ClInclude Include="Graphics\Managers\SceneManager.h" />
@@ -399,6 +400,7 @@
     <ClCompile Include="Graphics\API\DX12\VertexBuffer.cpp" />
     <ClCompile Include="Graphics\API\DX12\VertexTypes.cpp" />
     <ClCompile Include="Graphics\Camera.cpp" />
+    <ClCompile Include="Graphics\EffectPSO.cpp" />
     <ClCompile Include="Graphics\Graphics.cpp" />
     <ClCompile Include="Graphics\Managers\SceneManager.cpp" />
     <ClCompile Include="Graphics\Managers\TextureManager.cpp" />
@@ -410,7 +412,13 @@
     <ClCompile Include="Platform\Windows\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Graphics\Shaders\GenerateMips_CS.hlsl">
+    <FxCompile Include="Graphics\Shaders\DecalPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Graphics\Shaders\GenerateMipsCS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
@@ -420,13 +428,19 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.1</ShaderModel>
     </FxCompile>
+    <FxCompile Include="Graphics\Shaders\LightingPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
     <FxCompile Include="Graphics\Shaders\PixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
-    <FxCompile Include="Graphics\Shaders\UnlitPixelShader.hlsl">
+    <FxCompile Include="Graphics\Shaders\UnlitPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
@@ -456,9 +470,7 @@
     <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC7Encode_TryMode02CS.inc" />
     <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC7Encode_TryMode137CS.inc" />
     <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC7Encode_TryMode456CS.inc" />
-    <None Include="Graphics\Shaders\Compiled\GenerateMips_CS.cso" />
     <None Include="Graphics\Shaders\Compiled\PixelShader.cso" />
-    <None Include="Graphics\Shaders\Compiled\UnlitPixelShader.cso" />
     <None Include="Graphics\Shaders\Compiled\VertexShader.cso" />
   </ItemGroup>
   <ItemGroup>

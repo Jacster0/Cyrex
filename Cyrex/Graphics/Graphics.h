@@ -1,11 +1,16 @@
 #pragma once
-#include "API/DX12/Common.h"
-#include "Core/Time/GameTimer.h" 
-#include "API/DX12/RenderTarget.h"
 #include "Lights.h"
 #include "Camera.h"
+
+#include "Core/Time/GameTimer.h"
+
+#include "API/DX12/Common.h"
+#include "API/DX12/RenderTarget.h"
+
 #include <memory>
 #include <array>
+#include <thread>
+#include <future>
 
 namespace Cyrex {
     struct VertexPosColor {
@@ -20,6 +25,7 @@ namespace Cyrex {
     class Mesh;
     class Scene;
     class PipelineStateObject;
+    class EffectPSO;
     class RootSignature;
     class SwapChain;
     class ShaderResourceView;
@@ -41,15 +47,19 @@ namespace Cyrex {
         void LoadContent();
         void UnLoadContent() noexcept;
 
+        bool LoadScene(const std::string& sceneFile);
+        bool LoadingProgress(float loadingProgress);
+
         void OnMouseWheel(float delta) noexcept;
         void OnMouseMoved(int dx, int dy) noexcept;
         void OnMouseMoved(const Mouse& mouse) noexcept;
 
-        void KeyboardInput(const Keyboard& kbd) noexcept;
+        void KeyboardInput(Keyboard& kbd) noexcept;
 
         void SetHwnd(HWND hWnd) noexcept { m_hWnd = hWnd; }
         bool IsInitialized() const noexcept { return m_isIntialized; }
         void ToggleVsync();
+        bool& AnimateLights() noexcept { return m_animateLights; }
     private:
         void UpdateCamera() noexcept;
         void UpdateLights() noexcept;
@@ -63,7 +73,7 @@ namespace Cyrex {
            float InitialCamFov;
         };
 
-        CameraData* m_cameraData;
+        std::unique_ptr<CameraData> m_cameraData;
 
         struct CameraControls {
             float Forward  = 0;
@@ -94,14 +104,16 @@ namespace Cyrex {
         bool m_animateLights = true;
       
         std::shared_ptr<Device> m_device;
-        std::shared_ptr<RootSignature> m_rootSignature;
         std::shared_ptr<SwapChain> m_swapChain;
 
-        std::shared_ptr<PipelineStateObject> m_pipelineState;
-        std::shared_ptr<PipelineStateObject> m_unlitPipelineState;
+        std::shared_ptr<EffectPSO> m_lightingPSO;
+        std::shared_ptr<EffectPSO> m_decalPSO;
+        std::shared_ptr<EffectPSO> m_unlitPSO;
 
         RenderTarget m_renderTarget;
         GameTimer m_timer;
+
+        std::shared_ptr<Scene> m_scene;
 
         std::shared_ptr<Scene> m_cube;
         std::shared_ptr<Scene> m_sphere;
@@ -109,17 +121,16 @@ namespace Cyrex {
         std::shared_ptr<Scene> m_torus;
         std::shared_ptr<Scene> m_plane;
 
-        std::shared_ptr<Texture> m_defaultTexture;
-        std::shared_ptr<Texture> m_directXTexture;
-        std::shared_ptr<Texture> m_earthTexture;
-        std::shared_ptr<Texture> m_monaLisaTexture;
-
-        std::shared_ptr<ShaderResourceView> m_defaultTextureView;
-        std::shared_ptr<ShaderResourceView> m_directXTextureView;
-        std::shared_ptr<ShaderResourceView> m_earthTextureView;
-        std::shared_ptr<ShaderResourceView> m_monaLisaTextureView;
-
         std::vector<PointLight> m_pointLights;
         std::vector<SpotLight>  m_spotLights;
+        std::vector<DirectionalLight> m_directionalLights;
+
+        bool m_cancelLoading;
+        std::atomic_bool  m_isLoading;
+        std::future<bool> m_loadingTask;
+        float             m_loadingProgress;
+        std::string       m_loadingText;
+
+        static constexpr auto m_testScene = "Resources/Models/crytek-sponza/sponza_nobanner.obj";
     };
 }
