@@ -57,11 +57,11 @@ namespace Cyrex {
 
 		void CreateMainWindow() noexcept;
 		void Resize() const noexcept;
-	
+
 		HWND m_hWnd;
 		RECT m_windowRect;
-		int m_width{ 800 };
-		int m_height{ 600 };
+		int m_width{ 1300 };
+		int m_height{ 800 };
 		int m_lastMousePosX{};
 		int m_lastMousePosY{};
 		bool m_fullScreen;

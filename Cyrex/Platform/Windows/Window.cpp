@@ -5,6 +5,7 @@ import StringUtils;
 #include "Graphics/Graphics.h"
 #include "Core/Application.h"
 #include "Core/Logger.h"
+
 #include <cassert>
 #include <comdef.h>
 
@@ -312,6 +313,7 @@ namespace Cyrex {
 				m_mouse.cursor.Confine(m_hWnd);
 				m_mouse.cursor.Hide();
 			}
+
 			m_mouse.OnLeftPressed(point.x, point.y);
 		}
 		else {
