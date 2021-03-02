@@ -194,6 +194,15 @@
     <ClInclude Include="Core\Time\GameTimer.h" />
     <ClInclude Include="Core\Time\Time.h" />
     <ClInclude Include="Core\Visitor.h" />
+    <ClInclude Include="Editor\ImGuiManager.h" />
+    <ClInclude Include="Editor\ImGui\imconfig.h" />
+    <ClInclude Include="Editor\ImGui\imgui.h" />
+    <ClInclude Include="Editor\ImGui\imgui_impl_dx12.h" />
+    <ClInclude Include="Editor\ImGui\imgui_impl_win32.h" />
+    <ClInclude Include="Editor\ImGui\imgui_internal.h" />
+    <ClInclude Include="Editor\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="Editor\ImGui\imstb_textedit.h" />
+    <ClInclude Include="Editor\ImGui\imstb_truetype.h" />
     <ClInclude Include="Extern\Assimp\include\assimp\aabb.h" />
     <ClInclude Include="Extern\Assimp\include\assimp\ai_assert.h" />
     <ClInclude Include="Extern\Assimp\include\assimp\anim.h" />
@@ -344,6 +353,14 @@
     <ClCompile Include="Core\Time\GameTimer.cpp" />
     <ClCompile Include="Core\Utils\StringUtils.ixx" />
     <ClCompile Include="Core\Utils\ThreadUtils.ixx" />
+    <ClCompile Include="Editor\ImGuiManager.cpp" />
+    <ClCompile Include="Editor\ImGui\imgui.cpp" />
+    <ClCompile Include="Editor\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="Editor\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="Editor\ImGui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="Editor\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="Editor\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="Editor\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="Extern\DirectXTex\DDSTextureLoader\DDSTextureLoader.cpp" />
     <ClCompile Include="Extern\DirectXTex\DDSTextureLoader\DDSTextureLoader12.cpp" />
     <ClCompile Include="Extern\DirectXTex\DirectXTex\BC.cpp" />
@@ -412,6 +429,18 @@
     <ClCompile Include="Platform\Windows\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Editor\Shaders\ImGuiPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Editor\Shaders\ImGuiVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="Graphics\Shaders\DecalPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
@@ -470,7 +499,13 @@
     <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC7Encode_TryMode02CS.inc" />
     <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC7Encode_TryMode137CS.inc" />
     <None Include="Extern\DirectXTex\DirectXTex\Shaders\Compiled\BC7Encode_TryMode456CS.inc" />
+    <None Include="Graphics\Shaders\Compiled\DecalPS.cso" />
+    <None Include="Graphics\Shaders\Compiled\GenerateMipsCS.cso" />
+    <None Include="Graphics\Shaders\Compiled\ImGuiPS.cso" />
+    <None Include="Graphics\Shaders\Compiled\ImGuiVS.cso" />
+    <None Include="Graphics\Shaders\Compiled\LightingPS.cso" />
     <None Include="Graphics\Shaders\Compiled\PixelShader.cso" />
+    <None Include="Graphics\Shaders\Compiled\UnlitPS.cso" />
     <None Include="Graphics\Shaders\Compiled\VertexShader.cso" />
   </ItemGroup>
   <ItemGroup>

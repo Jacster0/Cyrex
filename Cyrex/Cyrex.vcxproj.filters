@@ -459,6 +459,33 @@
     <ClInclude Include="Graphics\EffectPSO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Editor\ImGui\imconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\ImGui\imgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\ImGui\imgui_impl_dx12.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\ImGui\imgui_impl_win32.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\ImGui\imgui_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\ImGui\imstb_textedit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\ImGui\imstb_truetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\ImGui\imstb_rectpack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\ImGuiManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Platform\Windows\Window.cpp">
@@ -701,6 +728,30 @@
     <ClCompile Include="Graphics\EffectPSO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Editor\ImGui\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\ImGui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\ImGui\imgui_impl_dx12.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\ImGui\imgui_impl_win32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\ImGui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\ImGui\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\ImGui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\ImGuiManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Graphics\Shaders\VertexShader.hlsl" />
@@ -709,6 +760,8 @@
     <FxCompile Include="Graphics\Shaders\LightingPS.hlsl" />
     <FxCompile Include="Graphics\Shaders\DecalPS.hlsl" />
     <FxCompile Include="Graphics\Shaders\GenerateMipsCS.hlsl" />
+    <FxCompile Include="Editor\Shaders\ImGuiVS.hlsl" />
+    <FxCompile Include="Editor\Shaders\ImGuiPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Graphics\Shaders\Compiled\VertexShader.cso" />
@@ -761,6 +814,12 @@
     <None Include="Extern\DirectXTex\DirectXTex\DirectXTex.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="Graphics\Shaders\Compiled\DecalPS.cso" />
+    <None Include="Graphics\Shaders\Compiled\GenerateMipsCS.cso" />
+    <None Include="Graphics\Shaders\Compiled\ImGuiPS.cso" />
+    <None Include="Graphics\Shaders\Compiled\ImGuiVS.cso" />
+    <None Include="Graphics\Shaders\Compiled\LightingPS.cso" />
+    <None Include="Graphics\Shaders\Compiled\UnlitPS.cso" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="Extern\Assimp\Lib\assimp-vc142-mtd.lib" />
