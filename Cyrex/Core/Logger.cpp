@@ -1,21 +1,9 @@
 #include "Logger.h"
 #include "Time/Time.h"
 
-static Cyrex::Logger* gpSingleton = nullptr;
-
 Cyrex::Logger& Cyrex::Logger::Get() noexcept {
-    if (!gpSingleton) {
-        gpSingleton = new Logger();
-    }
-    return *gpSingleton;
-}
-
-void Cyrex::Logger::StartUp() const noexcept {
-}
-
-void Cyrex::Logger::ShutDown() noexcept {
-    if (gpSingleton != nullptr)
-        delete gpSingleton;
+    static Logger instance;
+    return instance;
 }
 
 void Cyrex::Logger::SetOutputStream(OutputStream ostream) noexcept {
@@ -38,7 +26,7 @@ void Cyrex::Logger::SetOutputStream(OutputStream ostream) noexcept {
 }
 
 void Cyrex::Logger::Reset() noexcept {
-    prefix.clear();
+    m_prefix.clear();
     Console::SetTextColor(ConsoleColor::White);
 }
 
@@ -64,24 +52,32 @@ void Cyrex::Logger::SetLevel(Level lvl) noexcept {
         SetLevel(OutputStream::crx_console_err, ConsoleColor::Red, "<CRITICAL> ");
         break;
     }
+    case Level::crx_debug: {
+        SetLevel(OutputStream::crx_console_standard, ConsoleColor::Green, "[DEBUG] ");
+        break;
+    }
     case Level::crx_wdefault: {
-        SetLevel(OutputStream::crx_console_wstandard, ConsoleColor::White, "");
+        SetLevel(OutputStream::crx_console_wstandard, ConsoleColor::White, L"");
         break;
     }
     case Level::crx_werror: {
-        SetLevel(OutputStream::crx_console_werr, ConsoleColor::Red, "<ERROR> ");
+        SetLevel(OutputStream::crx_console_werr, ConsoleColor::Red, L"<ERROR> ");
         break;
     }
     case Level::crx_wwarn: {
-        SetLevel(OutputStream::crx_console_wstandard, ConsoleColor::Yellow, "<WARNING> ");
+        SetLevel(OutputStream::crx_console_wstandard, ConsoleColor::Yellow, L"<WARNING> ");
         break;
     }
     case Level::crx_winfo: {
-        SetLevel(OutputStream::crx_console_wstandard, ConsoleColor::Yellow, "<INFO> ");
+        SetLevel(OutputStream::crx_console_wstandard, ConsoleColor::Yellow, L"<INFO> ");
         break;
     }
     case Level::crx_wcritical: {
-        SetLevel(OutputStream::crx_console_werr, ConsoleColor::Red, "<CRITICAL> ");
+        SetLevel(OutputStream::crx_console_werr, ConsoleColor::Red, L"<CRITICAL> ");
+        break;
+    }
+    case Level::crx_wdebug: {
+        SetLevel(OutputStream::crx_console_standard, ConsoleColor::Green, L"[DEBUG] ");
         break;
     }
     default:
@@ -92,13 +88,13 @@ void Cyrex::Logger::SetLevel(Level lvl) noexcept {
 void Cyrex::Logger::SetLevel(OutputStream ostream, ConsoleColor clr, std::string_view attribute) noexcept {
     SetOutputStream(ostream);
     Console::SetTextColor(clr);
-    prefix.clear();
-    prefix.append("[").append(crxtime::GetCurrentTimeAsFormatedString()).append("] ").append(attribute);
+    m_prefix.clear();
+    m_prefix.append("[").append(crxtime::GetCurrentTimeAsFormatedString()).append("] ").append(attribute);
 }
 
 void Cyrex::Logger::SetLevel(OutputStream ostream, ConsoleColor clr, std::wstring_view attribute) noexcept {
     SetOutputStream(ostream);
     Console::SetTextColor(clr);
-    wprefix.clear();
-    wprefix.append(L"[").append(crxtime::GetCurrentTimeAsWideFormatedString()).append(L"] ").append(attribute);
+    m_wprefix.clear();
+    m_wprefix.append(L"[").append(crxtime::GetCurrentTimeAsWideFormatedString()).append(L"] ").append(attribute);
 }
