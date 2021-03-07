@@ -1,6 +1,7 @@
 #pragma once
 #include <string_view>
 #include "CrxWindow.h"
+#include "Core/CommonTypes.h"
 
 //God damn Macros
 #ifdef MessageBox
@@ -45,17 +46,6 @@ namespace Cyrex {
             ServiceNotification = 0x200000
         };
 
-        enum class DialogResult {
-            None   = 0x0,
-            OK     = 0x1,
-            Cancel = 0x2,
-            Abort  = 0x3,
-            Retry  = 0x4,
-            Ignore = 0x5,
-            Yes    = 0x6,
-            No     = 0x7,
-        };
-    public:
         static DialogResult Show(const std::string_view text) noexcept;
         static DialogResult Show(const std::string_view text, const std::string_view caption) noexcept;
         static DialogResult Show(const std::string_view text, const std::string_view caption, const MessageBoxButtons buttons) noexcept;
@@ -77,7 +67,7 @@ namespace Cyrex {
             const MessageBocIcon icon,
             const MessageBoxDefaultButton defaultButton,
             const MessageBoxOptions options) noexcept;
-    public:
+
         static DialogResult Show(const std::wstring_view text) noexcept;
         static DialogResult Show(const std::wstring_view text, const std::wstring_view caption) noexcept;
         static DialogResult Show(const std::wstring_view text, const std::wstring_view caption, const MessageBoxButtons buttons) noexcept;
