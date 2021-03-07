@@ -1,10 +1,13 @@
-import ThreadUtils;
-import StringUtils;
-
 #include "Window.h"
 #include "Graphics/Graphics.h"
 #include "Core/Application.h"
 #include "Core/Logger.h"
+#include "Core/Utils/StringUtils.h"
+#include "Core/Utils/ThreadUtils.h"
+
+#include "Editor/Editor.h"
+#include "Editor/ImGui/imgui.h"
+#include "Editor/ImGui/imgui_impl_win32.h"
 
 #include <cassert>
 #include <comdef.h>
@@ -90,6 +93,10 @@ namespace Cyrex {
 	}
 
 	LRESULT Window::MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept {
+		if (m_imguiInitialized && ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam)) {
+			return true;
+		}
+
 		switch (msg) {
 		case WM_ACTIVATE:
 			if (!m_mouse.cursor.IsEnabled()) {
@@ -109,19 +116,25 @@ namespace Cyrex {
 		//Keyboard messages
 		case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
+			if (m_imguiInitialized && Editor::GetIO().WantCaptureKeyboard) {
+				break;
+			}
 			if (!(lParam & 0x40000000) || Kbd.AutorepeatIsEnabled()) {
 				Kbd.OnKeyPressed(static_cast<unsigned char>(wParam));
 			}
 		break;
 		case WM_SYSKEYUP:
 		case WM_KEYUP:
+			if (m_imguiInitialized && Editor::GetIO().WantCaptureKeyboard) {
+				break;
+			}
 			Kbd.OnKeyReleased(static_cast<unsigned char>(wParam));
 			break;
 		case WM_CHAR:
+			if (m_imguiInitialized && Editor::GetIO().WantCaptureKeyboard) {
+				break;
+			}
 			Kbd.OnChar(static_cast<unsigned char>(wParam));
-			break;
-		//We won't handle any Alt+key combination (yet atleast)
-		case WM_SYSCHAR:
 			break;
 		case WM_MOUSEWHEEL:
 			MouseWheel(lParam, wParam);
@@ -254,6 +267,19 @@ namespace Cyrex {
 	}
 
 	void Window::MouseMove(LPARAM lParam, WPARAM wParam) {
+		if (!m_mouse.cursor.IsEnabled()) {
+			if (!m_mouse.IsInWindow()) {
+				SetCapture(m_hWnd);
+				m_mouse.OnMouseEnter();
+				m_mouse.cursor.Hide();
+			}
+			return;
+		}
+
+		if (m_imguiInitialized && Editor::GetIO().WantCaptureMouse) {
+			return;
+		}
+
 		const auto point = MAKEPOINTS(lParam);
 		int x = point.x;
 		int y = point.y;
@@ -266,15 +292,6 @@ namespace Cyrex {
 
 		m_lastMousePosX = x;
 		m_lastMousePosY = y;
-
-		if (!m_mouse.cursor.IsEnabled()) {
-			if (!m_mouse.IsInWindow()) {
-				SetCapture(m_hWnd);
-				m_mouse.OnMouseEnter();
-				m_mouse.cursor.Hide();
-			}
-			return;
-		}
 
 		if (x >= 0 && x <= m_width && y >= 0 && y < m_height) {
 			m_mouse.OnMouseMove(x,y);
@@ -297,6 +314,10 @@ namespace Cyrex {
 	}
 
 	void Window::MouseWheel(LPARAM lParam, WPARAM wParam) {
+		if (m_imguiInitialized && Editor::GetIO().WantCaptureMouse) {
+			return;
+		}
+
 		const auto point = MAKEPOINTS(lParam);
 		const int delta  = GET_WHEEL_DELTA_WPARAM(wParam);
 
@@ -314,14 +335,25 @@ namespace Cyrex {
 				m_mouse.cursor.Hide();
 			}
 
+			if (m_imguiInitialized && Editor::GetIO().WantCaptureMouse) {
+				return;
+			}
+
 			m_mouse.OnLeftPressed(point.x, point.y);
 		}
 		else {
+			if (m_imguiInitialized && Editor::GetIO().WantCaptureMouse) {
+				return;
+			}
 			m_mouse.OnRightPressed(point.x, point.y);
 		}
 	}
 
 	void Window::MouseUp(LPARAM lParam, MouseButton buttonClicked) {
+		if (m_imguiInitialized && Editor::GetIO().WantCaptureMouse) {
+			return;
+		}
+
 		const auto point = MAKEPOINTS(lParam);
 		int x = point.x;
 		int y = point.y;

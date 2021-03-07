@@ -483,7 +483,16 @@
     <ClInclude Include="Editor\ImGui\imstb_rectpack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Editor\ImGuiManager.h">
+    <ClInclude Include="Editor\Editor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Filesystem\OpenFileDialog.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Utils\ThreadUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\CommonTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -710,12 +719,6 @@
     <ClCompile Include="Graphics\Managers\TextureManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Core\Utils\StringUtils.ixx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Utils\ThreadUtils.ixx">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Core\InstructionSet\InstructionSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -749,7 +752,13 @@
     <ClCompile Include="Editor\ImGui\imgui_demo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Editor\ImGuiManager.cpp">
+    <ClCompile Include="Editor\Editor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Filesystem\OpenFileDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Utils\StringUtils.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

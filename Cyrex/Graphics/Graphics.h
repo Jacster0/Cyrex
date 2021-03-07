@@ -3,6 +3,7 @@
 #include "Camera.h"
 
 #include "Core/Time/GameTimer.h"
+#include "Core/Filesystem/OpenFileDialog.h"
 
 #include "API/DX12/Common.h"
 #include "API/DX12/RenderTarget.h"
@@ -18,9 +19,12 @@ namespace Cyrex {
         DirectX::XMFLOAT3 Color;
     };
 
+    enum class VSync;
+
     class Keyboard;
     class Mouse;
     class CommandQueue;
+    class CommandList;
     class Device;
     class Mesh;
     class Scene;
@@ -30,7 +34,8 @@ namespace Cyrex {
     class SwapChain;
     class ShaderResourceView;
     class Texture;
-
+    class Editor;
+   
     class Graphics {
     public:
         Graphics();
@@ -53,8 +58,10 @@ namespace Cyrex {
         void OnMouseWheel(float delta) noexcept;
         void OnMouseMoved(int dx, int dy) noexcept;
         void OnMouseMoved(const Mouse& mouse) noexcept;
+        void OnGUI(const std::shared_ptr<CommandList>& commandList, const RenderTarget& renderTarget);
 
         void KeyboardInput(Keyboard& kbd) noexcept;
+        void OnOpenFileDialog() noexcept;
 
         void SetHwnd(HWND hWnd) noexcept { m_hWnd = hWnd; }
         bool IsInitialized() const noexcept { return m_isIntialized; }
@@ -90,6 +97,7 @@ namespace Cyrex {
         };
 
         CameraControls m_cameraControls;
+        OpenFileDialog m_fileDialog;
 
         uint32_t m_clientWidth{};
         uint32_t m_clientHeight{};
@@ -98,11 +106,12 @@ namespace Cyrex {
         D3D12_VIEWPORT m_viewport;
         D3D12_RECT m_scissorRect;
 
-        bool m_vsync = true;
+        VSync m_vsync;
         bool m_tearingSupported;
         bool m_isIntialized = false;
         bool m_animateLights = true;
       
+        std::unique_ptr<Editor> m_editor;
         std::shared_ptr<Device> m_device;
         std::shared_ptr<SwapChain> m_swapChain;
 
@@ -125,12 +134,13 @@ namespace Cyrex {
         std::vector<SpotLight>  m_spotLights;
         std::vector<DirectionalLight> m_directionalLights;
 
-        bool m_cancelLoading;
+        bool m_showOpenFileDialog{};
         std::atomic_bool  m_isLoading;
         std::future<bool> m_loadingTask;
-        float             m_loadingProgress;
-        std::string       m_loadingText;
+        float m_loadingProgress;
+        std::string m_loadingText;
 
-        static constexpr auto m_testScene = "Resources/Models/crytek-sponza/sponza_nobanner.obj";
+        float m_fps;
+        static constexpr auto m_testScene = "D:/Clone Model/stormtrooper_imperial_helmet_oscar_creativo/scene.gltf";
     };
 }

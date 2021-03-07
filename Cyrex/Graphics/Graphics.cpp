@@ -8,10 +8,13 @@
 #include "Managers/TextureManager.h"
 #include "Managers/SceneManager.h"
 
+#include "Editor/Editor.h"
+
 #include "Core/Logger.h"
 #include "Core/Input/Keyboard.h"
 #include "Core/Input/Mouse.h"
 #include "Core/Math/Math.h"
+#include "Core/Utils/StringUtils.h"
 
 #include "API/DX12/DXException.h"
 #include "API/DX12/CommandQueue.h"
@@ -28,6 +31,8 @@
 
 #include <chrono>
 #include <cstdlib>
+
+#include <ShObjIdl.h>
 
 namespace wrl = Microsoft::WRL;
 namespace dx = DirectX;
@@ -57,7 +62,8 @@ static constexpr auto g_longMax = std::numeric_limits<long>::max();
 
 Graphics::Graphics()
     :
-    m_scissorRect(CD3DX12_RECT(0, 0, g_longMax, g_longMax))  
+    m_scissorRect(CD3DX12_RECT(0, 0, g_longMax, g_longMax)),
+    m_vsync(VSync::Off)
 {
     dx::XMVECTOR cameraPos    = dx::XMVectorSet(0, 5.0f, -20, 1);
     dx::XMVECTOR cameraTarget = dx::XMVectorSet(0, 5, 0, 1);
@@ -70,6 +76,52 @@ Graphics::Graphics()
     m_cameraData->InitialCamPos = m_camera.GetTranslation();
     m_cameraData->InitialCamRot = m_camera.GetRotation();
     m_cameraData->InitialCamFov = m_camera.GetFov();
+
+    std::vector<COMDLG_FILTERSPEC> fileFilters = { {
+        { L"All Files",                              L"*.*"          },
+        { L"Autodesk",                               L"*.fbx"        },
+        { L"Collada",                                L"*.dae"        },
+        { L"glTF",                                   L"*.gltf;*.glb" },
+        { L"Blender 3D",                             L"*.blend"      },
+        { L"3ds Max 3DS",                            L"*.3ds"        },
+        { L"3ds Max ASE",                            L"*.ase"        },
+        { L"Wavefront Object",                       L"*.obj"        },
+        { L"Industry Foundation Classes (IFC/Step)", L"*.ifc"        },
+        { L"XGL",                                    L"*.xgl;*.zgl"  },
+        { L"Stanford Polygon Library",               L"*.ply"        },
+        { L"AutoCAD DXF",                            L"*.dxf"        },
+        { L"LightWave",                              L"*.lws"        },
+        { L"LightWave Scene",                        L"*.lws"        },
+        { L"Modo",                                   L"*.lxo"        },
+        { L"Stereolithography",                      L"*.stl"        },
+        { L"DirectX X",                              L"*.x"          },
+        { L"AC3D",                                   L"*.ac"         },
+        { L"Milkshape 3D",                           L"*.ms3d"       },
+        { L"TrueSpace",                              L"*.cob;*.scn"  },
+        { L"Ogre XML",                               L"*.xml"        },
+        { L"Irrlicht Mesh",                          L"*.irrmesh"    },
+        { L"Irrlicht Scene",                         L"*.irr"        },
+        { L"Quake I",                                L"*.mdl"        },
+        { L"Quake II",                               L"*.md2"        },
+        { L"Quake III",                              L"*.md3"        },
+        { L"Quake III Map/BSP",                      L"*.pk3"        },
+        { L"Return to Castle Wolfenstein",           L"*.mdc"        },
+        { L"Doom 3",                                 L"*.md5*"       },
+        { L"Valve Model",                            L"*.smd;*.vta"  },
+        { L"Open Game Engine Exchange",              L"*.ogx"        },
+        { L"Unreal",                                 L"*.3d"         },
+        { L"BlitzBasic 3D",                          L"*.b3d"        },
+        { L"Quick3D",                                L"*.q3d;*.q3s"  },
+        { L"Neutral File Format",                    L"*.nff"        },
+        { L"Sense8 WorldToolKit",                    L"*.nff"        },
+        { L"Object File Format",                     L"*.off"        },
+        { L"PovRAY Raw",                             L"*.raw"        },
+        { L"Terragen Terrain",                       L"*.ter"        },
+        { L"Izware Nendo",                           L"*.ndo"        }, }
+    };
+
+    m_fileDialog.SetFilter(std::move(fileFilters));
+    m_fileDialog.SetFilterIndex(0);
 }
 
 Graphics::~Graphics() { }
@@ -84,17 +136,20 @@ void Graphics::Initialize(uint32_t width, uint32_t height) {
 
     m_device = Device::Create();
 
-    //Log the 
+    //Log the adapter 
     crxlog::wlog(L"Adapter: ", m_device->GetDescription(), Logger::WNewLine());
 
     m_swapChain = m_device->CreateSwapChain(m_hWnd, DXGI_FORMAT_R8G8B8A8_UNORM);
     m_tearingSupported = m_swapChain->IsTearingSupported();
 
     m_swapChain->SetVsync(m_vsync);
-    
+
+    m_editor = std::make_unique<Editor>(*m_device, m_hWnd, m_swapChain->GetRenderTarget());
+    Editor::SetDarkThemeColors();
+   
     m_clientWidth  = width;
     m_clientHeight = height;
-   
+
     LoadContent();
     Resize(width, height);
 
@@ -110,10 +165,14 @@ void Graphics::Update() noexcept {
     frameCount++;  
 
     if (m_timer.GetElapsedSeconds() > 1.0) {
-        const auto fps = frameCount / m_timer.GetElapsedSeconds();
-        crxlog::log(fps, " fps");
+        m_fps = frameCount / m_timer.GetElapsedSeconds();
+
         frameCount = 0;
         m_timer.ResetElapsedTime();
+    }
+    if (m_showOpenFileDialog) {
+        m_showOpenFileDialog = false;
+        OnOpenFileDialog();
     }
      //Wait for the swapchain before updating the camera in order to reduce input lag
     m_swapChain->WaitForSwapChain();
@@ -124,10 +183,7 @@ void Graphics::Update() noexcept {
 
 void Graphics::LoadContent() {
     //Load the scene asynchronously
-    m_loadingTask = std::async(std::launch::async,
-        [this]() -> bool { 
-            return LoadScene(m_testScene);
-        });
+    m_loadingTask = std::async(std::launch::async, [&]() -> bool { return LoadScene(m_testScene); });
 
     auto& commandQueue = m_device->GetCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
     auto  commandList  = commandQueue.GetCommandList();
@@ -197,11 +253,12 @@ void Graphics::UnLoadContent() noexcept {
 }
 
 bool Cyrex::Graphics::LoadScene(const std::string& sceneFile) {
-    m_isLoading = true;
-    m_cancelLoading = false;
+    m_isLoading     = true;
 
     auto& commandQueue = m_device->GetCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
     auto commandList   = commandQueue.GetCommandList();
+
+    m_loadingText = std::string("Loading ") + sceneFile + "...";
 
     auto scene = SceneManager::LoadSceneFromFile(*commandList, sceneFile, 
         [&](float loadingProgress) -> bool { 
@@ -217,7 +274,6 @@ bool Cyrex::Graphics::LoadScene(const std::string& sceneFile) {
 
         scene->GetRootNode()->SetLocalTransform(dx::XMMatrixScaling(scale, scale, scale));
 
-        auto cameraRotation   = m_camera.GetRotation();
         auto cameraFov        = m_camera.GetFov();
         auto distanceToObject = boudningSphere.Radius / std::tanf(dx::XMConvertToRadians(cameraFov) / 2.0f);
 
@@ -226,8 +282,9 @@ bool Cyrex::Graphics::LoadScene(const std::string& sceneFile) {
 
         cameraPosition = cameraPosition + focusPoint;
 
+       
         m_camera.SetTranslation(cameraPosition);
-        
+
         m_scene = scene;
     }
 
@@ -242,7 +299,7 @@ bool Cyrex::Graphics::LoadScene(const std::string& sceneFile) {
 bool Cyrex::Graphics::LoadingProgress(float loadingProgress) {
     m_loadingProgress = loadingProgress;
 
-    return !m_cancelLoading;
+    return true;
 }
 
 void Graphics::Render() {
@@ -259,8 +316,8 @@ void Graphics::Render() {
     }
     else {
         //Create the scene visitors
-        SceneVisitor opaquePass(*commandList, m_camera, *m_lightingPSO, false);
-        SceneVisitor transparentPass(*commandList, m_camera, *m_decalPSO, true);
+        SceneVisitor opaquePass(*commandList, m_camera, *m_lightingPSO, TransparentPass::False);
+        SceneVisitor transparentPass(*commandList, m_camera, *m_decalPSO, TransparentPass::True);
 
         // Clear the render targets.
         TextureManager::ClearTexture(
@@ -287,6 +344,7 @@ void Graphics::Render() {
         commandList->ResolveSubresource(swapChainBuffer, msaaRenderTarget);
     }
 
+    OnGUI(commandList, m_swapChain->GetRenderTarget());
     commandQueue.ExecuteCommandList(commandList);
     m_swapChain->Present();
 }
@@ -295,14 +353,13 @@ void Graphics::Resize(uint32_t width, uint32_t height) {
     m_clientWidth  = std::max(1u, width);
     m_clientHeight = std::max(1u, height);
 
-    m_swapChain->Resize(m_clientWidth, m_clientHeight);
-
     float aspectRatio = m_clientWidth / static_cast<float>(m_clientHeight);
     m_camera.SetProj(45.0f, aspectRatio, 0.1f, 100.0f);
 
     m_viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(m_clientWidth), static_cast<float>(m_clientHeight));
 
     m_renderTarget.Resize(m_clientWidth, m_clientHeight);
+    m_swapChain->Resize(m_clientWidth, m_clientHeight);
 }
 
 void Graphics::ToggleVsync() {
@@ -340,7 +397,7 @@ void Graphics::UpdateLights() noexcept {
     static constexpr auto pi = Math::MathConstants::pi_float;
     const int numDirectionalLights = 3;
 
-    static const std::array lightColors = { Colors::White, Colors::OrangeRed, Colors::Blue };
+    static const std::array lightColors = { Colors::White, Colors::White, Colors::White };
 
     static float lightAnimTime = 0.0f;
 
@@ -405,13 +462,75 @@ void Graphics::OnMouseMoved(const Mouse& mouse) noexcept {
 
     if (mouse.LeftIsPressed()) {
         m_cameraControls.Pitch -= mouse.GetDeltaY() * mouseSpeed;
-        m_cameraControls.Pitch = std::clamp(m_cameraControls.Pitch, -90.0f, 90.0f);
+        m_cameraControls.Pitch  = std::clamp(m_cameraControls.Pitch, -90.0f, 90.0f);
 
         m_cameraControls.Yaw -= mouse.GetDeltaX() * mouseSpeed;
     }
 }
 
+void Cyrex::Graphics::OnGUI(const std::shared_ptr<CommandList>& commandList, const RenderTarget& renderTarget)
+{
+    m_editor->NewFrame();
+
+    if (m_isLoading) {
+        // Show a progress bar.
+        ImGui::SetNextWindowPos(
+            ImVec2(m_clientWidth / 2.0f, m_clientHeight / 2.0f), 
+            0,
+            ImVec2(0.5, 0.5));
+        ImGui::SetNextWindowSize(ImVec2(m_clientWidth / 2.0f, 0));
+
+        ImGui::Begin("Loading ", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar);
+
+        ImGui::ProgressBar(m_loadingProgress);
+        ImGui::Text(m_loadingText.c_str());
+
+        ImGui::End();
+    }
+
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Open file...", "Ctrl+O", nullptr, !m_isLoading)) {
+                m_showOpenFileDialog = true;
+            }
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Options")) {
+            auto vSync = static_cast<bool>(m_swapChain->GetVsync());
+            if (ImGui::MenuItem("V-Sync", "V", &vSync)) {
+                m_swapChain->SetVsync(static_cast<VSync>(vSync));
+
+                const auto val = (vSync) ? "On" : "Off";
+                crxlog::info("Toggled Vsync: ", val);
+            }
+
+            ImGui::MenuItem("Animate Lights", "Space", &m_animateLights);
+            ImGui::EndMenu();
+        }
+        
+        static constexpr auto BUFFER_SIZE = 256;
+        char buffer[BUFFER_SIZE];
+        {
+            sprintf_s(buffer, BUFFER_SIZE, "FPS: %.2f (%.2f ms)  ", m_fps, 1.0 / m_fps * 1000.0);
+
+            const auto fpsTextSize = ImGui::CalcTextSize(buffer);
+
+            ImGui::SameLine((float)m_clientWidth  - fpsTextSize.x);
+            ImGui::Text(buffer);
+        }
+      
+        ImGui::EndMainMenuBar();
+    }
+    m_editor->Render(commandList, renderTarget);
+}
+
 void Graphics::KeyboardInput(Keyboard& kbd) noexcept {
+    if (ImGui::GetIO().WantCaptureKeyboard) {
+        return;
+    }
+
     m_cameraControls.Forward  = static_cast<float>(kbd.KeyIsPressed('W'));
     m_cameraControls.Left     = static_cast<float>(kbd.KeyIsPressed('A'));
     m_cameraControls.Backward = static_cast<float>(kbd.KeyIsPressed('S'));
@@ -427,5 +546,13 @@ void Graphics::KeyboardInput(Keyboard& kbd) noexcept {
 
         m_cameraControls.Pitch = 0.0f;
         m_cameraControls.Yaw   = 0.0f;
+    }
+}
+
+void Cyrex::Graphics::OnOpenFileDialog() noexcept {
+    if (m_fileDialog.Open() == DialogResult::OK) {
+        const auto& filePath = ToNarrow(m_fileDialog.GetDisplayName(SIGDN_FILESYSPATH));
+
+        m_loadingTask = std::async(std::launch::async, [this, filePath]() -> bool { return LoadScene(filePath); });
     }
 }

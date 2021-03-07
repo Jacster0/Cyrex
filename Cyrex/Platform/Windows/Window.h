@@ -33,6 +33,8 @@ namespace Cyrex {
 		void EnableCursor() noexcept { m_mouse.cursor.Enable(); }
 		void DisableCursor() noexcept { m_mouse.cursor.Disable(m_hWnd); }
 
+		void SetImGuiIntialized(bool value) { m_imguiInitialized = value; }
+
 		Keyboard Kbd;
 		Mouse m_mouse;
 		std::shared_ptr<Graphics> Gfx = nullptr;
@@ -65,6 +67,7 @@ namespace Cyrex {
 		int m_lastMousePosX{};
 		int m_lastMousePosY{};
 		bool m_fullScreen;
+		bool m_imguiInitialized{};
 		std::vector<std::byte> m_rawInputBuffer;
 	};
 }

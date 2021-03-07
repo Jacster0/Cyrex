@@ -181,7 +181,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Core\Application.h" />
+    <ClInclude Include="Core\CommonTypes.h" />
     <ClInclude Include="Core\Console.h" />
+    <ClInclude Include="Core\Filesystem\OpenFileDialog.h" />
     <ClInclude Include="Core\InstructionSet\CpuInfo.h" />
     <ClInclude Include="Core\Math\Math.h" />
     <ClInclude Include="Core\MemoryHelperFuncs.h" />
@@ -193,8 +195,9 @@
     <ClInclude Include="Core\ThreadSafeQueue.h" />
     <ClInclude Include="Core\Time\GameTimer.h" />
     <ClInclude Include="Core\Time\Time.h" />
+    <ClInclude Include="Core\Utils\ThreadUtils.h" />
     <ClInclude Include="Core\Visitor.h" />
-    <ClInclude Include="Editor\ImGuiManager.h" />
+    <ClInclude Include="Editor\Editor.h" />
     <ClInclude Include="Editor\ImGui\imconfig.h" />
     <ClInclude Include="Editor\ImGui\imgui.h" />
     <ClInclude Include="Editor\ImGui\imgui_impl_dx12.h" />
@@ -342,6 +345,7 @@
     <ClCompile Include="Core\Application.cpp" />
     <ClCompile Include="Core\Console.cpp" />
     <ClCompile Include="Core\Exceptions\CyrexException.cpp" />
+    <ClCompile Include="Core\Filesystem\OpenFileDialog.cpp" />
     <ClCompile Include="Core\Input\Cursor.cpp" />
     <ClCompile Include="Core\Input\Keyboard.cpp" />
     <ClCompile Include="Core\Input\Mouse.cpp" />
@@ -351,9 +355,8 @@
     <ClCompile Include="Core\Logger.cpp" />
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="Core\Time\GameTimer.cpp" />
-    <ClCompile Include="Core\Utils\StringUtils.ixx" />
-    <ClCompile Include="Core\Utils\ThreadUtils.ixx" />
-    <ClCompile Include="Editor\ImGuiManager.cpp" />
+    <ClCompile Include="Core\Utils\StringUtils.h" />
+    <ClCompile Include="Editor\Editor.cpp" />
     <ClCompile Include="Editor\ImGui\imgui.cpp" />
     <ClCompile Include="Editor\ImGui\imgui_demo.cpp" />
     <ClCompile Include="Editor\ImGui\imgui_draw.cpp" />
