@@ -141,6 +141,6 @@ namespace Cyrex {
         std::string m_loadingText;
 
         float m_fps;
-        static constexpr auto m_testScene = "D:/Clone Model/stormtrooper_imperial_helmet_oscar_creativo/scene.gltf";
+        static constexpr auto m_testScene = "Resources/Models/crytek-sponza/sponza_nobanner.obj";
     };
 }
