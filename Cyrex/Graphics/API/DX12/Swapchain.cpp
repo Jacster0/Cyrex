@@ -44,18 +44,18 @@ Cyrex::SwapChain::SwapChain(Device& device, HWND hWnd, DXGI_FORMAT renderTargetF
     m_height = windowRect.bottom - windowRect.top;
 
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-    swapChainDesc.Width = m_width;
-    swapChainDesc.Height = m_height;
-    swapChainDesc.Format = m_renderTargetFormat;
-    swapChainDesc.Stereo = FALSE;
-    swapChainDesc.SampleDesc = { 1, 0 };
+    swapChainDesc.Width       = m_width;
+    swapChainDesc.Height      = m_height;
+    swapChainDesc.Format      = m_renderTargetFormat;
+    swapChainDesc.Stereo      = FALSE;
+    swapChainDesc.SampleDesc  = { 1, 0 };
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = BUFFER_COUNT;
-    swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-    swapChainDesc.Flags = m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
-    swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+    swapChainDesc.Scaling     = DXGI_SCALING_STRETCH;
+    swapChainDesc.SwapEffect  = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    swapChainDesc.AlphaMode   = DXGI_ALPHA_MODE_UNSPECIFIED;
+    swapChainDesc.Flags       = m_tearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+    swapChainDesc.Flags      |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 
     wrl::ComPtr<IDXGISwapChain1> dxgiSwapChain1;
 
@@ -129,8 +129,8 @@ uint32_t Cyrex::SwapChain::Present(const std::shared_ptr<Texture>& texture) {
     commandList->TransitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
     m_commandQueue.ExecuteCommandList(commandList);
 
-    uint32_t syncInterval = m_vSync ? 1 : 0;
-    uint32_t presentFlags = m_tearingSupported && !m_fullscreen && !m_vSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
+    uint32_t syncInterval = static_cast<uint32_t>(m_vSync);
+    uint32_t presentFlags = (m_tearingSupported && !m_fullscreen && m_vSync == VSync::Off) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
     ThrowIfFailed(m_dxgiSwapChain->Present(syncInterval, presentFlags));
 
@@ -168,6 +168,6 @@ void Cyrex::SwapChain::SetFullScreen(bool fullScreen) {
     }
 }
 
-void Cyrex::SwapChain::SetVsync(bool vSync) {
+void Cyrex::SwapChain::SetVsync(VSync vSync) {
     m_vSync = vSync;
 }

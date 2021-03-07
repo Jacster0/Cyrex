@@ -37,7 +37,7 @@ namespace Cyrex {
         void ImportScene(CommandList& commandList, const aiScene& scene, std::filesystem::path parentPath);
         void ImportMaterial(CommandList& commandList, const aiMaterial& material, std::filesystem::path parentPath);
         void ImportMesh(CommandList& commandList, const aiMesh& aiMesh);
-        std::shared_ptr<SceneNode> ImportSceneNode(CommandList& commandList, std::shared_ptr<SceneNode> parent, const aiNode* aiNode);
+        std::shared_ptr<SceneNode> ImportSceneNode(std::shared_ptr<SceneNode> parent, const aiNode* aiNode);
 
         using MaterialMap = std::map<std::string, std::shared_ptr<Material>>;
         using MaterialList = std::vector<std::shared_ptr<Material>>;

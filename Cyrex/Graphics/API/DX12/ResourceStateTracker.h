@@ -1,5 +1,7 @@
 #pragma once
 #include "d3dx12.h"
+#include <wrl/client.h>
+
 #include <mutex>
 #include <map>
 #include <unordered_map>
@@ -8,10 +10,12 @@
 namespace Cyrex {
     class CommandList;
     class Resource;
+
     class ResourceStateTracker {
     public:
         ResourceStateTracker();
-    public:
+        ~ResourceStateTracker() = default;
+
         void ResourceBarrier(const D3D12_RESOURCE_BARRIER& barrier);
 
         void TransitionResource(
@@ -31,12 +35,11 @@ namespace Cyrex {
 
         void CommitFinalResourceStates();
         void Reset();
-    public:
+
         static void Lock();
         static void Unlock();
+
         static void AddGlobalResourceState(ID3D12Resource* resource, D3D12_RESOURCE_STATES state);
-        static void RemoveGlobalResourceState(ID3D12Resource* resource, bool immediate = false);
-        static void RemoveGarbageResources();
     private:
         using ResourceBarriers = std::vector<D3D12_RESOURCE_BARRIER>;
 
@@ -63,6 +66,7 @@ namespace Cyrex {
             D3D12_RESOURCE_STATES GetSubresourceState(uint32_t subresource) const {
                 D3D12_RESOURCE_STATES state = State;
                 const auto iter = SubresourceState.find(subresource);
+
                 if (iter != SubresourceState.end()) {
                     state = iter->second;
                 }
@@ -85,7 +89,6 @@ namespace Cyrex {
         // The global resource state array stores the state of a resource
         // between command list execution.
         static ResourceStateMap ms_globalResourceState;
-        static ResourceList ms_garbageResources;
 
         static std::mutex ms_globalMutex;
         static bool ms_isLocked;

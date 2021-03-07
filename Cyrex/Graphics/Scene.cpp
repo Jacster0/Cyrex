@@ -159,7 +159,7 @@ void Cyrex::Scene::ImportScene(CommandList& commandList, const aiScene& scene, s
     }
 
     //Import the root node
-    m_rootNode = ImportSceneNode(commandList, nullptr, scene.mRootNode);
+    m_rootNode = ImportSceneNode(nullptr, scene.mRootNode);
 }
 
 void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& material, std::filesystem::path parentPath) {
@@ -371,7 +371,7 @@ void Cyrex::Scene::ImportMesh(CommandList& commandList, const aiMesh& aiMesh) {
     m_meshes.push_back(mesh);
 }
 
-std::shared_ptr<Cyrex::SceneNode> Cyrex::Scene::ImportSceneNode(CommandList& commandList, std::shared_ptr<SceneNode> parent, const aiNode* aiNode) {
+std::shared_ptr<Cyrex::SceneNode> Cyrex::Scene::ImportSceneNode(std::shared_ptr<SceneNode> parent, const aiNode* aiNode) {
     if (!aiNode) {
         return nullptr;
     }
@@ -393,7 +393,7 @@ std::shared_ptr<Cyrex::SceneNode> Cyrex::Scene::ImportSceneNode(CommandList& com
 
     //Recursively Import children
     for (unsigned i = 0; i < aiNode->mNumChildren; i++) {
-        const auto child = ImportSceneNode(commandList, node, aiNode->mChildren[i]);
+        const auto child = ImportSceneNode(node, aiNode->mChildren[i]);
         node->AddChild(child);
     }
     return node;

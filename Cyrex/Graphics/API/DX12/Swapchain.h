@@ -6,6 +6,8 @@
 #include <array>
 
 namespace Cyrex {
+    enum class VSync {On = true, Off = false};
+
     class CommandQueue;
     class Device;
     class Texture;
@@ -26,9 +28,9 @@ namespace Cyrex {
         void ToggleFullScreen() { SetFullScreen(!m_fullscreen); }
         bool IsFullscreen() const noexcept { return m_fullscreen; }
 
-        void ToggleVsync() { SetVsync(!m_vSync); }
-        void SetVsync(bool vSync);
-        bool GetVsync() const noexcept { return m_vSync; }
+        void ToggleVsync() { SetVsync((m_vSync == VSync::On) ? VSync::Off : VSync::On); }
+        void SetVsync(VSync vSync);
+        VSync GetVsync() const noexcept { return m_vSync; }
     protected:
         SwapChain(Device& device, HWND hWnd, DXGI_FORMAT renderTargetFormat = DXGI_FORMAT_R10G10B10A2_UNORM);
         virtual ~SwapChain();
@@ -49,7 +51,7 @@ namespace Cyrex {
         uint32_t m_height;
         DXGI_FORMAT m_renderTargetFormat;
 
-        bool m_vSync;
+        VSync m_vSync;
         bool m_tearingSupported;
         bool m_fullscreen;
     };

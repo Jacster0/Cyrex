@@ -14,13 +14,13 @@ namespace Cyrex {
     };
 
 
-//Since we want the location information provided from the caller, ThrowIfFailed must now be a macro until  
-//we get support for std::source_location in MSVC and Visual Studio
+    //Since we want the location information provided from the caller, ThrowIfFailed must now be a macro until  
+    //we get support for std::source_location in MSVC and Visual Studio
 #ifndef ThrowIfFailed
-#define ThrowIfFailed(x)                                                 \
-{                                                                        \
-    HRESULT hr = (x);                                                    \
-    if(FAILED(hr)) { throw DxException(hr, #x, __FILE__, __LINE__); }    \
-}
+#define ThrowIfFailed(x)                                                     \
+    {                                                                        \
+        HRESULT hr = (x);                                                    \
+        if(FAILED(hr)) { throw DxException(hr, #x, __FILE__, __LINE__); }    \
+    }
 #endif
 }

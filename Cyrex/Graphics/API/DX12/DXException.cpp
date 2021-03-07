@@ -1,8 +1,8 @@
-import StringUtils;
-
 #include "DXException.h"
 #include <comdef.h>
 #include <sstream>
+
+#include "Core/Utils/StringUtils.h"
 
 Cyrex::DxException::DxException(HRESULT hr, const std::string& functionName, const std::string& file, int line) noexcept
     :
