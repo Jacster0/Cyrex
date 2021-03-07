@@ -10,12 +10,12 @@
 
 using namespace Cyrex;
 
-SceneVisitor::SceneVisitor(CommandList& commandList, const Camera& camera, EffectPSO& pso, bool transparent)
+SceneVisitor::SceneVisitor(CommandList& commandList, const Camera& camera, EffectPSO& pso, TransparentPass transparentPass)
     :
     m_commandList(commandList),
     m_camera(camera),
     m_lightingPSO(pso),
-    m_transparentPass(transparent)
+    m_transparentPass(transparentPass)
 {}
 
 void SceneVisitor::Visit(Scene& scene) {
@@ -30,7 +30,7 @@ void SceneVisitor::Visit(SceneNode& sceneNode) {
 void SceneVisitor::Visit(Mesh& mesh) {
     auto material = mesh.GetMaterial();
 
-    if (material->IsTransparent() == m_transparentPass) {
+    if (material->IsTransparent() == static_cast<bool>(m_transparentPass)) {
         m_lightingPSO.SetMaterial(material);
 
         m_lightingPSO.Apply(m_commandList);
