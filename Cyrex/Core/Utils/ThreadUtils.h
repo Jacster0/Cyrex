@@ -1,8 +1,6 @@
 #include "Platform/Windows/CrxWindow.h"
 #include <thread>
 
-export module ThreadUtils;
-
 namespace Cyrex {
     namespace ThreadUtils {
         const DWORD MS_VC_EXCEPTION = 0x406D1388;
@@ -16,7 +14,7 @@ namespace Cyrex {
         } THREADNAME_INFO;
 #pragma pack( pop )
 
-        export inline void SetThreadName(std::thread& thread, const char* threadName) {
+        inline void SetThreadName(std::thread& thread, const char* threadName) {
             THREADNAME_INFO info;
             info.dwType = 0x1000;
             info.szName = threadName;

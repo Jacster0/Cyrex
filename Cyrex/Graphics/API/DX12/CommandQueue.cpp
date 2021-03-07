@@ -1,5 +1,3 @@
-import ThreadUtils;
-
 #include "CommandQueue.h"
 #include "DXException.h"
 #include "CommandList.h"
@@ -7,6 +5,8 @@ import ThreadUtils;
 #include "Device.h"
 #include <cassert>
 #include <string>
+
+#include "Core/Utils/ThreadUtils.h"
 
 namespace wrl = Microsoft::WRL;
 
