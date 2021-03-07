@@ -44,7 +44,7 @@ namespace Cyrex {
         mutable ThreadSafeQueue<std::shared_ptr<CommandList>> m_availableCommandLists;
 
         std::thread m_processInFlightCommandListsThread;
-        std::atomic_bool m_processInFlightCommandListsBool = true;
+        std::atomic_bool m_processInFlightCommandListsBool{ true };
         std::mutex m_processInFlightCommandListsThreadMutex;
         std::condition_variable m_processInFlightCommandListsThreadCV;
     };
