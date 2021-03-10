@@ -13,10 +13,12 @@ namespace Cyrex {
 
     class DynamicDescriptorHeap {
     public:
-        DynamicDescriptorHeap(Device& device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
+        DynamicDescriptorHeap(
+            Device& device, 
+            D3D12_DESCRIPTOR_HEAP_TYPE heapType, 
             uint32_t numDescriptorsPerHeap = 1024);
         ~DynamicDescriptorHeap();
-    public:
+
         void StageDescriptors(
             uint32_t rootParamIndex,
             uint32_t offset,
@@ -68,7 +70,6 @@ namespace Cyrex {
             D3D12_CPU_DESCRIPTOR_HANDLE* BaseDescriptor;
         };
 
-    private:
         D3D12_DESCRIPTOR_HEAP_TYPE m_descriptorHeapType;
         uint32_t m_numDescriptorsPerHeap;
         uint32_t m_descriptorHandleIncrementSize;

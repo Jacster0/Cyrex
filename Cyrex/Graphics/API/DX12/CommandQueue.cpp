@@ -10,33 +10,32 @@
 
 namespace wrl = Microsoft::WRL;
 
-namespace Context {
-    using namespace Cyrex;
+using namespace Cyrex;
 
-    class MakeCommandList final : public CommandList {
-    public:
-        MakeCommandList(Device& device, D3D12_COMMAND_LIST_TYPE type)
-            :
-            CommandList(device, type)
-        {}
-        ~MakeCommandList() {}
-    };
-}
+class MakeCommandList final : public CommandList {
+public:
+    MakeCommandList(Device& device, D3D12_COMMAND_LIST_TYPE type)
+        :
+        CommandList(device, type)
+    {}
+    ~MakeCommandList() {}
+};
+
 Cyrex::CommandQueue::CommandQueue(Device& device, D3D12_COMMAND_LIST_TYPE type)
     :
     m_device(device),
-    m_fenceValue(0),
-    m_commandListType(type)
+    m_commandListType(type),
+    m_fenceValue(0)
 {
     using namespace std::string_literals;
 
     const auto d3d12Device = m_device.GetD3D12Device();
 
     D3D12_COMMAND_QUEUE_DESC desc = {};
-    desc.Type     = type;
-    desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-    desc.Flags    = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    desc.NodeMask = 0;
+    desc.Type                     = type;
+    desc.Priority                 = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+    desc.Flags                    = D3D12_COMMAND_QUEUE_FLAG_NONE;
+    desc.NodeMask                 = 0;
 
     ThrowIfFailed(d3d12Device->CreateCommandQueue(&desc, IID_PPV_ARGS(&m_d3d12CommandQueue)));
     ThrowIfFailed(d3d12Device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_d3d12Fence)));
@@ -64,6 +63,11 @@ Cyrex::CommandQueue::CommandQueue(Device& device, D3D12_COMMAND_LIST_TYPE type)
     ThreadUtils::SetThreadName(m_processInFlightCommandListsThread, threadname.c_str());
 }
 
+Cyrex::CommandQueue::~CommandQueue() {
+    m_processInFlightCommandListsBool = false;
+    m_processInFlightCommandListsThread.join();
+}
+
 wrl::ComPtr<ID3D12CommandQueue> Cyrex::CommandQueue::GetD3D12CommandQueue() const
 {
     return m_d3d12CommandQueue;
@@ -76,7 +80,7 @@ std::shared_ptr<Cyrex::CommandList> Cyrex::CommandQueue::GetCommandList() const 
         m_availableCommandLists.TryPop(commandList);
     }
     else {
-        commandList = std::make_shared<Context::MakeCommandList>(m_device, m_commandListType);
+        commandList = std::make_shared<MakeCommandList>(m_device, m_commandListType);
     }
 
     return commandList;
@@ -89,16 +93,14 @@ uint64_t Cyrex::CommandQueue::ExecuteCommandList(std::shared_ptr<CommandList> co
 uint64_t Cyrex::CommandQueue::ExecuteCommandLists(const std::vector<std::shared_ptr<CommandList>>& commandLists) {
     ResourceStateTracker::Lock();
 
-    auto capacity = commandLists.size() * 2; //2x since each command list will have a pending command list
-
     std::vector<std::shared_ptr<CommandList>> toBeQueued;
-    toBeQueued.reserve(capacity);
+    toBeQueued.reserve(commandLists.size() * 2); //2x since each command list will have a pending command list
 
     std::vector<std::shared_ptr<CommandList>> generateMipsCommandLists;
     generateMipsCommandLists.reserve(commandLists.size());
 
     std::vector<ID3D12CommandList*> d3d12CommandLists;
-    d3d12CommandLists.reserve(capacity); 
+    d3d12CommandLists.reserve(commandLists.size() * 2); // 2x since each command list will have a pending command list.
 
     for (const auto commandList : commandLists) {
         const auto pendingCommandList = GetCommandList();
@@ -146,7 +148,7 @@ uint64_t Cyrex::CommandQueue::ExecuteCommandLists(const std::vector<std::shared_
 
 uint64_t Cyrex::CommandQueue::Signal() {
     uint64_t fenceValue = ++m_fenceValue;
-    m_d3d12CommandQueue->Signal(m_d3d12Fence.Get(), m_fenceValue);
+    m_d3d12CommandQueue->Signal(m_d3d12Fence.Get(), fenceValue);
     return fenceValue;
 }
 
@@ -176,11 +178,6 @@ bool Cyrex::CommandQueue::IsFenceComplete(uint64_t fenceValue) {
 
 void Cyrex::CommandQueue::Wait(const CommandQueue& rhs) {
     m_d3d12CommandQueue->Wait(rhs.m_d3d12Fence.Get(), rhs.m_fenceValue);
-}
-
-Cyrex::CommandQueue::~CommandQueue() {
-    m_processInFlightCommandListsBool = false;
-    m_processInFlightCommandListsThread.join();
 }
 
 void Cyrex::CommandQueue::ProccessInFlightCommandLists() {

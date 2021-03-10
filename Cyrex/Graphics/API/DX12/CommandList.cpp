@@ -43,7 +43,6 @@ Cyrex::CommandList::CommandList(Device& device, D3D12_COMMAND_LIST_TYPE type)
     m_device(device),
     m_d3d12CommandListType(type)
 {
-    wrl::ComPtr<ID3D12GraphicsCommandList2> commandList;
     const auto d3d12device = m_device.GetD3D12Device();
 
     ThrowIfFailed(d3d12device->CreateCommandAllocator(m_d3d12CommandListType, IID_PPV_ARGS(&m_d3d12CommandAllocator)));
@@ -52,15 +51,14 @@ Cyrex::CommandList::CommandList(Device& device, D3D12_COMMAND_LIST_TYPE type)
         m_d3d12CommandListType,
         m_d3d12CommandAllocator.Get(),
         nullptr,
-        IID_PPV_ARGS(&commandList)));
-    m_d3d12CommandList = commandList;
+        IID_PPV_ARGS(&m_d3d12CommandList)));
 
     m_uploadBuffer         = std::make_unique<UploadBuffer>(device);
     m_resourceStateTracker = std::make_unique<ResourceStateTracker>();
 
     for (auto i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; i++) {
         m_dynamicDescriptorHeap[i] = std::make_unique<DynamicDescriptorHeap>(device, static_cast<D3D12_DESCRIPTOR_HEAP_TYPE>(i));
-        m_descriptorHeaps[i] = nullptr;
+        m_descriptorHeaps[i]       = nullptr;
     }
 }
 
@@ -289,7 +287,6 @@ void Cyrex::CommandList::GenerateMips(const std::shared_ptr<Texture>& texture) {
             IID_PPV_ARGS(&aliasResource)));
 
         ResourceStateTracker::AddGlobalResourceState(aliasResource.Get(), D3D12_RESOURCE_STATE_COMMON);
-
         TrackResource(aliasResource);
 
         ThrowIfFailed(d3d12Device->CreatePlacedResource(
@@ -301,7 +298,6 @@ void Cyrex::CommandList::GenerateMips(const std::shared_ptr<Texture>& texture) {
             IID_PPV_ARGS(&uavResource)));
 
         ResourceStateTracker::AddGlobalResourceState(uavResource.Get(), D3D12_RESOURCE_STATE_COMMON);
-
         TrackResource(uavResource);
 
         AliasingBarrier(nullptr, aliasResource);
@@ -338,7 +334,7 @@ void Cyrex::CommandList::CopyTextureSubresource(
 
         wrl::ComPtr<ID3D12Resource> intermediateResource;
         auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        auto buffer = CD3DX12_RESOURCE_DESC::Buffer(requiredSize);
+        auto buffer    = CD3DX12_RESOURCE_DESC::Buffer(requiredSize);
 
         ThrowIfFailed(d3d12Device->CreateCommittedResource(
             &heapProps,

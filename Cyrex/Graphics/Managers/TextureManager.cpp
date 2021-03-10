@@ -6,6 +6,7 @@
 #include "Graphics/API/DX12/Device.h"
 #include "Graphics/API/DX12/DXException.h"
 #include "Graphics/API/DX12/d3dx12.h"
+#include "Graphics/API/DX12/ResourceStateTracker.h"
 
 #include <wrl.h>
 #include <filesystem>
@@ -21,7 +22,6 @@ std::mutex TextureManager::ms_textureCacheMutex;
 
 std::shared_ptr<Texture> TextureManager::LoadTextureFromFile(CommandList& commandList, const std::wstring fileName, bool sRGB) {
     std::shared_ptr<Texture> texture;
-
     fs::path filePath(fileName);
 
     if (!fs::exists(filePath)) {
@@ -76,7 +76,7 @@ std::shared_ptr<Texture> TextureManager::LoadTextureFromFile(CommandList& comman
                 static_cast<uint16_t>(metadata.arraySize));
             break;
         case TEX_DIMENSION_TEXTURE3D:
-            textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+            textureDesc = CD3DX12_RESOURCE_DESC::Tex3D(
                 metadata.format,
                 static_cast<uint64_t>(metadata.width),
                 static_cast<uint32_t>(metadata.height),
@@ -88,8 +88,8 @@ std::shared_ptr<Texture> TextureManager::LoadTextureFromFile(CommandList& comman
 
         const auto d3d12Device = commandList.GetDevice().GetD3D12Device();
         wrl::ComPtr<ID3D12Resource> textureResource;
-        auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
+        auto heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
         ThrowIfFailed(d3d12Device->CreateCommittedResource(
             &heapProperties,
             D3D12_HEAP_FLAG_NONE,
@@ -100,6 +100,9 @@ std::shared_ptr<Texture> TextureManager::LoadTextureFromFile(CommandList& comman
 
         texture = commandList.GetDevice().CreateTexture(textureResource);
         texture->SetName(fileName);
+
+        //Update the global state tracker
+        ResourceStateTracker::AddGlobalResourceState(textureResource.Get(), D3D12_RESOURCE_STATE_COMMON);
 
         std::vector<D3D12_SUBRESOURCE_DATA> subResources(scratchImage.GetImageCount());
         const Image* pImages = scratchImage.GetImages();

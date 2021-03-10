@@ -196,13 +196,13 @@ void Graphics::LoadContent() {
     m_unlitPSO    = std::make_shared<EffectPSO>(m_device, EnableLighting::False, EnableDecal::False);
 
     // Create a color buffer with sRGB for gamma correction.
-    auto backBufferFormat  = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-    auto depthBufferFormat = DXGI_FORMAT_D32_FLOAT;
+    const auto backBufferFormat  = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    const auto depthBufferFormat = DXGI_FORMAT_D32_FLOAT;
 
-    auto sampleDesc = m_device->GetMultisampleQualityLevels(backBufferFormat);
+    const auto sampleDesc = m_device->GetMultisampleQualityLevels(backBufferFormat);
 
     // Create an off-screen render target with a single color buffer and a depth buffer.
-    auto colorDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+    const auto colorDesc = CD3DX12_RESOURCE_DESC::Tex2D(
         backBufferFormat, 
         m_clientWidth, 
         m_clientHeight, 
@@ -214,7 +214,7 @@ void Graphics::LoadContent() {
 
     auto clr = Colors::LightSteelBlue;
     D3D12_CLEAR_VALUE colorClearValue;
-    colorClearValue.Format = colorDesc.Format;
+    colorClearValue.Format   = colorDesc.Format;
     colorClearValue.Color[0] = XMVectorGetX(clr);
     colorClearValue.Color[1] = XMVectorGetY(clr);
     colorClearValue.Color[2] = XMVectorGetZ(clr);
@@ -245,7 +245,7 @@ void Graphics::LoadContent() {
     m_renderTarget.AttachTexture(AttachmentPoint::DepthStencil, depthTexture);
 
     // Make sure the copy command queue is finished before leaving this function.
-    commandQueue.WaitForFenceValue(fence);
+   /* commandQueue.WaitForFenceValue(fence);*/
 }
 
 void Graphics::UnLoadContent() noexcept { 
@@ -316,8 +316,8 @@ void Graphics::Render() {
     }
     else {
         //Create the scene visitors
-        SceneVisitor opaquePass(*commandList, m_camera, *m_lightingPSO, TransparentPass::False);
-        SceneVisitor transparentPass(*commandList, m_camera, *m_decalPSO, TransparentPass::True);
+        SceneVisitor opaquePass(*commandList, m_camera, *m_lightingPSO, RenderPass::Opaque);
+        SceneVisitor transparentPass(*commandList, m_camera, *m_decalPSO, RenderPass::Transparent);
 
         // Clear the render targets.
         TextureManager::ClearTexture(
@@ -335,9 +335,11 @@ void Graphics::Render() {
         commandList->SetRenderTarget(m_renderTarget);
 
         //render the scene
-        m_scene->Accept(opaquePass);
-        m_scene->Accept(transparentPass);
-
+        if (m_scene) {
+            m_scene->Accept(opaquePass);
+            m_scene->Accept(transparentPass);
+        }
+       
         auto swapChainBuffer  = m_swapChain->GetRenderTarget().GetTexture(AttachmentPoint::Color0);
         auto msaaRenderTarget = renderTarget.GetTexture(AttachmentPoint::Color0);
 

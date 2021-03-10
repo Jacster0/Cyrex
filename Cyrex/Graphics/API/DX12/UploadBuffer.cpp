@@ -21,7 +21,7 @@ Cyrex::UploadBuffer::Allocation Cyrex::UploadBuffer::Allocate(size_t sizeInBytes
         throw std::bad_alloc();
     }
 
-    if (!m_currentPage || m_currentPage->HasSpace(sizeInBytes, alignment)) {
+    if (!m_currentPage || !m_currentPage->HasSpace(sizeInBytes, alignment)) {
         m_currentPage = RequestPage();
     }
 
@@ -29,7 +29,7 @@ Cyrex::UploadBuffer::Allocation Cyrex::UploadBuffer::Allocate(size_t sizeInBytes
 }
 
 void Cyrex::UploadBuffer::Reset() {
-    m_currentPage = nullptr;
+    m_currentPage    = nullptr;
     m_availablePages = m_pagePool;
 
     for (auto page : m_availablePages) {
@@ -63,7 +63,7 @@ Cyrex::UploadBuffer::Page::Page(Device& device, size_t sizeInBytes)
     const auto& d3d12Device = m_device.GetD3D12Device();
 
     auto heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    auto buffer = CD3DX12_RESOURCE_DESC::Buffer(m_pageSize);
+    auto buffer    = CD3DX12_RESOURCE_DESC::Buffer(m_pageSize);
 
     ThrowIfFailed(d3d12Device->CreateCommittedResource(
         &heapProps,
@@ -97,13 +97,16 @@ Cyrex::UploadBuffer::Allocation Cyrex::UploadBuffer::Page::Allocate(size_t sizeI
     if (!HasSpace(sizeInBytes, alignment)) {
         throw std::bad_alloc();
     }
-    size_t alignedSize = 0;
+
+    size_t alignedSize = Math::AlignUp(sizeInBytes, alignment);
+    m_offset           = Math::AlignUp(m_offset, alignment);
 
     Allocation alloc;
     alloc.CPU = static_cast<uint8_t*>(m_cpuPtr) + m_offset;
     alloc.GPU = m_gpuPtr + m_offset;
 
     m_offset += alignedSize;
+
     return alloc;
 }
 

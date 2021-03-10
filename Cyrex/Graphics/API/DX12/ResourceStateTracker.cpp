@@ -149,12 +149,13 @@ uint32_t Cyrex::ResourceStateTracker::FlushPendingResourceBarriers(const std::sh
 
     const auto numBarriers = static_cast<uint32_t>(resourceBarriers.size());
 
-    if (numBarriers > 0) {
+    if (numBarriers > 0) { 
         auto d3d12CommandList = commandList->GetD3D12CommandList();
         d3d12CommandList->ResourceBarrier(numBarriers, resourceBarriers.data());
     }
 
     m_pendingResourceBarriers.clear();
+
     return numBarriers;
 }
 
