@@ -5,8 +5,7 @@
 #include "Core/Utils/StringUtils.h"
 #include "Core/Utils/ThreadUtils.h"
 
-#include "Editor/Editor.h"
-#include "Editor/ImGui/imgui.h"
+#include "Editor/EditorLayer.h"
 #include "Editor/ImGui/imgui_impl_win32.h"
 
 #include <cassert>
@@ -116,7 +115,7 @@ namespace Cyrex {
 		//Keyboard messages
 		case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
-			if (m_imguiInitialized && Editor::GetIO().WantCaptureKeyboard) {
+			if (m_imguiInitialized && EditorLayer::GetIO().WantCaptureKeyboard) {
 				break;
 			}
 			if (!(lParam & 0x40000000) || Kbd.AutorepeatIsEnabled()) {
@@ -125,13 +124,13 @@ namespace Cyrex {
 		break;
 		case WM_SYSKEYUP:
 		case WM_KEYUP:
-			if (m_imguiInitialized && Editor::GetIO().WantCaptureKeyboard) {
+			if (m_imguiInitialized && EditorLayer::GetIO().WantCaptureKeyboard) {
 				break;
 			}
 			Kbd.OnKeyReleased(static_cast<unsigned char>(wParam));
 			break;
 		case WM_CHAR:
-			if (m_imguiInitialized && Editor::GetIO().WantCaptureKeyboard) {
+			if (m_imguiInitialized && EditorLayer::GetIO().WantCaptureKeyboard) {
 				break;
 			}
 			Kbd.OnChar(static_cast<unsigned char>(wParam));
@@ -276,7 +275,7 @@ namespace Cyrex {
 			return;
 		}
 
-		if (m_imguiInitialized && Editor::GetIO().WantCaptureMouse) {
+		if (m_imguiInitialized && EditorLayer::GetIO().WantCaptureMouse) {
 			return;
 		}
 
@@ -314,7 +313,7 @@ namespace Cyrex {
 	}
 
 	void Window::MouseWheel(LPARAM lParam, WPARAM wParam) {
-		if (m_imguiInitialized && Editor::GetIO().WantCaptureMouse) {
+		if (m_imguiInitialized && EditorLayer::GetIO().WantCaptureMouse) {
 			return;
 		}
 
@@ -335,14 +334,14 @@ namespace Cyrex {
 				m_mouse.cursor.Hide();
 			}
 
-			if (m_imguiInitialized && Editor::GetIO().WantCaptureMouse) {
+			if (m_imguiInitialized && EditorLayer::GetIO().WantCaptureMouse) {
 				return;
 			}
 
 			m_mouse.OnLeftPressed(point.x, point.y);
 		}
 		else {
-			if (m_imguiInitialized && Editor::GetIO().WantCaptureMouse) {
+			if (m_imguiInitialized && EditorLayer::GetIO().WantCaptureMouse) {
 				return;
 			}
 			m_mouse.OnRightPressed(point.x, point.y);
@@ -350,7 +349,7 @@ namespace Cyrex {
 	}
 
 	void Window::MouseUp(LPARAM lParam, MouseButton buttonClicked) {
-		if (m_imguiInitialized && Editor::GetIO().WantCaptureMouse) {
+		if (m_imguiInitialized && EditorLayer::GetIO().WantCaptureMouse) {
 			return;
 		}
 

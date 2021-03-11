@@ -34,7 +34,7 @@ namespace Cyrex {
     class SwapChain;
     class ShaderResourceView;
     class Texture;
-    class Editor;
+    class EditorLayer;
    
     class Graphics {
     public:
@@ -58,15 +58,24 @@ namespace Cyrex {
         void OnMouseWheel(float delta) noexcept;
         void OnMouseMoved(int dx, int dy) noexcept;
         void OnMouseMoved(const Mouse& mouse) noexcept;
-        void OnGUI(const std::shared_ptr<CommandList>& commandList, const RenderTarget& renderTarget);
 
         void KeyboardInput(Keyboard& kbd) noexcept;
         void OnOpenFileDialog() noexcept;
 
         void SetHwnd(HWND hWnd) noexcept { m_hWnd = hWnd; }
         bool IsInitialized() const noexcept { return m_isIntialized; }
+
         void ToggleVsync();
+        VSync GetVsync() const noexcept;
+        void SetVsync(VSync vSync) noexcept;
+
         bool& AnimateLights() noexcept { return m_animateLights; }
+
+        [[nodiscard]] std::tuple<uint32_t, uint32_t> GetScreenSize() const noexcept { return { m_clientWidth, m_clientHeight }; }
+        [[nodiscard]] float GetLoadingProgress() const noexcept { return m_loadingProgress; }
+        [[nodiscard]] std::string_view GetLoadingText() const noexcept { return m_loadingText; }
+        [[nodiscard]] bool IsLoadingScene() const noexcept { return m_isLoading; }
+        [[nodiscard]] float GetFramesPerSecond() const noexcept { return m_fps; }
     private:
         void UpdateCamera() noexcept;
         void UpdateLights() noexcept;
@@ -111,7 +120,7 @@ namespace Cyrex {
         bool m_isIntialized = false;
         bool m_animateLights = true;
       
-        std::unique_ptr<Editor> m_editor;
+        std::shared_ptr<EditorLayer> m_editorLayer;
         std::shared_ptr<Device> m_device;
         std::shared_ptr<SwapChain> m_swapChain;
 
@@ -133,8 +142,7 @@ namespace Cyrex {
         std::vector<PointLight> m_pointLights;
         std::vector<SpotLight>  m_spotLights;
         std::vector<DirectionalLight> m_directionalLights;
-
-        bool m_showOpenFileDialog{};
+      
         std::atomic_bool  m_isLoading;
         std::future<bool> m_loadingTask;
         float m_loadingProgress;

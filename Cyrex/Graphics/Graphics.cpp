@@ -8,7 +8,8 @@
 #include "Managers/TextureManager.h"
 #include "Managers/SceneManager.h"
 
-#include "Editor/Editor.h"
+#include "Editor/D3D12Layer.h"
+#include "Editor/EditorContext.h"
 
 #include "Core/Logger.h"
 #include "Core/Input/Keyboard.h"
@@ -144,8 +145,9 @@ void Graphics::Initialize(uint32_t width, uint32_t height) {
 
     m_swapChain->SetVsync(m_vsync);
 
-    m_editor = std::make_unique<Editor>(*m_device, m_hWnd, m_swapChain->GetRenderTarget());
-    Editor::SetDarkThemeColors();
+    m_editorLayer = std::make_shared<D3D12Layer>(*m_device, *m_swapChain, m_hWnd);
+    m_editorLayer->Attach();
+    m_editorLayer->SetThemeColors(EditorTheme::Dark);
    
     m_clientWidth  = width;
     m_clientHeight = height;
@@ -169,10 +171,6 @@ void Graphics::Update() noexcept {
 
         frameCount = 0;
         m_timer.ResetElapsedTime();
-    }
-    if (m_showOpenFileDialog) {
-        m_showOpenFileDialog = false;
-        OnOpenFileDialog();
     }
      //Wait for the swapchain before updating the camera in order to reduce input lag
     m_swapChain->WaitForSwapChain();
@@ -250,6 +248,7 @@ void Graphics::LoadContent() {
 
 void Graphics::UnLoadContent() noexcept { 
     m_loadingTask.get();
+    m_editorLayer->Detach();
 }
 
 bool Cyrex::Graphics::LoadScene(const std::string& sceneFile) {
@@ -346,7 +345,9 @@ void Graphics::Render() {
         commandList->ResolveSubresource(swapChainBuffer, msaaRenderTarget);
     }
 
-    OnGUI(commandList, m_swapChain->GetRenderTarget());
+    //Render the UI
+    EditorContext::Render(*this, m_editorLayer, *commandList);
+
     commandQueue.ExecuteCommandList(commandList);
     m_swapChain->Present();
 }
@@ -366,6 +367,14 @@ void Graphics::Resize(uint32_t width, uint32_t height) {
 
 void Graphics::ToggleVsync() {
     m_swapChain->ToggleVsync();
+}
+
+VSync Cyrex::Graphics::GetVsync() const noexcept {
+    return m_swapChain->GetVsync();
+}
+
+void Cyrex::Graphics::SetVsync(VSync vSync) noexcept {
+    m_swapChain->SetVsync(vSync);
 }
 
 void Graphics::UpdateCamera() noexcept {
@@ -468,64 +477,6 @@ void Graphics::OnMouseMoved(const Mouse& mouse) noexcept {
 
         m_cameraControls.Yaw -= mouse.GetDeltaX() * mouseSpeed;
     }
-}
-
-void Cyrex::Graphics::OnGUI(const std::shared_ptr<CommandList>& commandList, const RenderTarget& renderTarget)
-{
-    m_editor->NewFrame();
-
-    if (m_isLoading) {
-        // Show a progress bar.
-        ImGui::SetNextWindowPos(
-            ImVec2(m_clientWidth / 2.0f, m_clientHeight / 2.0f), 
-            0,
-            ImVec2(0.5, 0.5));
-        ImGui::SetNextWindowSize(ImVec2(m_clientWidth / 2.0f, 0));
-
-        ImGui::Begin("Loading ", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar);
-
-        ImGui::ProgressBar(m_loadingProgress);
-        ImGui::Text(m_loadingText.c_str());
-
-        ImGui::End();
-    }
-
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open file...", "Ctrl+O", nullptr, !m_isLoading)) {
-                m_showOpenFileDialog = true;
-            }
-
-            ImGui::EndMenu();
-        }
-
-        if (ImGui::BeginMenu("Options")) {
-            auto vSync = static_cast<bool>(m_swapChain->GetVsync());
-            if (ImGui::MenuItem("V-Sync", "V", &vSync)) {
-                m_swapChain->SetVsync(static_cast<VSync>(vSync));
-
-                const auto val = (vSync) ? "On" : "Off";
-                crxlog::info("Toggled Vsync: ", val);
-            }
-
-            ImGui::MenuItem("Animate Lights", "Space", &m_animateLights);
-            ImGui::EndMenu();
-        }
-        
-        static constexpr auto BUFFER_SIZE = 256;
-        char buffer[BUFFER_SIZE];
-        {
-            sprintf_s(buffer, BUFFER_SIZE, "FPS: %.2f (%.2f ms)  ", m_fps, 1.0 / m_fps * 1000.0);
-
-            const auto fpsTextSize = ImGui::CalcTextSize(buffer);
-
-            ImGui::SameLine((float)m_clientWidth  - fpsTextSize.x);
-            ImGui::Text(buffer);
-        }
-      
-        ImGui::EndMainMenuBar();
-    }
-    m_editor->Render(commandList, renderTarget);
 }
 
 void Graphics::KeyboardInput(Keyboard& kbd) noexcept {
