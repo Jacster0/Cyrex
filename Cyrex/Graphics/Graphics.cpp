@@ -243,7 +243,7 @@ void Graphics::LoadContent() {
     m_renderTarget.AttachTexture(AttachmentPoint::DepthStencil, depthTexture);
 
     // Make sure the copy command queue is finished before leaving this function.
-   /* commandQueue.WaitForFenceValue(fence);*/
+    commandQueue.WaitForFenceValue(fence);
 }
 
 void Graphics::UnLoadContent() noexcept { 
@@ -251,7 +251,7 @@ void Graphics::UnLoadContent() noexcept {
     m_editorLayer->Detach();
 }
 
-bool Cyrex::Graphics::LoadScene(const std::string& sceneFile) {
+bool Graphics::LoadScene(const std::string& sceneFile) {
     m_isLoading     = true;
 
     auto& commandQueue = m_device->GetCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
@@ -295,7 +295,7 @@ bool Cyrex::Graphics::LoadScene(const std::string& sceneFile) {
     return scene != nullptr;
 }
 
-bool Cyrex::Graphics::LoadingProgress(float loadingProgress) {
+bool Graphics::LoadingProgress(float loadingProgress) {
     m_loadingProgress = loadingProgress;
 
     return true;
@@ -369,11 +369,11 @@ void Graphics::ToggleVsync() {
     m_swapChain->ToggleVsync();
 }
 
-VSync Cyrex::Graphics::GetVsync() const noexcept {
+VSync Graphics::GetVsync() const noexcept {
     return m_swapChain->GetVsync();
 }
 
-void Cyrex::Graphics::SetVsync(VSync vSync) noexcept {
+void Graphics::SetVsync(VSync vSync) noexcept {
     m_swapChain->SetVsync(vSync);
 }
 
@@ -440,7 +440,6 @@ void Graphics::UpdateLights() noexcept {
     }
 
     m_lightingPSO->SetDirectionalLights(m_directionalLights);
-
     m_decalPSO->SetDirectionalLights(m_directionalLights);
 }
 
@@ -490,7 +489,7 @@ void Graphics::KeyboardInput(Keyboard& kbd) noexcept {
     m_cameraControls.Right    = static_cast<float>(kbd.KeyIsPressed('D'));
     m_cameraControls.Down     = static_cast<float>(kbd.KeyIsPressed('Q'));
     m_cameraControls.Up       = static_cast<float>(kbd.KeyIsPressed('E'));
-    m_cameraControls.Sneak    = (kbd.KeyIsPressed(VK_SHIFT));
+    m_cameraControls.Sneak    = kbd.KeyIsPressed(VK_SHIFT);
 
     if (kbd.KeyIsPressed('R')) {
         m_camera.SetTranslation(m_cameraData->InitialCamPos);
@@ -502,10 +501,10 @@ void Graphics::KeyboardInput(Keyboard& kbd) noexcept {
     }
 }
 
-void Cyrex::Graphics::OnOpenFileDialog() noexcept {
+void Graphics::OnOpenFileDialog() noexcept {
     if (m_fileDialog.Open() == DialogResult::OK) {
-        const auto& filePath = ToNarrow(m_fileDialog.GetDisplayName(SIGDN_FILESYSPATH));
+        const auto& filepath = m_fileDialog.GetFilePath();
 
-        m_loadingTask = std::async(std::launch::async, [this, filePath]() -> bool { return LoadScene(filePath); });
+        m_loadingTask = std::async(std::launch::async, [this, filepath]() -> bool { return LoadScene(ToNarrow(filepath)); });
     }
 }

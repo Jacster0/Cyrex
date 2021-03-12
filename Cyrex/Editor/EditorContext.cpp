@@ -17,27 +17,27 @@ void EditorContext::Render(Graphics& gfx, const std::shared_ptr<EditorLayer>& ed
                                        ImGuiWindowFlags_NoCollapse |
                                        ImGuiWindowFlags_NoScrollbar;
 
-    const auto isLoading = gfx.IsLoadingScene();
+    const auto& loadingData = gfx.GetLoadingData();
 
     //Save the screen width and height
     auto [width, height] = gfx.GetScreenSize();
 
     //Most of the frames will probably not be spent loading scenes.
-    if (isLoading) [[unlikely]] {
+    if (loadingData.IsSceneLoading) [[unlikely]] {
         ImGui::SetNextWindowPos(ImVec2(width / 2.0f, height / 2.0f), 0, ImVec2(0.5f, 0.5f));
         ImGui::SetNextWindowSize(ImVec2(width / 2.0f, 0));
 
         ImGui::Begin("Loading ", nullptr, uiOptions.ProgressbarWindowFlags);
 
-        ImGui::ProgressBar(gfx.GetLoadingProgress());
-        ImGui::Text(gfx.GetLoadingText().data());
+        ImGui::ProgressBar(loadingData.LoadingProgress);
+        ImGui::Text(loadingData.LoadingText.data());
 
         ImGui::End();
     }
 
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Open", "Ctrl+O", nullptr, !isLoading)) {
+            if (ImGui::MenuItem("Open", "Ctrl+O", nullptr, !loadingData.IsSceneLoading)) {
                 gfx.OnOpenFileDialog();
             }
             ImGui::EndMenu();

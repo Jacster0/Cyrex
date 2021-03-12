@@ -19,6 +19,12 @@ namespace Cyrex {
         DirectX::XMFLOAT3 Color;
     };
 
+    struct LoadingData {
+        float LoadingProgress;
+        bool IsSceneLoading;
+        std::string_view LoadingText;
+    };
+
     enum class VSync;
 
     class Keyboard;
@@ -35,7 +41,7 @@ namespace Cyrex {
     class ShaderResourceView;
     class Texture;
     class EditorLayer;
-   
+
     class Graphics {
     public:
         Graphics();
@@ -72,10 +78,8 @@ namespace Cyrex {
         bool& AnimateLights() noexcept { return m_animateLights; }
 
         [[nodiscard]] std::tuple<uint32_t, uint32_t> GetScreenSize() const noexcept { return { m_clientWidth, m_clientHeight }; }
-        [[nodiscard]] float GetLoadingProgress() const noexcept { return m_loadingProgress; }
-        [[nodiscard]] std::string_view GetLoadingText() const noexcept { return m_loadingText; }
-        [[nodiscard]] bool IsLoadingScene() const noexcept { return m_isLoading; }
         [[nodiscard]] float GetFramesPerSecond() const noexcept { return m_fps; }
+        [[nodiscard]] const LoadingData& GetLoadingData() const noexcept { return { m_loadingProgress, m_isLoading, m_loadingText }; }
     private:
         void UpdateCamera() noexcept;
         void UpdateLights() noexcept;

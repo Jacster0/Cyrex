@@ -24,6 +24,8 @@ namespace Cyrex {
         [[nodiscard]] const std::vector<COMDLG_FILTERSPEC>& GetFilter()  noexcept { return m_fileFilters; }
 
         [[nodiscard]] std::wstring GetDisplayName(_SIGDN sigdnName) const noexcept;
+        [[nodiscard]] std::wstring GetFilePath() const noexcept;
+
         void SetOwnerHWND(HWND owner) noexcept { m_ownerHwnd = owner; }
     private:
         Microsoft::WRL::ComPtr<IFileOpenDialog> m_openFileDialog;

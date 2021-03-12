@@ -71,7 +71,7 @@ namespace Cyrex::Math {
 
         DirectX::XMScalarSinCos(&dx, &dz, angle);
 
-        DirectX::XMVECTORF32 vec = { { { dx, 0, dz, 0 } } };
+        DirectX::XMVECTORF32 vec = { dx, 0, dz, 0 };
 
         return vec;
     }

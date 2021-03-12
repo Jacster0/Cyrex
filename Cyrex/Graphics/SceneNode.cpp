@@ -147,8 +147,7 @@ void Cyrex::SceneNode::Accept(IVisitor& visitor) {
     }
 
     // Visit children
-    for (auto& child : m_children)
-    {
+    for (auto& child : m_children) {
         child->Accept(visitor);
     }
 }

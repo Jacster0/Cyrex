@@ -44,3 +44,7 @@ std::wstring Cyrex::OpenFileDialog::GetDisplayName(_SIGDN sigdnName) const noexc
     }
     return std::wstring();
 }
+
+std::wstring Cyrex::OpenFileDialog::GetFilePath() const noexcept {
+    return GetDisplayName(SIGDN_FILESYSPATH);
+}
