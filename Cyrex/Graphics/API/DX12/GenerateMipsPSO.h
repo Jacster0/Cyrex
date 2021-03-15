@@ -36,11 +36,17 @@ namespace Cyrex {
         std::shared_ptr<PipelineStateObject> GetPipelineState() const noexcept { return m_pipelineState; }
         D3D12_CPU_DESCRIPTOR_HANDLE GetDefaultUAV() const { return m_defaultUAV.GetDescriptorHandle(); }
     private:
+        void CreateRootSignature() noexcept;
+        void CreatePSO() noexcept;
+        void CreateUAVS() noexcept;
+
         std::shared_ptr<RootSignature> m_rootSignature;
         std::shared_ptr<PipelineStateObject> m_pipelineState;
 
         // If generating less than 4 mip map levels, the unused mip maps
         // need to be padded with default UAVs
         DescriptorAllocation m_defaultUAV;
+
+        Device& m_device;
     };
 }
