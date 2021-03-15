@@ -37,22 +37,14 @@ Cyrex::Application::Application() {
 }
 
 Cyrex::Application::~Application() {
-	AssimpLogger<>::Kill();
+	AssimpLogger::Detach();
 	Console::Destroy();
 }
 
 int Cyrex::Application::Run() {
-	if (m_isInitialized) [[likely]] {
-		m_gfx->Initialize(m_window->GetWidth(), m_window->GetHeight());
-	
-		if (!m_gfx->IsInitialized()) [[unlikely]] {
-			crxlog::critical("Cannot render to screen because no Graphics object have been intialized");
-		}
-		m_window->SetImGuiIntialized(true);
-	    m_window->Show();
-	}
-	else [[unlikely]] {
-		crxlog::critical("Application is not intialized");
+	if (!m_isInitialized) [[unlikely]] {
+		crxlog::critical("Application is not initialized");
+	    return 1;
 	}
 
 	while (true) {
@@ -77,7 +69,17 @@ void Cyrex::Application::Initialize() noexcept {
 	m_gfx->SetHwnd(m_window->GetWindowHandle());
 	m_window->Kbd.EnableAutorepeat();
 
-	AssimpLogger<>::Attach();
+	AssimpLogger::Attach();
+
+	m_gfx->Initialize(m_window->GetWidth(), m_window->GetHeight());
+
+	if (!m_gfx->IsInitialized()) [[unlikely]] {
+		crxlog::critical("Cannot render to screen because no Graphics object have been intialized");
+		m_isInitialized = false;
+	    return;
+	}
+	m_window->SetImGuiIntialized(true);
+	m_window->Show();
 
 	m_isInitialized = true;
 }
