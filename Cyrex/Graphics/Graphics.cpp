@@ -141,11 +141,10 @@ void Graphics::Initialize(uint32_t width, uint32_t height) {
     crxlog::wlog(L"Adapter: ", m_device->GetDescription(), Logger::WNewLine());
 
     m_swapChain = m_device->CreateSwapChain(m_hWnd, DXGI_FORMAT_R8G8B8A8_UNORM);
-    m_tearingSupported = m_swapChain->IsTearingSupported();
-
     m_swapChain->SetVsync(m_vsync);
 
     m_editorLayer = std::make_shared<D3D12Layer>(*m_device, *m_swapChain, m_hWnd);
+
     m_editorLayer->Attach();
     m_editorLayer->SetThemeColors(EditorTheme::Dark);
    
@@ -189,9 +188,9 @@ void Graphics::LoadContent() {
     auto fence = commandQueue.ExecuteCommandList(commandList);
 
     //Create PSO's
-    m_lightingPSO = std::make_shared<EffectPSO>(m_device, EnableLighting::True,  EnableDecal::False);
-    m_decalPSO    = std::make_shared<EffectPSO>(m_device, EnableLighting::True,  EnableDecal::True);
-    m_unlitPSO    = std::make_shared<EffectPSO>(m_device, EnableLighting::False, EnableDecal::False);
+    m_lightingPSO = std::make_shared<EffectPSO>(*m_device, EnableLighting::True,  EnableDecal::False);
+    m_decalPSO    = std::make_shared<EffectPSO>(*m_device, EnableLighting::True,  EnableDecal::True);
+    m_unlitPSO    = std::make_shared<EffectPSO>(*m_device, EnableLighting::False, EnableDecal::False);
 
     // Create a color buffer with sRGB for gamma correction.
     const auto backBufferFormat  = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;

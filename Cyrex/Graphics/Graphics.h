@@ -79,7 +79,7 @@ namespace Cyrex {
 
         [[nodiscard]] std::tuple<uint32_t, uint32_t> GetScreenSize() const noexcept { return { m_clientWidth, m_clientHeight }; }
         [[nodiscard]] float GetFramesPerSecond() const noexcept { return m_fps; }
-        [[nodiscard]] const LoadingData& GetLoadingData() const noexcept { return { m_loadingProgress, m_isLoading, m_loadingText }; }
+        [[nodiscard]] const LoadingData GetLoadingData() const noexcept { return { m_loadingProgress, m_isLoading, m_loadingText }; }
     private:
         void UpdateCamera() noexcept;
         void UpdateLights() noexcept;
@@ -120,7 +120,6 @@ namespace Cyrex {
         D3D12_RECT m_scissorRect;
 
         VSync m_vsync;
-        bool m_tearingSupported;
         bool m_isIntialized = false;
         bool m_animateLights = true;
       
