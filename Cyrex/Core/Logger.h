@@ -141,7 +141,6 @@ namespace Cyrex {
 #endif
     }
 
-    template<Logger::Level lvl = Logger::Level::crx_default>
     class AssimpLogger : public Assimp::LogStream {
     public:
         virtual void write(const char* message) noexcept override {
@@ -150,7 +149,7 @@ namespace Cyrex {
             std::regex_match(message, match, m_assimpLogRegex);
 
             if (match.size() > 1) {
-                Logger::Get().Log(lvl, match.str(1), Logger::NewLine());
+                Logger::Get().Log(m_level, match.str(1), Logger::NewLine());
             }
         }
         static void Attach() noexcept {
@@ -161,15 +160,22 @@ namespace Cyrex {
 #endif
             auto assimpLogger = Assimp::DefaultLogger::create("", logSeverity, 0);
 
-            assimpLogger->attachStream(new AssimpLogger<Logger::Level::crx_debug>(), Assimp::Logger::Debugging);
-            assimpLogger->attachStream(new AssimpLogger<Logger::Level::crx_info>(),  Assimp::Logger::Info);
-            assimpLogger->attachStream(new AssimpLogger<Logger::Level::crx_warn>(),  Assimp::Logger::Warn);
-            assimpLogger->attachStream(new AssimpLogger<Logger::Level::crx_error>(), Assimp::Logger::Err);
+            assimpLogger->attachStream(new AssimpLogger(Logger::Level::crx_debug), Assimp::Logger::Debugging);
+            assimpLogger->attachStream(new AssimpLogger(Logger::Level::crx_info),  Assimp::Logger::Info);
+            assimpLogger->attachStream(new AssimpLogger(Logger::Level::crx_warn),  Assimp::Logger::Warn);
+            assimpLogger->attachStream(new AssimpLogger(Logger::Level::crx_error), Assimp::Logger::Err);
         }
 
-        static void Kill() noexcept {
+        static void Detach() noexcept {
             Assimp::DefaultLogger::kill();
         }
+    private:
+        AssimpLogger(Logger::Level lvl = Logger::Level::crx_default)
+            :
+            m_level(lvl)
+        {}
+
+        Logger::Level m_level;
     };
 }
 
