@@ -56,7 +56,7 @@ namespace Cyrex {
             NumRootParameters
         };
 
-        EffectPSO(std::shared_ptr<Device> device, EnableLighting enableLighting, EnableDecal enableDecal);
+        EffectPSO(Device& device, EnableLighting enableLighting, EnableDecal enableDecal);
 
         [[nodiscard]] const std::vector<PointLight>& GetPointLights() const noexcept { return m_pointLights; }
         void SetPointLights(const std::vector<PointLight>& pointLights) noexcept {
@@ -120,9 +120,13 @@ namespace Cyrex {
             DirectX::XMMATRIX Projection;
         };
 
+        void CreateRootSignature() noexcept;
+        void CreatePSO() noexcept;
+        void CreateSRV() noexcept;
+
         inline void BindTexture(CommandList& commandList, uint32_t offset, const std::shared_ptr<Texture>& texture);
 
-        std::shared_ptr<Device> m_device;
+        Device& m_device;
         std::shared_ptr<RootSignature> m_rootSignature;
         std::shared_ptr<PipelineStateObject> m_pipelineStateObject;
 

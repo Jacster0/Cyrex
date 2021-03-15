@@ -13,7 +13,7 @@
 namespace wrl = Microsoft::WRL;
 namespace dx  = DirectX;
 
-Cyrex::EffectPSO::EffectPSO(std::shared_ptr<Device> device, EnableLighting enableLighting, EnableDecal enableDecal)
+Cyrex::EffectPSO::EffectPSO(Device& device, EnableLighting enableLighting, EnableDecal enableDecal)
     :
     m_device(device),
     m_enableLighting(static_cast<bool>(enableLighting)),
@@ -21,6 +21,45 @@ Cyrex::EffectPSO::EffectPSO(std::shared_ptr<Device> device, EnableLighting enabl
 {
     m_pMVP = std::make_unique<MVP>();
 
+    //Create the root signature
+    CreateRootSignature();
+    //Create the PSO
+    CreatePSO();
+    //Create an SRV that can be used to pad unused texture slots.
+    CreateSRV();
+}
+
+void Cyrex::EffectPSO::CreateRootSignature() noexcept {
+    D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
+                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
+                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+
+    //Descriptor range for the textures
+    CD3DX12_DESCRIPTOR_RANGE1 descriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8, 3);
+
+    CD3DX12_ROOT_PARAMETER1 rootParameters[RootParameters::NumRootParameters] {};
+    rootParameters[RootParameters::MatricesCB].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_VERTEX);
+    rootParameters[RootParameters::MaterialCB].InitAsConstantBufferView(0, 1, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
+
+    rootParameters[RootParameters::LightPropertiesCB].InitAsConstants(sizeof(LightProperties) / 4, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+    rootParameters[RootParameters::PointLights].InitAsShaderResourceView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
+    rootParameters[RootParameters::SpotLights].InitAsShaderResourceView(1, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
+    rootParameters[RootParameters::DirectionalLights].InitAsShaderResourceView(2, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
+
+    rootParameters[RootParameters::Textures].InitAsDescriptorTable(1, &descriptorRange, D3D12_SHADER_VISIBILITY_PIXEL);
+
+    CD3DX12_STATIC_SAMPLER_DESC anisotropicSampler(0, D3D12_FILTER_ANISOTROPIC);
+
+    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
+    rootSignatureDescription.Init_1_1(RootParameters::NumRootParameters, rootParameters, 1, &anisotropicSampler, rootSignatureFlags);
+
+    m_rootSignature = m_device.CreateRootSignature(rootSignatureDescription.Desc_1_1);
+
+}
+
+void Cyrex::EffectPSO::CreatePSO() noexcept {
+    //Load the shaders
     wrl::ComPtr<ID3DBlob> vertexShaderBlob;
     ThrowIfFailed(D3DReadFileToBlob(L"Graphics/Shaders/Compiled/VertexShader.cso", &vertexShaderBlob));
 
@@ -37,33 +76,6 @@ Cyrex::EffectPSO::EffectPSO(std::shared_ptr<Device> device, EnableLighting enabl
     else {
         ThrowIfFailed(D3DReadFileToBlob(L"Graphics/Shaders/Compiled/UnlitPS.cso", &pixelShaderBlob));
     }
-
-    //Create the root signature.
-    D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
-                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
-                                                    D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
-
-    //Descriptor range for the textures
-    CD3DX12_DESCRIPTOR_RANGE1 descriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 8, 3);
-
-    CD3DX12_ROOT_PARAMETER1 rootParameters[RootParameters::NumRootParameters];
-    rootParameters[RootParameters::MatricesCB].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_VERTEX);
-    rootParameters[RootParameters::MaterialCB].InitAsConstantBufferView(0, 1, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
-
-    rootParameters[RootParameters::LightPropertiesCB].InitAsConstants(sizeof(LightProperties) / 4, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
-    rootParameters[RootParameters::PointLights].InitAsShaderResourceView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
-    rootParameters[RootParameters::SpotLights].InitAsShaderResourceView(1, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
-    rootParameters[RootParameters::DirectionalLights].InitAsShaderResourceView(2, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
-
-    rootParameters[RootParameters::Textures].InitAsDescriptorTable(1, &descriptorRange, D3D12_SHADER_VISIBILITY_PIXEL);
-
-    CD3DX12_STATIC_SAMPLER_DESC anisotropicSampler(0, D3D12_FILTER_ANISOTROPIC);
-
-    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
-    rootSignatureDescription.Init_1_1(RootParameters::NumRootParameters, rootParameters, 1, &anisotropicSampler, rootSignatureFlags);
-
-    m_rootSignature = m_device->CreateRootSignature(rootSignatureDescription.Desc_1_1);
 
     //Set up the pipeline state
     struct PipeLineStateStream {
@@ -82,14 +94,14 @@ Cyrex::EffectPSO::EffectPSO(std::shared_ptr<Device> device, EnableLighting enabl
     auto backBufferFormat  = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
     auto depthBufferFormat = DXGI_FORMAT_D32_FLOAT;
 
-    auto sampleDesc = m_device->GetMultisampleQualityLevels(backBufferFormat);
+    auto sampleDesc = m_device.GetMultisampleQualityLevels(backBufferFormat);
 
     D3D12_RT_FORMAT_ARRAY rtvFormats = {};
     rtvFormats.NumRenderTargets      = 1;
     rtvFormats.RTFormats[0]          = backBufferFormat;
 
     CD3DX12_RASTERIZER_DESC rasterizerState(D3D12_DEFAULT);
-    rasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+    rasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 
     if (m_enableDecal) {
         //Disable culling on decal geometry
@@ -106,9 +118,10 @@ Cyrex::EffectPSO::EffectPSO(std::shared_ptr<Device> device, EnableLighting enabl
     pipelineStateStream.RTVFormats            = rtvFormats;
     pipelineStateStream.SampleDesc            = sampleDesc;
 
-    m_pipelineStateObject = m_device->CreatePipelineStateObject(pipelineStateStream);
+    m_pipelineStateObject = m_device.CreatePipelineStateObject(pipelineStateStream);
+}
 
-    //Create an SRV that can be used to pad unused texture slots.
+void Cyrex::EffectPSO::CreateSRV() noexcept {
     D3D12_SHADER_RESOURCE_VIEW_DESC defaultSRV = {};
     defaultSRV.Format                          = DXGI_FORMAT_R8G8B8A8_UNORM;
     defaultSRV.ViewDimension                   = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -118,7 +131,25 @@ Cyrex::EffectPSO::EffectPSO(std::shared_ptr<Device> device, EnableLighting enabl
     defaultSRV.Texture2D.ResourceMinLODClamp   = 0;
     defaultSRV.Shader4ComponentMapping         = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
-    m_defaultSRV = m_device->CreateShaderResourceView(nullptr, &defaultSRV);
+    m_defaultSRV = m_device.CreateShaderResourceView(nullptr, &defaultSRV);
+}
+
+
+inline void Cyrex::EffectPSO::BindTexture(CommandList& commandList, uint32_t offset, const std::shared_ptr<Texture>& texture) {
+    if (texture) {
+        commandList.SetShaderResourceView(
+            RootParameters::Textures,
+            offset,
+            texture,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    }
+    else {
+        commandList.SetShaderResourceView(
+            RootParameters::Textures,
+            offset,
+            m_defaultSRV,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    }
 }
 
 void Cyrex::EffectPSO::Apply(CommandList& commandList) {
@@ -171,21 +202,4 @@ void Cyrex::EffectPSO::Apply(CommandList& commandList) {
     }
 
     m_dirtyFlags = DF_None;
-}
-
-inline void Cyrex::EffectPSO::BindTexture(CommandList& commandList, uint32_t offset, const std::shared_ptr<Texture>& texture) {
-    if (texture) {
-        commandList.SetShaderResourceView(
-            RootParameters::Textures, 
-            offset, 
-            texture, 
-            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    }
-    else {
-        commandList.SetShaderResourceView(
-            RootParameters::Textures, 
-            offset, 
-            m_defaultSRV, 
-            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    }
 }
