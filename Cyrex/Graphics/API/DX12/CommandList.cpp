@@ -783,7 +783,7 @@ void Cyrex::CommandList::Dispatch(uint32_t numGroupsX, uint32_t numGroupsY, uint
     m_d3d12CommandList->Dispatch(numGroupsX, numGroupsY, numGroupsZ);
 }
 
-void Cyrex::CommandList::Close() {
+void Cyrex::CommandList::Close() { 
     FlushResourceBarriers();
     m_d3d12CommandList->Close();
 }
