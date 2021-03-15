@@ -8,6 +8,7 @@ using namespace Microsoft::WRL;
 Cyrex::OpenFileDialog::OpenFileDialog() noexcept {
     auto hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_openFileDialog));
 
+    m_openFileDialog->SetTitle(L"Cyrex Open file Dialog");
     m_canShowDialog = SUCCEEDED(hr);
 }
 
