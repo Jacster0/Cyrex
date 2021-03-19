@@ -1,6 +1,6 @@
 ## Cyrex is a game engine written in modern C++ and DirectX 12.
 
-[![Sponza rendered with Cyrex](Cyrex/Resources/Screenshots/Sponza.PNG?raw=true)](#)
+[![Sponza rendered with Cyrex](Cyrex/Resources/Screenshots/CyrexSponzaScene.PNG?raw=true)](#)
 
 Resources I used to build this Engine:
 
