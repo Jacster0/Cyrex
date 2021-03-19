@@ -41,6 +41,7 @@ namespace Cyrex {
     class ShaderResourceView;
     class Texture;
     class EditorLayer;
+    class EditorContext;
 
     class Graphics {
     public:
@@ -124,6 +125,8 @@ namespace Cyrex {
         bool m_animateLights = true;
       
         std::shared_ptr<EditorLayer> m_editorLayer;
+        std::unique_ptr<EditorContext> m_editorContext;
+
         std::shared_ptr<Device> m_device;
         std::shared_ptr<SwapChain> m_swapChain;
 
@@ -135,10 +138,11 @@ namespace Cyrex {
         GameTimer m_timer;
 
         std::shared_ptr<Scene> m_scene;
+        std::shared_ptr<Scene> m_lightBulb;
 
         std::shared_ptr<Scene> m_cube;
         std::shared_ptr<Scene> m_sphere;
-        std::shared_ptr<Scene> m_cone;
+        std::shared_ptr<Scene> m_flashLight;
         std::shared_ptr<Scene> m_torus;
         std::shared_ptr<Scene> m_plane;
 

@@ -10,6 +10,7 @@
 
 #include "Editor/D3D12Layer.h"
 #include "Editor/EditorContext.h"
+#include "Editor/LightsEditorPanel.h"
 
 #include "Core/Logger.h"
 #include "Core/Input/Keyboard.h"
@@ -66,6 +67,10 @@ Graphics::Graphics()
     m_scissorRect(CD3DX12_RECT(0, 0, g_longMax, g_longMax)),
     m_vsync(VSync::Off)
 {
+    m_pointLights.resize(1);
+    m_spotLights.resize(1);
+    m_directionalLights.resize(1);
+
     dx::XMVECTOR cameraPos    = dx::XMVectorSet(0, 5.0f, -20, 1);
     dx::XMVECTOR cameraTarget = dx::XMVectorSet(0, 5, 0, 1);
     dx::XMVECTOR cameraUp     = dx::XMVectorSet(0, 1, 0, 0);
@@ -148,6 +153,8 @@ void Graphics::Initialize(uint32_t width, uint32_t height) {
     m_editorLayer->Attach();
     m_editorLayer->SetThemeColors(EditorTheme::Dark);
    
+    m_editorContext = std::make_unique<EditorContext>(*this);
+
     m_clientWidth  = width;
     m_clientHeight = height;
 
@@ -185,12 +192,15 @@ void Graphics::LoadContent() {
     auto& commandQueue = m_device->GetCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
     auto  commandList  = commandQueue.GetCommandList();
 
+    m_lightBulb  = GeometryGenerator::CreateSphere(commandList, 0.1f);
+    m_flashLight = GeometryGenerator::CreateCone(commandList, 0.1f, 0.1f);
+
     auto fence = commandQueue.ExecuteCommandList(commandList);
 
     //Create PSO's
-    m_lightingPSO = std::make_shared<EffectPSO>(*m_device, EnableLighting::True,  EnableDecal::False);
-    m_decalPSO    = std::make_shared<EffectPSO>(*m_device, EnableLighting::True,  EnableDecal::True);
-    m_unlitPSO    = std::make_shared<EffectPSO>(*m_device, EnableLighting::False, EnableDecal::False);
+    m_lightingPSO  = std::make_shared<EffectPSO>(*m_device, EnableLighting::True,  EnableDecal::False);
+    m_decalPSO     = std::make_shared<EffectPSO>(*m_device, EnableLighting::True,  EnableDecal::True);
+    m_unlitPSO     = std::make_shared<EffectPSO>(*m_device, EnableLighting::False, EnableDecal::False);
 
     // Create a color buffer with sRGB for gamma correction.
     const auto backBufferFormat  = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -316,6 +326,7 @@ void Graphics::Render() {
         //Create the scene visitors
         SceneVisitor opaquePass(*commandList, m_camera, *m_lightingPSO, RenderPass::Opaque);
         SceneVisitor transparentPass(*commandList, m_camera, *m_decalPSO, RenderPass::Transparent);
+        SceneVisitor unlitPass(*commandList, m_camera, *m_unlitPSO, RenderPass::Opaque);
 
         // Clear the render targets.
         TextureManager::ClearTexture(
@@ -338,6 +349,28 @@ void Graphics::Render() {
             m_scene->Accept(transparentPass);
         }
        
+
+        MaterialProperties lightMaterial = Material::Black;
+        for (const auto& l : m_pointLights) {
+            lightMaterial.Emissive = l.Color;
+            auto lightPos = XMLoadFloat4(&l.WorldSpacePosition);
+            auto worldMatrix = XMMatrixTranslationFromVector(lightPos);
+
+            m_lightBulb->GetRootNode()->SetLocalTransform(worldMatrix);
+            m_lightBulb->GetRootNode()->GetMesh()->GetMaterial()->SetMaterialProperties(lightMaterial);
+            m_lightBulb->Accept(unlitPass);
+        }
+
+        for (const auto& l : m_spotLights) {
+            lightMaterial.Emissive = l.Color;
+            auto lightPos    = XMLoadFloat4(&l.WorldSpacePosition);
+            auto worldMatrix = XMMatrixTranslationFromVector(lightPos);
+
+            m_flashLight->GetRootNode()->SetLocalTransform(worldMatrix);
+            m_flashLight->GetRootNode()->GetMesh()->GetMaterial()->SetMaterialProperties(lightMaterial);
+            m_flashLight->Accept(unlitPass);
+        }
+
         auto swapChainBuffer  = m_swapChain->GetRenderTarget().GetTexture(AttachmentPoint::Color0);
         auto msaaRenderTarget = renderTarget.GetTexture(AttachmentPoint::Color0);
 
@@ -345,7 +378,7 @@ void Graphics::Render() {
     }
 
     //Render the UI
-    EditorContext::Render(*this, m_editorLayer, *commandList);
+    m_editorContext->Render(m_editorLayer, *commandList);
 
     commandQueue.ExecuteCommandList(commandList);
     m_swapChain->Present();
@@ -356,7 +389,7 @@ void Graphics::Resize(uint32_t width, uint32_t height) {
     m_clientHeight = std::max(1u, height);
 
     float aspectRatio = m_clientWidth / static_cast<float>(m_clientHeight);
-    m_camera.SetProj(45.0f, aspectRatio, 0.1f, 100.0f);
+    m_camera.SetProj(45.0f, aspectRatio, 0.1f, 1000.0f);
 
     m_viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(m_clientWidth), static_cast<float>(m_clientHeight));
 
@@ -402,43 +435,69 @@ void Graphics::UpdateCamera() noexcept {
 }
 
 void Graphics::UpdateLights() noexcept {
-    XMMATRIX viewMatrix = m_camera.GetView();
+    const auto viewMatrix = m_camera.GetView();
 
-    static constexpr auto pi = Math::MathConstants::pi_float;
-    const int numDirectionalLights = 3;
+    //Load the lighproperties from the editor
+    const auto& lightProperties      = m_editorContext->Get<LightProperties>();
 
-    static const std::array lightColors = { Colors::White, Colors::White, Colors::White };
+    auto& directionalLightProperties = lightProperties.mDirectionalLightProperties;
+    auto& pointLightProperties       = lightProperties.mPointLightProperties;
+    auto& spotLightProperties        = lightProperties.mSpotLightProperties;
 
-    static float lightAnimTime = 0.0f;
+    //Pointlight...
+    auto& pointLight                = m_pointLights[0];
+    pointLight.Color                = pointLightProperties.Color;
+    pointLight.ConstantAttenuation  = pointLightProperties.ConstantAttenuation;
+    pointLight.LinearAttenuation    = pointLightProperties.LinearAttenuation;
+    pointLight.QuadraticAttenuation = pointLightProperties.QuadraticAttenuation;
+    pointLight.Ambient              = pointLightProperties.Ambient;
+    pointLight.WorldSpacePosition   = pointLightProperties.Position;
 
-    if (m_animateLights) {
-        lightAnimTime += static_cast<float>(m_timer.GetDeltaSeconds()) * 0.5f * pi;
-    }
+    XMVECTOR pointLightWorldSpacePosition = XMLoadFloat4(&pointLight.WorldSpacePosition);
+    XMStoreFloat4(&pointLight.ViewSpacePosition, XMVector3TransformCoord(pointLightWorldSpacePosition, viewMatrix));
 
-    constexpr float radius = 1.0f;
+    //Directional light...
+    auto& directionalLight                 = m_directionalLights[0];
+    directionalLight.Ambient               = directionalLightProperties.Ambient;
+    directionalLight.Color                 = directionalLightProperties.Color;
+    directionalLight.WorldSpaceDirection.x = sin(XMConvertToRadians(directionalLightProperties.Angle));
+    directionalLight.WorldSpaceDirection.y = cos(XMConvertToRadians(directionalLightProperties.Angle));
 
-    float directionalLightOffset = numDirectionalLights > 0 ? 2.0f * pi / numDirectionalLights : 0;
+    XMVECTOR directionalLightWorldSpaceDirection = XMLoadFloat4(&directionalLight.WorldSpaceDirection);
+    directionalLightWorldSpaceDirection          = XMVector3Normalize(XMVectorNegate(directionalLightWorldSpaceDirection));
 
-    m_directionalLights.resize(numDirectionalLights);
+    XMStoreFloat4(&directionalLight.WorldSpaceDirection, directionalLightWorldSpaceDirection);
+    XMStoreFloat4(&directionalLight.ViewSpaceDirection,  XMVector3TransformNormal(directionalLightWorldSpaceDirection, viewMatrix));
 
-    for (int i = 0; i < numDirectionalLights; i++) {
-        DirectionalLight& light = m_directionalLights[i];
+    //Spotlight...
+    auto& spotLight                 = m_spotLights[0];
+    spotLight.Color                 = spotLightProperties.Color;
+    spotLight.ConstantAttenuation   = spotLightProperties.ConstantAttenuation;
+    spotLight.LinearAttenuation     = spotLightProperties.LinearAttenuation;
+    spotLight.QuadraticAttenuation  = spotLightProperties.QuadraticAttenuation;
+    spotLight.Ambient               = spotLightProperties.Ambient;
+    spotLight.WorldSpacePosition    = spotLightProperties.Position;
+    spotLight.SpotAngle             = XMConvertToRadians(spotLightProperties.SpotAngle);
+    spotLight.WorldSpaceDirection.x = sin(XMConvertToRadians(spotLightProperties.Direction));
+    spotLight.WorldSpaceDirection.y = cos(XMConvertToRadians(spotLightProperties.Direction));
 
-        float angle = lightAnimTime + directionalLightOffset * i;
+    XMVECTOR spotLightWorldSpaceDirection = XMLoadFloat4(&spotLight.WorldSpaceDirection);
+    spotLightWorldSpaceDirection = XMVector3Normalize(XMVectorNegate(spotLightWorldSpaceDirection));
 
-        XMVECTORF32 worldSpacePosition = { static_cast<float>(std::cos(angle)) * radius,
-                                           static_cast<float>(std::sin(angle)) * radius, radius, 1.0f };
+    XMVECTOR spotLightWorldSpacePosition  = XMLoadFloat4(&spotLight.WorldSpacePosition);
+   
 
-        XMVECTOR worldSpaceDirection = XMVector3Normalize(XMVectorNegate(worldSpacePosition));
-        XMVECTOR viewSpaceDirection  = XMVector3TransformNormal(worldSpaceDirection, viewMatrix);
+    XMStoreFloat4(&spotLight.WorldSpaceDirection, spotLightWorldSpaceDirection);
+    XMStoreFloat4(&spotLight.ViewSpaceDirection,  XMVector3TransformNormal(spotLightWorldSpaceDirection, viewMatrix));
+    XMStoreFloat4(&spotLight.ViewSpacePosition,   XMVector3TransformCoord(spotLightWorldSpacePosition, viewMatrix));
 
-        XMStoreFloat4(&light.WorldSpaceDirection, worldSpaceDirection);
-        XMStoreFloat4(&light.ViewSpaceDirection, viewSpaceDirection);
-
-        light.Color = XMFLOAT4(lightColors[i]);
-    }
-
+    //Set the lights in the PSO
+    m_lightingPSO->SetSpotLights(m_spotLights);
+    m_lightingPSO->SetPointLights(m_pointLights);
     m_lightingPSO->SetDirectionalLights(m_directionalLights);
+
+    m_decalPSO->SetSpotLights(m_spotLights);
+    m_decalPSO->SetPointLights(m_pointLights);
     m_decalPSO->SetDirectionalLights(m_directionalLights);
 }
 
