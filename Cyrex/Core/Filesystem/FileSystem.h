@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <concepts>
 
 //When cppwin32 has a stable release this won't be a problem anymore
 #ifdef CreateDirectory
@@ -41,5 +42,10 @@ namespace Cyrex {
         [[nodiscard]] static const std::string ConvertToGenericPath(const std::string& path) noexcept;
         [[nodiscard]] static const DirectoryList GetDirectoriesInDirectory(const std::string& path) noexcept;
         [[nodiscard]] static const FileList GetFilesInDirectory(const std::string& path) noexcept;
+
+        template<typename ...Args>
+        [[nodiscard]] static inline std::string AppendMultiple(Args&&... args) noexcept {
+            return (std::ostringstream{} << ... << args).str();
+        }
     };
 }
