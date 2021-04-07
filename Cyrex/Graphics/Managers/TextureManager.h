@@ -11,7 +11,7 @@ namespace Cyrex {
     class Texture;
     class TextureManager {
     public:
-        static std::shared_ptr<Texture> LoadTextureFromFile(CommandList& commandList, const std::wstring fileName, bool sRGB);
+        static std::shared_ptr<Texture> LoadTextureFromFile(CommandList& commandList, const std::string fileName, bool sRGB);
         static void ClearTexture(CommandList& commandList, const std::shared_ptr<Texture>& texture, const DirectX::XMVECTORF32 clearColor);
         static void ClearDepthStencilTexture(
             CommandList& commandList,

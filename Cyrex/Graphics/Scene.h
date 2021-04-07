@@ -1,7 +1,6 @@
 #pragma once
 
 #include <DirectXCollision.h>
-#include <filesystem>
 #include <functional>
 #include <memory>
 #include <map>
@@ -34,8 +33,8 @@ namespace Cyrex {
         bool LoadSceneFromFile(CommandList& commandList, const std::string& fileName, const std::function<bool(float)>& loadingProgress);
         bool LoadSceneFromString(CommandList& commandList, const std::string& sceneString, const std::string format);
     private:
-        void ImportScene(CommandList& commandList, const aiScene& scene, std::filesystem::path parentPath);
-        void ImportMaterial(CommandList& commandList, const aiMaterial& material, std::filesystem::path parentPath);
+        void ImportScene(CommandList& commandList, const aiScene& scene, const std::string& parentPath);
+        void ImportMaterial(CommandList& commandList, const aiMaterial& material, const std::string& parentPath);
         void ImportMesh(CommandList& commandList, const aiMesh& aiMesh);
         std::shared_ptr<SceneNode> ImportSceneNode(std::shared_ptr<SceneNode> parent, const aiNode* aiNode);
 

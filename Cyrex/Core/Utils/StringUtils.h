@@ -17,4 +17,16 @@ namespace Cyrex {
 
         return std::wstring(wide);
     }
+
+    inline bool IsEmptyOrWhiteSpace(const std::string& str) noexcept {
+        //Check if the string is empty
+        if (str.empty()) {
+            return true;
+        }
+        //Check if the string contains any non whitespace character
+        if (str.find_first_not_of(' ') != std::string::npos) {
+            return false;
+        }
+        return true;
+    }
 }

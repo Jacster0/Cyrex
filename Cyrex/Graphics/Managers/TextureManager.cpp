@@ -8,11 +8,12 @@
 #include "Graphics/API/DX12/d3dx12.h"
 #include "Graphics/API/DX12/ResourceStateTracker.h"
 
+#include "Core/Utils/StringUtils.h"
+#include "Core/Filesystem/FileSystem.h"
+
 #include <wrl.h>
-#include <filesystem>
 #include <vector>
 
-namespace fs = std::filesystem;
 namespace wrl = Microsoft::WRL;
 using namespace Cyrex;
 using namespace DirectX;
@@ -20,16 +21,16 @@ using namespace DirectX;
 std::map<std::wstring, ID3D12Resource*> TextureManager::ms_textureCache;
 std::mutex TextureManager::ms_textureCacheMutex;
 
-std::shared_ptr<Texture> TextureManager::LoadTextureFromFile(CommandList& commandList, const std::wstring fileName, bool sRGB) {
+std::shared_ptr<Texture> TextureManager::LoadTextureFromFile(CommandList& commandList, const std::string fileName, bool sRGB) {
     std::shared_ptr<Texture> texture;
-    fs::path filePath(fileName);
 
-    if (!fs::exists(filePath)) {
+    if (!FileSystem::Exists(fileName)) {
         throw std::exception("File not found");
     }
+    const std::wstring wideFileName = ToWide(fileName);
 
-    std::lock_guard<std::mutex> lock(ms_textureCacheMutex);
-    const auto iter = ms_textureCache.find(fileName);
+    std::unique_lock<std::mutex> lock(ms_textureCacheMutex);
+    const auto iter = ms_textureCache.find(wideFileName);
 
     if (iter != ms_textureCache.end()) {
         texture = commandList.GetDevice().CreateTexture(iter->second);
@@ -39,19 +40,19 @@ std::shared_ptr<Texture> TextureManager::LoadTextureFromFile(CommandList& comman
         TexMetadata metadata;
         ScratchImage scratchImage;
 
-        const auto fileExtension = filePath.extension();
+        const auto fileExtension = FileSystem::GetExtensionFromFilePath(fileName);
 
         if (fileExtension == ".dds") {
-            ThrowIfFailed(LoadFromDDSFile(fileName.c_str(), DDS_FLAGS_FORCE_RGB, &metadata, scratchImage));
+            ThrowIfFailed(LoadFromDDSFile(wideFileName.c_str(), DDS_FLAGS_FORCE_RGB, &metadata, scratchImage));
         }
         else if (fileExtension == ".hdr") {
-            ThrowIfFailed(LoadFromHDRFile(fileName.c_str(), &metadata, scratchImage));
+            ThrowIfFailed(LoadFromHDRFile(wideFileName.c_str(), &metadata, scratchImage));
         }
         else if (fileExtension == ".tga") {
-            ThrowIfFailed(LoadFromTGAFile(fileName.c_str(), &metadata, scratchImage));
+            ThrowIfFailed(LoadFromTGAFile(wideFileName.c_str(), &metadata, scratchImage));
         }
         else {
-            ThrowIfFailed(LoadFromWICFile(fileName.c_str(), WIC_FLAGS_FORCE_RGB, &metadata, scratchImage));
+            ThrowIfFailed(LoadFromWICFile(wideFileName.c_str(), WIC_FLAGS_FORCE_RGB, &metadata, scratchImage));
         }
 
         if (sRGB) {
@@ -99,7 +100,7 @@ std::shared_ptr<Texture> TextureManager::LoadTextureFromFile(CommandList& comman
             IID_PPV_ARGS(&textureResource)));
 
         texture = commandList.GetDevice().CreateTexture(textureResource);
-        texture->SetName(fileName);
+        texture->SetName(wideFileName);
 
         //Update the global state tracker
         ResourceStateTracker::AddGlobalResourceState(textureResource.Get(), D3D12_RESOURCE_STATE_COMMON);
@@ -120,7 +121,7 @@ std::shared_ptr<Texture> TextureManager::LoadTextureFromFile(CommandList& comman
             commandList.GenerateMips(texture);
         }
 
-        ms_textureCache[fileName] = textureResource.Get();
+        ms_textureCache[wideFileName] = textureResource.Get();
     }
 
     return texture;

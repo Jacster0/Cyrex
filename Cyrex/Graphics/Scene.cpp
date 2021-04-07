@@ -2,13 +2,16 @@
 #include "Graphics/API/DX12/CommandList.h"
 #include "Graphics/API/DX12/Device.h"
 #include "Graphics/Material.h"
-#include "Graphics/API/DX12/Mesh.h"
+#include "Graphics/Mesh.h"
 #include "Graphics/API/DX12/Texture.h"
 #include "Material.h"
 #include "SceneNode.h"
 #include "API/DX12/VertexTypes.h"
 #include "Core/Visitor.h"
 #include "Managers/TextureManager.h"
+
+#include "Core/Filesystem/FileSystem.h"
+#include "Core/Utils/StringUtils.h"
 
 #include "assimp/aabb.h"
 #include "assimp/Importer.hpp"
@@ -22,7 +25,8 @@
 
 namespace dx = DirectX;
 namespace cx = Cyrex;
-namespace fs = std::filesystem;
+
+using namespace Cyrex;
 
 class ProgressHandler : public Assimp::ProgressHandler {
 public:
@@ -72,16 +76,15 @@ void Cyrex::Scene::Accept(IVisitor& visitor) {
 }
 
 bool Cyrex::Scene::LoadSceneFromFile(CommandList& commandList, const std::string& fileName, const std::function<bool(float)>& loadingProgress) {
-    fs::path filePath   = fileName;
-    fs::path exportPath = fs::path(filePath).replace_extension("assbin");
+    auto exportPath = FileSystem::ReplaceExtension(fileName, "assbin");
 
-    fs::path parentPath;
+    std::string parentPath;
 
-    if (filePath.has_parent_path()) {
-        parentPath = filePath.parent_path();
+    if (FileSystem::HasParentPath(fileName)) {
+        parentPath = FileSystem::GetParentDirectory(fileName);
     }
     else {
-        parentPath = fs::current_path();
+        parentPath = FileSystem::GetWorkingDirectory();
     }
 
     Assimp::Importer importer;
@@ -90,9 +93,10 @@ bool Cyrex::Scene::LoadSceneFromFile(CommandList& commandList, const std::string
     importer.SetProgressHandler(new ProgressHandler(*this, loadingProgress));
 
     //check if a preprocessed file exists
-    if (fs::exists(exportPath) && fs::is_regular_file(exportPath)) {
-        scene = importer.ReadFile(exportPath.string(), aiProcess_GenBoundingBoxes);
+    if (FileSystem::IsFile(exportPath)) {
+        scene = importer.ReadFile(exportPath, aiProcess_GenBoundingBoxes);
     }
+
     else {
         //File has not been preprocessed yet. Import and process the file.
         importer.SetPropertyFloat(AI_CONFIG_PP_GSN_MAX_SMOOTHING_ANGLE, 80.0f);
@@ -104,12 +108,12 @@ bool Cyrex::Scene::LoadSceneFromFile(CommandList& commandList, const std::string
             aiProcess_ConvertToLeftHanded             | 
             aiProcess_GenBoundingBoxes;
         
-        scene = importer.ReadFile(filePath.string(), preprocessFlag);
+        scene = importer.ReadFile(fileName, preprocessFlag);
 
         if (scene) {
             // Export the preprocessed scene file for faster loading next time.
             Assimp::Exporter exporter;
-            exporter.Export(scene, "assbin", exportPath.string(), 0);
+            exporter.Export(scene, "assbin", exportPath, 0);
         }
     }
 
@@ -136,11 +140,11 @@ bool Cyrex::Scene::LoadSceneFromString(CommandList& commandList, const std::stri
         return false; 
     }
 
-    ImportScene(commandList, *scene, fs::current_path());
+    ImportScene(commandList, *scene, FileSystem::GetWorkingDirectory());
     return true;
 }
 
-void Cyrex::Scene::ImportScene(CommandList& commandList, const aiScene& scene, std::filesystem::path parentPath) {
+void Cyrex::Scene::ImportScene(CommandList& commandList, const aiScene& scene, const std::string& parentPath) {
     if (m_rootNode) {
         m_rootNode.reset();
     }
@@ -162,7 +166,7 @@ void Cyrex::Scene::ImportScene(CommandList& commandList, const aiScene& scene, s
     m_rootNode = ImportSceneNode(nullptr, scene.mRootNode);
 }
 
-void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& material, std::filesystem::path parentPath) {
+void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& material, const std::string& parentPath) {
     aiString materialName;
     aiString aiTexturePath;
 
@@ -215,9 +219,10 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
         material.GetTexture(aiTextureType_AMBIENT, 0, &aiTexturePath, nullptr, nullptr,
                             &blendFactor, &aiBlendOperation) == aiReturn_SUCCESS)
     {
-        fs::path texturePath(aiTexturePath.C_Str());
-
-        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
+        auto texture = TextureManager::LoadTextureFromFile(
+            commandList, 
+            FileSystem::Append(parentPath, aiTexturePath.C_Str()), 
+            true);
         pMaterial->SetTexture(Material::TextureType::Ambient, texture);
     }
 
@@ -226,9 +231,10 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
         material.GetTexture(aiTextureType_EMISSIVE, 0, &aiTexturePath, nullptr, nullptr,
             &blendFactor, &aiBlendOperation) == aiReturn_SUCCESS)
     {
-        fs::path texturePath(aiTexturePath.C_Str());
-
-        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
+        auto texture = TextureManager::LoadTextureFromFile(
+            commandList, 
+            FileSystem::Append(parentPath, aiTexturePath.C_Str()), 
+            true);
         pMaterial->SetTexture(Material::TextureType::Emissive, texture);
     }
 
@@ -237,9 +243,10 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
         material.GetTexture(aiTextureType_DIFFUSE, 0, &aiTexturePath, nullptr, nullptr,
             &blendFactor, &aiBlendOperation) == aiReturn_SUCCESS)
     {
-        fs::path texturePath(aiTexturePath.C_Str());
-
-        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
+        auto texture = TextureManager::LoadTextureFromFile(
+            commandList, 
+            FileSystem::Append(parentPath, aiTexturePath.C_Str()), 
+            true);
         pMaterial->SetTexture(Material::TextureType::Diffuse, texture);
     }
 
@@ -248,9 +255,10 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
         material.GetTexture(aiTextureType_SPECULAR, 0, &aiTexturePath, nullptr, nullptr,
             &blendFactor, &aiBlendOperation) == aiReturn_SUCCESS)
     {
-        fs::path texturePath(aiTexturePath.C_Str());
-
-        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, true);
+        auto texture = TextureManager::LoadTextureFromFile(
+            commandList, 
+            FileSystem::Append(parentPath, aiTexturePath.C_Str()), 
+            true);
         pMaterial->SetTexture(Material::TextureType::Specular, texture);
     }
 
@@ -259,9 +267,10 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
         material.GetTexture(aiTextureType_SHININESS, 0, &aiTexturePath, nullptr, nullptr,
             &blendFactor, &aiBlendOperation) == aiReturn_SUCCESS)
     {
-        fs::path texturePath(aiTexturePath.C_Str());
-
-        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, false);
+        auto texture = TextureManager::LoadTextureFromFile(
+            commandList, 
+            FileSystem::Append(parentPath, aiTexturePath.C_Str()), 
+            false);
         pMaterial->SetTexture(Material::TextureType::SpecularPower, texture);
     }
 
@@ -270,9 +279,10 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
         material.GetTexture(aiTextureType_OPACITY, 0, &aiTexturePath, nullptr, nullptr,
             &blendFactor, &aiBlendOperation) == aiReturn_SUCCESS)
     {
-        fs::path texturePath(aiTexturePath.C_Str());
-
-        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, false);
+        auto texture = TextureManager::LoadTextureFromFile(
+            commandList, 
+            FileSystem::Append(parentPath, aiTexturePath.C_Str()), 
+            false);
         pMaterial->SetTexture(Material::TextureType::Opacity, texture);
     }
 
@@ -281,9 +291,10 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
         material.GetTexture(aiTextureType_NORMALS, 0, &aiTexturePath, nullptr, nullptr,
             &blendFactor, &aiBlendOperation) == aiReturn_SUCCESS)
     {
-        fs::path texturePath(aiTexturePath.C_Str());
-
-        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, false);
+        auto texture = TextureManager::LoadTextureFromFile(
+            commandList, 
+            FileSystem::Append(parentPath, aiTexturePath.C_Str()),
+            false);
         pMaterial->SetTexture(Material::TextureType::Normal, texture);
     }
 
@@ -293,9 +304,10 @@ void Cyrex::Scene::ImportMaterial(CommandList& commandList, const aiMaterial& ma
                                       aiTextureType_HEIGHT, 0, &aiTexturePath, 
                                       nullptr, nullptr, &blendFactor) == aiReturn_SUCCESS) 
     {
-        fs::path texturePath(aiTexturePath.C_Str());
-
-        auto texture = TextureManager::LoadTextureFromFile(commandList, parentPath / texturePath, false);
+        auto texture = TextureManager::LoadTextureFromFile(
+            commandList, 
+            FileSystem::Append(parentPath, aiTexturePath.C_Str()), 
+            false);
 
         //Some materials store normal maps in the bump map slot and Assimp can't tell the difference bewteen
         //those two texture type, so we are making a assumption whether the texture is a normal or bump map based
