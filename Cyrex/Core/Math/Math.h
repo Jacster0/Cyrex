@@ -104,15 +104,13 @@ namespace Cyrex::Math {
     }
 
     template<typename T> 
-    requires std::unsigned_integral<T>
-        && (Subtractable<T> && std::_Boolean_testable<T>)
-        [[nodiscard]] inline constexpr T signum(T x) {
+    requires std::unsigned_integral<T> && (Subtractable<T> && std::_Boolean_testable<T>)
+    [[nodiscard]] inline constexpr T signum(T x) {
         return static_cast<T>(0) < x;
     }
 
     template <typename T>
-    requires (std::signed_integral<T> || std::floating_point<T>) 
-        && (Subtractable<T> && std::_Boolean_testable<T>)
+    requires (std::signed_integral<T> || std::floating_point<T>) && (Subtractable<T> && std::_Boolean_testable<T>)
     [[nodiscard]] inline constexpr T Signum(T val) {
         return (static_cast<T>(0) < val) - (val < static_cast<T>(0));
     }
@@ -121,16 +119,8 @@ namespace Cyrex::Math {
 
     template <typename T>
     requires std::integral<T>
-    [[nodiscard]] inline constexpr bool IsPow2(T v) noexcept { return std::has_single_bit(v); }
-
-    template <typename T>
-    requires std::integral<T>
-    [[nodiscard]] inline constexpr bool GetNextPow2(T v) noexcept { return std::bit_ceil(v); }
-
-    template <typename T>
-    requires std::integral<T>
     [[nodiscard]] inline constexpr T GetNearestPow2(T v, bool roundUp = true) noexcept { 
-        if (IsPow2(v)) {
+        if (std::has_single_bit(v)) {
             return v;
         }
 
