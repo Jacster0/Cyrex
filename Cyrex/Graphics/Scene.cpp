@@ -354,7 +354,7 @@ void Cyrex::Scene::ImportMesh(CommandList& commandList, const aiMesh& aiMesh) {
 
     if (aiMesh.HasTextureCoords(0)) {
         for (index = 0; index < aiMesh.mNumVertices; index++) {
-            vertexData[index].TexCoord = *reinterpret_cast<Vector2*>(&aiMesh.mTextureCoords[0][index]);
+            vertexData[index].TexCoord = *reinterpret_cast<Vector3*>(&aiMesh.mTextureCoords[0][index]);
         }
     }
 

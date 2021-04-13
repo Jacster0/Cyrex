@@ -30,7 +30,7 @@ namespace Cyrex {
         explicit VertexPositionNormalTangentBitangentTexture(
             const Math::Vector3& position,
             const Math::Vector3& normal,
-            const Math::Vector2& texCoord,
+            const Math::Vector3& texCoord,
             const Math::Vector3& tangent = { 0, 0, 0},
             const Math::Vector3& bitangent = { 0, 0, 0})
             : 
@@ -45,7 +45,7 @@ namespace Cyrex {
         Math::Vector3 Normal;
         Math::Vector3 Tangent;
         Math::Vector3 Bitangent;
-        Math::Vector2 TexCoord;
+        Math::Vector3 TexCoord;
 
         static const D3D12_INPUT_LAYOUT_DESC InputLayout;
     private:
