@@ -21,21 +21,29 @@ namespace Cyrex::Math {
     template<typename T>
     concept Arithmethic = Divisble<T> || Subtractable<T> || Divisble<T> || Multipliable<T>;
 
+    template<typename T>
+    concept Number = (std::signed_integral<T> || std::floating_point<T>) && Arithmethic<T> && std::_Boolean_testable<T>;
+
+    template<typename T>
+    concept Unsigned_Number = std::unsigned_integral<T> && Arithmethic<T> && std::_Boolean_testable<T>;
+
+
     struct MathConstants {
-        static constexpr auto epsilon   = std::numeric_limits<float>::epsilon();
-        static constexpr auto pi_float  = std::numbers::pi_v<float>;
-        static constexpr auto pi        = pi_float;
-        static constexpr auto pi_div2   = pi_float / 2.0f;
-        static constexpr auto pi_mul2   = pi_float * 2.0f;
-        static constexpr auto pi_double = std::numbers::pi_v<double>;
-        static constexpr auto pi_mul2_d = pi_double * 2.0f;
-        static constexpr auto pi_div2_d = pi_double * 2.0f;
+        static constexpr auto EPSILON    = std::numeric_limits<float>::epsilon();
+        static constexpr auto PI_FLOAT   = std::numbers::pi_v<float>;
+        static constexpr auto PI         = PI_FLOAT;
+        static constexpr auto PI_DIV2    = PI_FLOAT / 2.0f;
+        static constexpr auto PI_MUL2    = PI_FLOAT * 2.0f;
+        static constexpr auto PI_DOUBLE  = std::numbers::pi_v<double>;
+        static constexpr auto PI_MUL2_D  = PI_DOUBLE * 2.0f;
+        static constexpr auto PI_DIV2_D  = PI_DOUBLE * 2.0f;
+        static constexpr auto TO_DEGREES = 180.0f / MathConstants::PI;
+        static constexpr auto TO_RADIANS = MathConstants::PI / 180.0f;
+        static constexpr auto MAX_LONG   = std::numeric_limits<long>::max;
     };
 
     //Check for equality but allow for a small error
-    template<typename T>
-    requires Addable<T> && Subtractable<T> && std::_Boolean_testable<T>
-    [[nodiscard]] constexpr inline bool Equals(T lhs, T rhs, T error = MathConstants::epsilon) {
+    [[nodiscard]] inline constexpr bool Equals(Number auto lhs, Number auto rhs, float error = MathConstants::EPSILON) {
         return lhs + error >= rhs && lhs - error <= rhs;
     }
 
@@ -69,7 +77,7 @@ namespace Cyrex::Math {
     }
 
     [[nodiscard]] inline DirectX::XMVECTOR GetCircleTangent(size_t i, size_t tesselation) noexcept {
-        float angle = (static_cast<float>(i) * MathConstants::pi_mul2 / static_cast<float>(tesselation)) + MathConstants::pi_div2;
+        float angle = (static_cast<float>(i) * MathConstants::PI_MUL2 / static_cast<float>(tesselation)) + MathConstants::PI_DIV2;
         float dx;
         float dz;
 
@@ -80,7 +88,7 @@ namespace Cyrex::Math {
     }
 
     [[nodiscard]] inline DirectX::XMVECTOR GetCircleVector(size_t i, size_t tesselation) noexcept {
-        float angle = static_cast<float>(i) * MathConstants::pi_mul2 / static_cast<float>(tesselation);
+        float angle = static_cast<float>(i) * MathConstants::PI_MUL2 / static_cast<float>(tesselation);
         float dx;
         float dz;
 
@@ -91,44 +99,36 @@ namespace Cyrex::Math {
         return vec;
     }
 
-    template <typename T>
-    requires (std::signed_integral<T> || std::floating_point<T>) && Multipliable<T>
-    [[nodiscard]] constexpr inline T ToDegrees(const T rads) noexcept {
-        return rads * (180.0f / MathConstants::pi);
+    [[nodiscard]] inline constexpr Number auto ToDegrees(const Number auto rads) noexcept {
+        return rads * MathConstants::TO_DEGREES;
     }
 
-    template <typename T>
-    requires (std::signed_integral<T> || std::floating_point<T>) && Multipliable<T>
-    [[nodiscard]] constexpr inline T ToRadians(const T degrees) noexcept {
-        return degrees * (MathConstants::pi / 180.0f);
+    [[nodiscard]] inline constexpr Number auto ToRadians(const Number auto degrees) noexcept {
+        return degrees * MathConstants::TO_RADIANS;
     }
 
-    template<typename T> 
-    requires std::unsigned_integral<T> && (Subtractable<T> && std::_Boolean_testable<T>)
+    template<Unsigned_Number T>
     [[nodiscard]] inline constexpr T signum(T x) {
         return static_cast<T>(0) < x;
     }
 
-    template <typename T>
-    requires (std::signed_integral<T> || std::floating_point<T>) && (Subtractable<T> && std::_Boolean_testable<T>)
-    [[nodiscard]] inline constexpr T Signum(T val) {
+    template<Number T>
+    [[nodiscard]] inline constexpr T auto Signum(T val) {
         return (static_cast<T>(0) < val) - (val < static_cast<T>(0));
     }
 
     [[nodiscard]] inline const float Cot(float v) noexcept { return cos(v) / sin(v); }
 
-    template <typename T>
-    requires std::integral<T>
-    [[nodiscard]] inline constexpr T GetNearestPow2(T v, bool roundUp = true) noexcept { 
-        if (std::has_single_bit(v)) {
-            return v;
+    [[nodiscard]] inline constexpr auto GetNearestPow2(std::integral auto val, bool roundUp = true) noexcept {
+        if (std::has_single_bit(val)) {
+            return val;
         }
 
-        const T next = std::bit_ceil(v);
-        const T prev = std::bit_floor(v);
+        const auto next = std::bit_ceil(val);
+        const auto prev = std::bit_floor(val);
 
-        const T n = next - v;
-        const T m = v - prev;
+        const auto n = next - val;
+        const auto m = val - prev;
 
         return (roundUp) ? ((n <= m) ? next : prev)
                          : ((n < m)  ? next : prev);
