@@ -1,46 +1,47 @@
 #include "SceneNode.h"
-#include "API/DX12/Mesh.h"
+#include "Mesh.h"
 #include "Core/Visitor.h"
 
-namespace dx = DirectX;
+using namespace Cyrex;
+using namespace Cyrex::Math;
 
-Cyrex::SceneNode::SceneNode(const DirectX::XMMATRIX& localTransform) {
+SceneNode::SceneNode(const Matrix& localTransform) {
     m_alignedData = new AlignedData();
 }
 
-Cyrex::SceneNode::~SceneNode() {
+SceneNode::~SceneNode() {
     delete m_alignedData;
 }
 
-const std::string& Cyrex::SceneNode::GetName() const noexcept {
+const std::string& SceneNode::GetName() const noexcept {
     return m_name;
 }
 
-void Cyrex::SceneNode::SetName(const std::string name) noexcept {
+void SceneNode::SetName(const std::string name) noexcept {
     m_name = name;
 }
 
-DirectX::XMMATRIX Cyrex::SceneNode::GetLocalTransform() const noexcept {
+Matrix SceneNode::GetLocalTransform() const noexcept {
     return m_alignedData->LocalTransform;
 }
 
-void Cyrex::SceneNode::SetLocalTransform(const DirectX::XMMATRIX& localTransform) {
+void SceneNode::SetLocalTransform(const Matrix& localTransform) {
     m_alignedData->LocalTransform = localTransform;
 }
 
-DirectX::XMMATRIX Cyrex::SceneNode::GetInverseLocalTransform() const noexcept {
+Matrix SceneNode::GetInverseLocalTransform() const noexcept {
     return m_alignedData->InverseTransform;
 }
 
-DirectX::XMMATRIX Cyrex::SceneNode::GetWorldTransform() const noexcept {
+Matrix SceneNode::GetWorldTransform() const noexcept {
     return m_alignedData->LocalTransform * GetParentWorldTransform();
 }
 
-DirectX::XMMATRIX Cyrex::SceneNode::GetInverseWorldTransform() const noexcept {
-    return dx::XMMatrixInverse(nullptr, GetWorldTransform());
+Matrix SceneNode::GetInverseWorldTransform() const noexcept {
+    return Matrix::Inverse(GetWorldTransform());
 }
 
-void Cyrex::SceneNode::AddChild(std::shared_ptr<SceneNode> childNode) {
+void SceneNode::AddChild(std::shared_ptr<SceneNode> childNode) {
     if (childNode) {
         NodeList::const_iterator nodeListIter = std::find(m_children.begin(), m_children.end(), childNode);
 
@@ -60,7 +61,7 @@ void Cyrex::SceneNode::AddChild(std::shared_ptr<SceneNode> childNode) {
     }
 }
 
-void Cyrex::SceneNode::RemoveChild(std::shared_ptr<SceneNode> childNode) {
+void SceneNode::RemoveChild(std::shared_ptr<SceneNode> childNode) {
     if (childNode) {
         NodeList::const_iterator nodeListIter = std::find(m_children.begin(), m_children.end(), childNode);
 
@@ -82,7 +83,7 @@ void Cyrex::SceneNode::RemoveChild(std::shared_ptr<SceneNode> childNode) {
     }
 }
 
-void Cyrex::SceneNode::SetParent(std::shared_ptr<SceneNode> parentNode) {
+void SceneNode::SetParent(std::shared_ptr<SceneNode> parentNode) {
     std::shared_ptr<SceneNode> me = shared_from_this();
 
     if (parentNode) {
@@ -96,7 +97,7 @@ void Cyrex::SceneNode::SetParent(std::shared_ptr<SceneNode> parentNode) {
     }
 }
 
-size_t Cyrex::SceneNode::AddMesh(std::shared_ptr<Mesh> mesh) {
+size_t SceneNode::AddMesh(std::shared_ptr<Mesh> mesh) {
     size_t index = -1;
 
     if (mesh) {
@@ -116,7 +117,7 @@ size_t Cyrex::SceneNode::AddMesh(std::shared_ptr<Mesh> mesh) {
     return index;
 }
 
-void Cyrex::SceneNode::RemoveMesh(std::shared_ptr<Mesh> mesh) {
+void SceneNode::RemoveMesh(std::shared_ptr<Mesh> mesh) {
     if (mesh)  {
         MeshList::const_iterator iter = std::find(m_meshes.begin(), m_meshes.end(), mesh);
         if (iter != m_meshes.end()) {
@@ -125,7 +126,7 @@ void Cyrex::SceneNode::RemoveMesh(std::shared_ptr<Mesh> mesh) {
     }
 }
 
-std::shared_ptr<Cyrex::Mesh> Cyrex::SceneNode::GetMesh(size_t index) noexcept {
+std::shared_ptr<Mesh> SceneNode::GetMesh(size_t index) noexcept {
     std::shared_ptr<Mesh>  mesh = nullptr;
 
     if (index < m_meshes.size()) {
@@ -134,11 +135,11 @@ std::shared_ptr<Cyrex::Mesh> Cyrex::SceneNode::GetMesh(size_t index) noexcept {
     return mesh;
 }
 
-const DirectX::BoundingBox& Cyrex::SceneNode::GetAABB() const noexcept {
+const DirectX::BoundingBox& SceneNode::GetAABB() const noexcept {
     return m_AABB;
 }
 
-void Cyrex::SceneNode::Accept(IVisitor& visitor) {
+void SceneNode::Accept(IVisitor& visitor) {
     visitor.Visit(*this);
 
     // Visit meshes
@@ -152,8 +153,8 @@ void Cyrex::SceneNode::Accept(IVisitor& visitor) {
     }
 }
 
-DirectX::XMMATRIX Cyrex::SceneNode::GetParentWorldTransform() const noexcept {
-    auto parentTransform = dx::XMMatrixIdentity();
+Matrix SceneNode::GetParentWorldTransform() const noexcept {
+    auto parentTransform = Matrix();
 
     if (auto parentNode = m_parentNode.lock()) {
         parentTransform = parentNode->GetWorldTransform();

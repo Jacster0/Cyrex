@@ -3,7 +3,10 @@
 #include <memory>
 
 namespace Cyrex {
+   
+
     class CommandList;
+    class Scene;
     class Scene;
     class GeometryGenerator {
     public:
@@ -17,11 +20,19 @@ namespace Cyrex {
             uint32_t tessellation = 16,
             bool reverseWinding = false);
 
+        static std::shared_ptr<Scene> CreateCylinder(
+            const std::shared_ptr<CommandList>& commandList,
+            float topRadius = 1.0f, 
+            float bottomRadius = 1.0f,
+            float height = 1.0f,
+            bool reverseWinding = false,
+            int numSlices = 15,
+            int numStacks = 15);
+
         static std::shared_ptr<Scene> CreateCone(
             const std::shared_ptr<CommandList>& commandList,
             float radius = 0.5, 
             float height = 1.0f, 
-            uint32_t tessellationbool = 32,
             bool reverseWinding = false);
 
         static std::shared_ptr<Scene> CreateTorus(

@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 #include <memory>
 #include <vector>
+#include "Core/Math/Matrix.h"
 
 namespace Cyrex {
     enum class EnableLighting : bool { True = true, False = false };
@@ -26,11 +27,11 @@ namespace Cyrex {
         };
 
         // Transformation matrices for the vertex shader
-        struct alignas(16) Matrices {
-            DirectX::XMMATRIX ModelMatrix;
-            DirectX::XMMATRIX ModelViewMatrix;
-            DirectX::XMMATRIX InverseTransposeModelViewMatrix;
-            DirectX::XMMATRIX ModelViewProjectionMatrix;
+        struct Matrices {
+            Cyrex::Math::Matrix ModelMatrix;
+            Cyrex::Math::Matrix ModelViewMatrix;
+            Cyrex::Math::Matrix InverseTransposeModelViewMatrix;
+            Cyrex::Math::Matrix ModelViewProjectionMatrix;
         };
 
         enum RootParameters {
@@ -84,21 +85,21 @@ namespace Cyrex {
             m_dirtyFlags |= DF_Material;
         }
 
-        [[nodiscard]] DirectX::XMMATRIX GetWorldMatrix() const noexcept { return m_pMVP->World; }
-        void XM_CALLCONV SetWorldMatrix(DirectX::FXMMATRIX worldMatrix)  noexcept {
-            m_pMVP->World = worldMatrix;
+        [[nodiscard]] Cyrex::Math::Matrix GetWorldMatrix() const noexcept { return m_MVP.World; }
+        void XM_CALLCONV SetWorldMatrix(Cyrex::Math::Matrix worldMatrix)  noexcept {
+            m_MVP.World = worldMatrix;
             m_dirtyFlags |= DF_Matrices;
         }
        
-        [[nodiscard]] DirectX::XMMATRIX GetViewMatrix() const noexcept { return m_pMVP->View; }
-        void XM_CALLCONV SetViewMatrix(DirectX::FXMMATRIX viewMatrix) noexcept {
-            m_pMVP->View = viewMatrix;
+        [[nodiscard]] Cyrex::Math::Matrix GetViewMatrix() const noexcept { return m_MVP.View; }
+        void XM_CALLCONV SetViewMatrix(Cyrex::Math::Matrix viewMatrix) noexcept {
+            m_MVP.View = viewMatrix;
             m_dirtyFlags |= DF_Matrices;
         }
        
-        [[nodiscard]] DirectX::XMMATRIX GetProjectionMatrix() const noexcept  { return m_pMVP->Projection; }
-        void XM_CALLCONV SetProjectionMatrix(DirectX::FXMMATRIX projectionMatrix) noexcept {
-            m_pMVP->Projection = projectionMatrix;
+        [[nodiscard]] Cyrex::Math::Matrix GetProjectionMatrix() const noexcept  { return m_MVP.Projection; }
+        void XM_CALLCONV SetProjectionMatrix(Cyrex::Math::Matrix projectionMatrix) noexcept {
+            m_MVP.Projection = projectionMatrix;
             m_dirtyFlags |= DF_Matrices;
         }
 
@@ -114,10 +115,10 @@ namespace Cyrex {
             DF_All = DF_PointLights | DF_SpotLights | DF_DirectionalLights | DF_Material | DF_Matrices
         };
 
-        struct alignas(16) MVP {
-            DirectX::XMMATRIX World;
-            DirectX::XMMATRIX View;
-            DirectX::XMMATRIX Projection;
+        struct MVP {
+            Cyrex::Math::Matrix World;
+            Cyrex::Math::Matrix View;
+            Cyrex::Math::Matrix Projection;
         };
 
         void CreateRootSignature() noexcept;
@@ -137,7 +138,7 @@ namespace Cyrex {
         std::shared_ptr<Material> m_material;
         std::shared_ptr<ShaderResourceView> m_defaultSRV;
 
-        std::unique_ptr<MVP> m_pMVP;
+        MVP m_MVP;
         CommandList* m_pPreviousCommandList{ nullptr };
 
         uint32_t m_dirtyFlags{ DF_All };

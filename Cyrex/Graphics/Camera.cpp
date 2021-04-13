@@ -1,65 +1,65 @@
 #include "Camera.h"
 
-namespace dx = DirectX;
 using namespace Cyrex;
+using namespace Cyrex::Math;
 
-Camera::Camera() {
-    m_data = new AlignedData();
-    m_data->Translation = dx::XMVectorZero();
-    m_data->Rotation    = dx::XMQuaternionIdentity();
-}
+Camera::Camera()
+    :
+    m_translation(Vector4()),
+    m_rotation(Quaternion()),
+    m_view(Matrix()),
+    m_invView(Matrix()),
+    m_proj(Matrix()),
+    m_invProj(Matrix())
+{}
 
-Camera::~Camera() {
-    delete m_data;
-}
+void Camera::SetLookAt(Vector4 eye, Vector4 target, Vector4 up) {
+    m_view = Matrix::CreateLookAtLH(eye, target, up);
 
-void XM_CALLCONV Camera::SetLookAt(DirectX::FXMVECTOR eye, DirectX::FXMVECTOR target, DirectX::FXMVECTOR up) {
-    m_data->View = dx::XMMatrixLookAtLH(eye, target, up);
-
-    m_data->Translation = eye;
-    m_data->Rotation    = dx::XMQuaternionRotationMatrix(dx::XMMatrixTranspose(m_data->View));
+    m_translation = eye;
+    m_rotation    = Matrix::Transpose(m_view).GetRotation();
 
     m_invViewDirty = true;
-    m_viewDirty = false;
+    m_viewDirty    = false;
 }
 
-DirectX::XMMATRIX Camera::GetView() const {
+Matrix Camera::GetView() const {
     if (m_viewDirty) {
         UpdateViewMatrix();
     }
-    return m_data->View;
+    return m_view;
 }
 
-DirectX::XMMATRIX Camera::GetInverseView() const {
+Matrix Camera::GetInverseView() const {
     if (m_invViewDirty) {
-        m_data->InvView = dx::XMMatrixInverse(nullptr, m_data->InvView);
+        m_invView      = Matrix::Inverse(m_invView);
         m_invViewDirty = false;
     }
-    return m_data->InvView;
+    return m_invView;
 }
 
 void Camera::SetProj(float vfov, float aspectRatio, float zNear, float zFar) {
-    m_vFov = vfov;
+    m_vFov        = vfov;
     m_aspectRatio = aspectRatio;
-    m_nearZ = zNear;
-    m_farZ = zFar;
+    m_nearZ       = zNear;
+    m_farZ        = zFar;
 
     m_projDirty = true;
     m_invProjDirty = true;
 }
 
-DirectX::XMMATRIX Camera::GetProj() const {
+Matrix Camera::GetProj() const {
     if (m_projDirty) {
         UpdateProjectionMatrix();
     }
-    return m_data->Proj;
+    return m_proj;
 }
 
-DirectX::XMMATRIX Camera::GetInverseProj() const {
+Matrix Camera::GetInverseProj() const {
     if (m_invProjDirty) {
         UpdateInverseProjectionMatrix();
     }
-    return m_data->InvProj;
+    return m_invProj;
 }
 
 void Camera::SetFov(float vFov) noexcept {
@@ -70,55 +70,53 @@ void Camera::SetFov(float vFov) noexcept {
     }
 }
 
-void XM_CALLCONV Camera::SetTranslation(DirectX::FXMVECTOR translation) {
-    m_data->Translation = translation;
-    m_viewDirty = true;
+void Camera::SetTranslation(Vector4 translation) {
+    m_translation = translation;
+    m_viewDirty   = true;
 }
 
-DirectX::XMVECTOR Camera::GetTranslation() const {
-    return m_data->Translation;
+Vector4 Camera::GetTranslation() const {
+    return m_translation;
 }
 
-void XM_CALLCONV Camera::SetRotation(DirectX::FXMVECTOR rotation) {
-    m_data->Rotation = rotation;
+void Camera::SetRotation(Quaternion rotation) {
+    m_rotation = rotation;
 }
 
-DirectX::XMVECTOR Camera::GetRotation() const {
-    return m_data->Rotation;
+Quaternion Camera::GetRotation() const {
+    return m_rotation;
 }
 
-void XM_CALLCONV Camera::Translate(DirectX::FXMVECTOR translation, Space space) {
-    using namespace DirectX;
+void Camera::Translate(Vector4 translation, Space space) {
+    Matrix mat = Matrix(translation, m_rotation, Vector3());
 
     switch (space) {
     case Space::Local:
-        m_data->Translation += XMVector3Rotate(translation, m_data->Rotation);
+        m_translation += Vector4::Rotate(translation, m_rotation);
         break;
     case Space::World:
-        m_data->Translation += translation;
+        m_translation += translation;
         break;
     }
 
-    m_data->Translation = XMVectorSetW(m_data->Translation, 1.0f);
+    m_translation.w = 1.0f;
 
     m_viewDirty    = true;
     m_invViewDirty = true;
 }
 
-void Camera::Rotate(DirectX::FXMVECTOR quaternion) {
-    m_data->Rotation = dx::XMQuaternionMultiply(quaternion, m_data->Rotation);
+void Camera::Rotate(Quaternion quaternion) {
+    m_rotation = quaternion * m_rotation;
 
     m_viewDirty    = true;
     m_invViewDirty = true;
 }
 
 void Camera::UpdateViewMatrix() const {
-    using namespace DirectX;
+    const auto& translation = Matrix::CreateTranslation(Vector4::Negate(m_translation));
+    const auto& rotation    = Matrix::Transpose(Matrix::CreateRotation(m_rotation));
 
-    XMMATRIX rotationMatrix    = XMMatrixTranspose(XMMatrixRotationQuaternion(m_data->Rotation));
-    XMMATRIX translationMatrix = XMMatrixTranslationFromVector(-(m_data->Translation));
-
-    m_data->View = translationMatrix * rotationMatrix;
+    m_view = translation * rotation;
 
     m_viewDirty    = false;
     m_invViewDirty = true;
@@ -128,12 +126,12 @@ void Camera::UpdateInverseViewMatrix() const {
     if (m_viewDirty) {
         UpdateViewMatrix();
     }
-    m_data->InvView = dx::XMMatrixInverse(nullptr, m_data->View);
+    m_invView = Matrix::Inverse(m_view);
     m_invViewDirty = false;
 }
 
 void Camera::UpdateProjectionMatrix() const {
-    m_data->Proj = dx::XMMatrixPerspectiveFovLH(dx::XMConvertToRadians(m_vFov), m_aspectRatio, m_nearZ, m_farZ);
+    m_proj = Matrix::CreatePerspectiveFieldOfViewLH(Math::ToRadians(m_vFov), m_aspectRatio, m_nearZ, m_farZ);
 
     m_projDirty    = false;
     m_invProjDirty = true;
@@ -144,6 +142,6 @@ void Camera::UpdateInverseProjectionMatrix() const {
         UpdateProjectionMatrix();
     }
 
-    m_data->InvProj = dx::XMMatrixInverse(nullptr, m_data->Proj);
+    m_invProj = Matrix::Inverse(m_proj);
     m_invProjDirty = false;
 }

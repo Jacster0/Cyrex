@@ -16,6 +16,7 @@
 #include "Core/Input/Keyboard.h"
 #include "Core/Input/Mouse.h"
 #include "Core/Math/Math.h"
+#include "Core/Math/Common.h"
 #include "Core/Utils/StringUtils.h"
 
 #include "API/DX12/DXException.h"
@@ -24,8 +25,8 @@
 #include "API/DX12/RootSignature.h"
 #include "API/DX12/Device.h"
 #include "API/DX12/Swapchain.h"
-#include "API/DX12/GeometryGenerator.h"
-#include "API/DX12/Mesh.h"
+#include "GeometryGenerator.h"
+#include "Mesh.h"
 #include "API/DX12/RenderTarget.h"
 #include "API/DX12/Texture.h"
 #include "API/DX12/ShaderResourceView.h"
@@ -40,25 +41,8 @@ namespace wrl = Microsoft::WRL;
 namespace dx = DirectX;
 
 using namespace Cyrex;
+using namespace Cyrex::Math;
 using namespace DirectX;
-
-dx::XMMATRIX XM_CALLCONV LookAtMatrix(dx::FXMVECTOR Position, dx::FXMVECTOR Direction, dx::FXMVECTOR Up) {
-    assert(!dx::XMVector3Equal(Direction, dx::XMVectorZero()));
-    assert(!dx::XMVector3IsInfinite(Direction));
-    assert(!dx::XMVector3Equal(Up, dx::XMVectorZero()));
-    assert(!dx::XMVector3IsInfinite(Up));
-
-    dx::XMVECTOR R2 = dx::XMVector3Normalize(Direction);
-
-    dx::XMVECTOR R0 = dx::XMVector3Cross(Up, R2);
-    R0 = dx::XMVector3Normalize(R0);
-
-    dx::XMVECTOR R1 = dx::XMVector3Cross(R2, R0);
-
-    dx::XMMATRIX M(R0, R1, R2, Position);
-
-    return M;
-}
 
 static constexpr auto g_longMax = std::numeric_limits<long>::max();
 
@@ -71,9 +55,9 @@ Graphics::Graphics()
     m_spotLights.resize(1);
     m_directionalLights.resize(1);
 
-    dx::XMVECTOR cameraPos    = dx::XMVectorSet(0, 5.0f, -20, 1);
-    dx::XMVECTOR cameraTarget = dx::XMVectorSet(0, 5, 0, 1);
-    dx::XMVECTOR cameraUp     = dx::XMVectorSet(0, 1, 0, 0);
+    Vector4 cameraPos{ 0, 5.0f, -20, 1 };
+    Vector4 cameraTarget{ 0, 5, 0, 1 };
+    Vector4 cameraUp{ 0, 1, 0, 0 };
 
     m_camera.SetLookAt(cameraPos, cameraTarget, cameraUp);
 
@@ -139,22 +123,19 @@ void Graphics::Initialize(uint32_t width, uint32_t height) {
         m_isIntialized = false;
         return;
     }
-
     m_device = Device::Create();
 
     //Log the adapter 
     crxlog::wlog(L"Adapter: ", m_device->GetDescription(), Logger::WNewLine());
 
-    m_swapChain = m_device->CreateSwapChain(m_hWnd, DXGI_FORMAT_R8G8B8A8_UNORM);
-    m_swapChain->SetVsync(m_vsync);
+    m_swapChain = std::make_shared<SwapChain>(*m_device, m_hWnd, DXGI_FORMAT_R8G8B8A8_UNORM);
 
-    m_editorLayer = std::make_shared<D3D12Layer>(*m_device, *m_swapChain, m_hWnd);
+    m_editorLayer   = std::make_shared<D3D12Layer>(*m_device, *m_swapChain, m_hWnd);
+    m_editorContext = std::make_unique<EditorContext>(*this);
 
     m_editorLayer->Attach();
     m_editorLayer->SetThemeColors(EditorTheme::Dark);
-   
-    m_editorContext = std::make_unique<EditorContext>(*this);
-
+ 
     m_clientWidth  = width;
     m_clientHeight = height;
 
@@ -193,7 +174,8 @@ void Graphics::LoadContent() {
     auto  commandList  = commandQueue.GetCommandList();
 
     m_lightBulb  = GeometryGenerator::CreateSphere(commandList, 0.1f);
-    m_flashLight = GeometryGenerator::CreateCone(commandList, 0.1f, 0.1f);
+    m_flashLight = GeometryGenerator::CreateTorus(commandList);
+   /* m_flashLight = GeometryGenerator::CreateCone(commandList,0.1f,0.5f);*/
 
     auto fence = commandQueue.ExecuteCommandList(commandList);
 
@@ -222,9 +204,9 @@ void Graphics::LoadContent() {
     auto clr = Colors::LightSteelBlue;
     D3D12_CLEAR_VALUE colorClearValue;
     colorClearValue.Format   = colorDesc.Format;
-    colorClearValue.Color[0] = XMVectorGetX(clr);
-    colorClearValue.Color[1] = XMVectorGetY(clr);
-    colorClearValue.Color[2] = XMVectorGetZ(clr);
+    colorClearValue.Color[0] = dx::XMVectorGetX(clr);
+    colorClearValue.Color[1] = dx::XMVectorGetY(clr);
+    colorClearValue.Color[2] = dx::XMVectorGetZ(clr);
     colorClearValue.Color[3] = 1.0f;
 
     auto colorTexture = m_device->CreateTexture(colorDesc, &colorClearValue);
@@ -280,17 +262,16 @@ bool Graphics::LoadScene(const std::string& sceneFile) {
         auto scale = 50.0f / (boudningSphere.Radius * 2.0f);
         boudningSphere.Radius *= scale;
 
-        scene->GetRootNode()->SetLocalTransform(dx::XMMatrixScaling(scale, scale, scale));
+        scene->GetRootNode()->SetLocalTransform(Matrix::CreateScale(scale));
 
         auto cameraFov        = m_camera.GetFov();
-        auto distanceToObject = boudningSphere.Radius / std::tanf(dx::XMConvertToRadians(cameraFov) / 2.0f);
+        auto distanceToObject = boudningSphere.Radius / std::tanf(Math::ToRadians(cameraFov) / 2.0f);
 
-        auto cameraPosition = dx::XMVectorSet(0, 0, -distanceToObject, 1);
-        auto focusPoint     = dx::XMVectorSet(boudningSphere.Center.x * scale, boudningSphere.Center.y * scale, boudningSphere.Center.z * scale, 1.0f);
+        Vector4 cameraPosition{ 0, 0, -distanceToObject, 1 };
+        Vector4 focusPoint{ boudningSphere.Center.x * scale, boudningSphere.Center.y * scale, boudningSphere.Center.z * scale, 1.0f };
 
         cameraPosition = cameraPosition + focusPoint;
 
-       
         m_camera.SetTranslation(cameraPosition);
 
         m_scene = scene;
@@ -308,6 +289,11 @@ bool Graphics::LoadingProgress(float loadingProgress) {
     m_loadingProgress = loadingProgress;
 
     return true;
+}
+
+void Cyrex::Graphics::SetViewPortSize(float x, float y) noexcept {
+    m_viewport.Width  = x;
+    m_viewport.Height = y;
 }
 
 void Graphics::Render() {
@@ -353,8 +339,8 @@ void Graphics::Render() {
         MaterialProperties lightMaterial = Material::Black;
         for (const auto& l : m_pointLights) {
             lightMaterial.Emissive = l.Color;
-            auto lightPos = XMLoadFloat4(&l.WorldSpacePosition);
-            auto worldMatrix = XMMatrixTranslationFromVector(lightPos);
+            auto& lightPos   = l.WorldSpacePosition;
+            auto worldMatrix = Matrix::CreateTranslation(lightPos);
 
             m_lightBulb->GetRootNode()->SetLocalTransform(worldMatrix);
             m_lightBulb->GetRootNode()->GetMesh()->GetMaterial()->SetMaterialProperties(lightMaterial);
@@ -363,8 +349,8 @@ void Graphics::Render() {
 
         for (const auto& l : m_spotLights) {
             lightMaterial.Emissive = l.Color;
-            auto lightPos    = XMLoadFloat4(&l.WorldSpacePosition);
-            auto worldMatrix = XMMatrixTranslationFromVector(lightPos);
+            auto& lightPos         = l.WorldSpacePosition;
+            auto worldMatrix       = Matrix::CreateTranslation(lightPos);
 
             m_flashLight->GetRootNode()->SetLocalTransform(worldMatrix);
             m_flashLight->GetRootNode()->GetMesh()->GetMaterial()->SetMaterialProperties(lightMaterial);
@@ -377,10 +363,11 @@ void Graphics::Render() {
         commandList->ResolveSubresource(swapChainBuffer, msaaRenderTarget);
     }
 
-    //Render the UI
+    ////Render the UI
     m_editorContext->Render(m_editorLayer, *commandList);
-
+    //Execute the recorded commands
     commandQueue.ExecuteCommandList(commandList);
+    //Present the final rendered image to the screen
     m_swapChain->Present();
 }
 
@@ -410,26 +397,21 @@ void Graphics::SetVsync(VSync vSync) noexcept {
 }
 
 void Graphics::UpdateCamera() noexcept {
-    using namespace DirectX;
-
     const float speedFactor = m_cameraControls.Sneak ? 4.0f : 16.0f;
-    const float dt = static_cast<float>(m_timer.GetDeltaSeconds());
+    const float dt          = static_cast<float>(m_timer.GetDeltaSeconds());
 
-    auto translate = XMVectorSet(
-        m_cameraControls.Right - m_cameraControls.Left,
-        0.0f,
+    Vector4 translate = Vector4(
+        m_cameraControls.Right   - m_cameraControls.Left,
+        m_cameraControls.Up      - m_cameraControls.Down,
         m_cameraControls.Forward - m_cameraControls.Backward,
-        1.0f) * speedFactor * dt;
+        1.0f ) * speedFactor * dt;
 
-    auto pan = XMVectorSet(0.0f, m_cameraControls.Up - m_cameraControls.Down, 0.0f, 1.0f) * speedFactor * dt;
+    m_camera.Translate(translate,Space::Local);
 
-    m_camera.Translate(translate);
-    m_camera.Translate(pan);
-
-    auto cameraRotation = XMQuaternionRotationRollPitchYaw(
-        XMConvertToRadians(m_cameraControls.Pitch),
-        XMConvertToRadians(m_cameraControls.Yaw),
-        0.0f);
+    auto cameraRotation = Quaternion::FromPitchYawRoll(
+        Math::ToRadians(m_cameraControls.Pitch),
+        Math::ToRadians(m_cameraControls.Yaw), 
+        0.0f); 
 
     m_camera.SetRotation(cameraRotation);
 }
@@ -453,21 +435,21 @@ void Graphics::UpdateLights() noexcept {
     pointLight.Ambient              = pointLightProperties.Ambient;
     pointLight.WorldSpacePosition   = pointLightProperties.Position;
 
-    XMVECTOR pointLightWorldSpacePosition = XMLoadFloat4(&pointLight.WorldSpacePosition);
-    XMStoreFloat4(&pointLight.ViewSpacePosition, XMVector3TransformCoord(pointLightWorldSpacePosition, viewMatrix));
+    auto& pointLightWorldSpacePosition = pointLight.WorldSpacePosition;
+    pointLight.ViewSpacePosition       = Vector4::TransformCoord(pointLightWorldSpacePosition, viewMatrix);
 
     //Directional light...
     auto& directionalLight                 = m_directionalLights[0];
     directionalLight.Ambient               = directionalLightProperties.Ambient;
     directionalLight.Color                 = directionalLightProperties.Color;
-    directionalLight.WorldSpaceDirection.x = sin(XMConvertToRadians(directionalLightProperties.Angle));
-    directionalLight.WorldSpaceDirection.y = cos(XMConvertToRadians(directionalLightProperties.Angle));
+    directionalLight.WorldSpaceDirection.x = std::sin(Math::ToRadians(directionalLightProperties.Angle));
+    directionalLight.WorldSpaceDirection.y = std::cos(Math::ToRadians(directionalLightProperties.Angle));
 
-    XMVECTOR directionalLightWorldSpaceDirection = XMLoadFloat4(&directionalLight.WorldSpaceDirection);
-    directionalLightWorldSpaceDirection          = XMVector3Normalize(XMVectorNegate(directionalLightWorldSpaceDirection));
+    auto& directionalLightWorldSpaceDirection = directionalLight.WorldSpaceDirection;
+    directionalLightWorldSpaceDirection       = Vector4::Normalize(Vector4::Negate(directionalLightWorldSpaceDirection));
 
-    XMStoreFloat4(&directionalLight.WorldSpaceDirection, directionalLightWorldSpaceDirection);
-    XMStoreFloat4(&directionalLight.ViewSpaceDirection,  XMVector3TransformNormal(directionalLightWorldSpaceDirection, viewMatrix));
+    directionalLight.WorldSpaceDirection = directionalLightWorldSpaceDirection;
+    directionalLight.ViewSpaceDirection  =  Vector4::TransformNormal(directionalLightWorldSpaceDirection, viewMatrix);
 
     //Spotlight...
     auto& spotLight                 = m_spotLights[0];
@@ -477,19 +459,18 @@ void Graphics::UpdateLights() noexcept {
     spotLight.QuadraticAttenuation  = spotLightProperties.QuadraticAttenuation;
     spotLight.Ambient               = spotLightProperties.Ambient;
     spotLight.WorldSpacePosition    = spotLightProperties.Position;
-    spotLight.SpotAngle             = XMConvertToRadians(spotLightProperties.SpotAngle);
-    spotLight.WorldSpaceDirection.x = sin(XMConvertToRadians(spotLightProperties.Direction));
-    spotLight.WorldSpaceDirection.y = cos(XMConvertToRadians(spotLightProperties.Direction));
+    spotLight.SpotAngle             = Math::ToRadians(spotLightProperties.SpotAngle);
+    spotLight.WorldSpaceDirection.x = std::sin(Math::ToRadians(spotLightProperties.Direction));
+    spotLight.WorldSpaceDirection.y = std::cos(Math::ToRadians(spotLightProperties.Direction));
 
-    XMVECTOR spotLightWorldSpaceDirection = XMLoadFloat4(&spotLight.WorldSpaceDirection);
-    spotLightWorldSpaceDirection = XMVector3Normalize(XMVectorNegate(spotLightWorldSpaceDirection));
+    auto spotLightWorldSpaceDirection = spotLight.WorldSpaceDirection;
+    spotLightWorldSpaceDirection      = Vector4::Normalize(Vector4::Negate(spotLightWorldSpaceDirection));
 
-    XMVECTOR spotLightWorldSpacePosition  = XMLoadFloat4(&spotLight.WorldSpacePosition);
-   
+    auto spotLightWorldSpacePosition  = spotLight.WorldSpacePosition;
 
-    XMStoreFloat4(&spotLight.WorldSpaceDirection, spotLightWorldSpaceDirection);
-    XMStoreFloat4(&spotLight.ViewSpaceDirection,  XMVector3TransformNormal(spotLightWorldSpaceDirection, viewMatrix));
-    XMStoreFloat4(&spotLight.ViewSpacePosition,   XMVector3TransformCoord(spotLightWorldSpacePosition, viewMatrix));
+    spotLight.WorldSpaceDirection = spotLightWorldSpaceDirection;
+    spotLight.ViewSpaceDirection  = Vector4::TransformNormal(spotLightWorldSpaceDirection, viewMatrix);
+    spotLight.ViewSpacePosition   = Vector4::TransformCoord(spotLightWorldSpacePosition, viewMatrix);
 
     //Set the lights in the PSO
     m_lightingPSO->SetSpotLights(m_spotLights);
@@ -517,7 +498,7 @@ void Graphics::OnMouseMoved(int dx, int dy) noexcept {
     constexpr auto mouseSpeed = 0.1f;
 
     m_cameraControls.Pitch += dy * mouseSpeed;
-    m_cameraControls.Pitch = std::clamp(m_cameraControls.Pitch, -90.0f, 90.0f);
+    m_cameraControls.Pitch  = std::clamp(m_cameraControls.Pitch, -90.0f, 90.0f);
 
     m_cameraControls.Yaw += dx * mouseSpeed;
 }

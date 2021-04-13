@@ -12,6 +12,7 @@ void LightsEditorPanel::Show() noexcept {
             ImGui::End();
         }
         else [[likely]] {
+            //ImGui::ShowDemoWindow();
             ShowLightsPanel();
             ImGui::End();
         }

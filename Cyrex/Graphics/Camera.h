@@ -1,6 +1,7 @@
 #pragma once
 
 #include <DirectXMath.h>
+#include "Core/Math/Common.h"
 
 enum class Space {
     Local,
@@ -11,45 +12,32 @@ namespace Cyrex {
     class Camera {
     public:
         Camera();
-        virtual ~Camera();
+        ~Camera() = default;
 
-        void XM_CALLCONV SetLookAt(DirectX::FXMVECTOR eye, DirectX::FXMVECTOR target, DirectX::FXMVECTOR up);
-        DirectX::XMMATRIX GetView() const;
-        DirectX::XMMATRIX GetInverseView() const;
+        void SetLookAt(Math::Vector4 eye, Math::Vector4 target, Math::Vector4 up);
+        Math::Matrix GetView() const;
+        Math::Matrix GetInverseView() const;
 
         void SetProj(float vfov, float aspectRatio, float zNear, float zFar);
-        DirectX::XMMATRIX GetProj() const;
-        DirectX::XMMATRIX GetInverseProj() const;
+        Math::Matrix GetProj() const;
+        Math::Matrix GetInverseProj() const;
 
         void SetFov(float vFov) noexcept;
         float GetFov() const noexcept { return m_vFov; }
 
-        void XM_CALLCONV SetTranslation(DirectX::FXMVECTOR translation);
-        DirectX::XMVECTOR GetTranslation() const;
+        void SetTranslation(Math::Vector4 translation);
+        Math::Vector4 GetTranslation() const;
 
-        void XM_CALLCONV SetRotation(DirectX::FXMVECTOR rotation);
-        DirectX::XMVECTOR GetRotation() const;
+        void SetRotation(Math::Quaternion rotation);
+        Math::Quaternion GetRotation() const;
 
-        void XM_CALLCONV Translate(DirectX::FXMVECTOR translation, Space space = Space::Local);
-        void Rotate(DirectX::FXMVECTOR quaternion);
-    protected:
-        virtual void UpdateViewMatrix() const;
-        virtual void UpdateInverseViewMatrix() const;
-        virtual void UpdateProjectionMatrix() const;
-        virtual void UpdateInverseProjectionMatrix() const;
-
-        struct alignas(16)  AlignedData {
-            DirectX::XMVECTOR Translation;
-            DirectX::XMVECTOR Rotation;
-
-            DirectX::XMMATRIX View;
-            DirectX::XMMATRIX InvView;
-
-            DirectX::XMMATRIX Proj;
-            DirectX::XMMATRIX InvProj;
-        };
-
-        AlignedData* m_data;
+        void Translate(Math::Vector4 translation, Space space = Space::Local);
+        void Rotate(Math::Quaternion quaternion);
+    private:
+        void UpdateViewMatrix() const;
+        void UpdateInverseViewMatrix() const;
+        void UpdateProjectionMatrix() const;
+        void UpdateInverseProjectionMatrix() const;
 
         float m_vFov{ 45 };
         float m_aspectRatio{ 1.0f };
@@ -61,5 +49,14 @@ namespace Cyrex {
 
         mutable bool m_projDirty;
         mutable bool m_invProjDirty;
+
+        Math::Vector4 m_translation;
+        Math::Quaternion m_rotation;
+
+        mutable Math::Matrix m_view;
+        mutable Math::Matrix m_invView;
+
+        mutable Math::Matrix m_proj;
+        mutable Math::Matrix m_invProj;
     };
 }

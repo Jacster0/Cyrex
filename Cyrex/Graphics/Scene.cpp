@@ -13,6 +13,9 @@
 #include "Core/Filesystem/FileSystem.h"
 #include "Core/Utils/StringUtils.h"
 
+#include "Core/Math/Vector2.h"
+#include "Core/Math/Vector3.h"
+
 #include "assimp/aabb.h"
 #include "assimp/Importer.hpp"
 #include "assimp/Exporter.hpp"
@@ -27,6 +30,7 @@ namespace dx = DirectX;
 namespace cx = Cyrex;
 
 using namespace Cyrex;
+using namespace Cyrex::Math;
 
 class ProgressHandler : public Assimp::ProgressHandler {
 public:
@@ -332,25 +336,25 @@ void Cyrex::Scene::ImportMesh(CommandList& commandList, const aiMesh& aiMesh) {
     //Process vertices
     if (aiMesh.HasPositions()) {
         for (index = 0; index < aiMesh.mNumVertices; index++) {
-            vertexData[index].Position = *reinterpret_cast<dx::XMFLOAT3*>(&aiMesh.mVertices[index]);
+            vertexData[index].Position = *reinterpret_cast<Vector3*>(&aiMesh.mVertices[index]);
         }
     }
     if (aiMesh.HasNormals()) {
         for (index = 0; index < aiMesh.mNumVertices; index++) {
-            vertexData[index].Normal = *reinterpret_cast<dx::XMFLOAT3*>(&aiMesh.mNormals[index]);
+            vertexData[index].Normal = *reinterpret_cast<Vector3*>(&aiMesh.mNormals[index]);
         }
     }
 
     if (aiMesh.HasTangentsAndBitangents()) {
         for (index = 0; index < aiMesh.mNumVertices; index++) {
-            vertexData[index].Tangent   = *reinterpret_cast<dx::XMFLOAT3*>(&aiMesh.mTangents[index]);
-            vertexData[index].Bitangent = *reinterpret_cast<dx::XMFLOAT3*>(&aiMesh.mBitangents[index]);
+            vertexData[index].Tangent   = *reinterpret_cast<Vector3*>(&aiMesh.mTangents[index]);
+            vertexData[index].Bitangent = *reinterpret_cast<Vector3*>(&aiMesh.mBitangents[index]);
         }
     }
 
     if (aiMesh.HasTextureCoords(0)) {
         for (index = 0; index < aiMesh.mNumVertices; index++) {
-            vertexData[index].TexCoord = *reinterpret_cast<dx::XMFLOAT3*>(&aiMesh.mTextureCoords[0][index]);
+            vertexData[index].TexCoord = *reinterpret_cast<Vector2*>(&aiMesh.mTextureCoords[0][index]);
         }
     }
 
@@ -388,7 +392,7 @@ std::shared_ptr<Cyrex::SceneNode> Cyrex::Scene::ImportSceneNode(std::shared_ptr<
         return nullptr;
     }
 
-    auto node = std::make_shared<SceneNode>(dx::XMMATRIX(&(aiNode->mTransformation.a1)));
+    auto node = std::make_shared<SceneNode>(*reinterpret_cast<const Matrix*>(&aiNode->mTransformation));
     node->SetParent(parent);
 
     if (aiNode->mName.length > 0) {

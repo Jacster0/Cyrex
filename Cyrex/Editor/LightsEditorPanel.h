@@ -1,11 +1,11 @@
 #pragma once
 #include <array>
-#include <DirectXMath.h>
+#include "Core/Math/Vector4.h"
 
 namespace Cyrex {
     struct PointLightProperties {
-        DirectX::XMFLOAT4 Position{ 0.0f, 0.0f, 0.0f, 1.0f };
-        DirectX::XMFLOAT4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+        Cyrex::Math::Vector4 Position{ 0.0f, 0.0f, 0.0f, 1.0f };
+        Cyrex::Math::Vector4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
         float Ambient{};
         float ConstantAttenuation{ 1.0f };
@@ -14,8 +14,8 @@ namespace Cyrex {
     };
 
     struct SpotLightProperties {
-        DirectX::XMFLOAT4 Position{ 0.0f, 0.0f, 0.0f, 1.0f };
-        DirectX::XMFLOAT4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+        Cyrex::Math::Vector4 Position{ 0.0f, 0.0f, 0.0f, 1.0f };
+        Cyrex::Math::Vector4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
         float Direction{};
         float Ambient{};
@@ -26,8 +26,8 @@ namespace Cyrex {
     };
 
     struct DirectionalLightProperties {
-        DirectX::XMFLOAT4 Direction{ 0.0f,0.0f,1.0f,1.0f };
-        DirectX::XMFLOAT4 Color{ 1.0f,1.0f,1.0f,1.0f };
+        Cyrex::Math::Vector4 Direction{ 0.0f,0.0f,1.0f,1.0f };
+        Cyrex::Math::Vector4 Color{ 1.0f,1.0f,1.0f,1.0f };
 
         float Angle{};
         float Ambient{};

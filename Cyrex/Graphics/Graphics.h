@@ -4,6 +4,8 @@
 
 #include "Core/Time/GameTimer.h"
 #include "Core/Filesystem/OpenFileDialog.h"
+#include "Core/Math/Vector4.h"
+#include "Core/Math/Quaternion.h"
 
 #include "API/DX12/Common.h"
 #include "API/DX12/RenderTarget.h"
@@ -62,6 +64,9 @@ namespace Cyrex {
         bool LoadScene(const std::string& sceneFile);
         bool LoadingProgress(float loadingProgress);
 
+        void SetViewPortSize(float x, float y) noexcept;
+        Texture* GetTexture() noexcept;
+
         void OnMouseWheel(float delta) noexcept;
         void OnMouseMoved(int dx, int dy) noexcept;
         void OnMouseMoved(const Mouse& mouse) noexcept;
@@ -81,6 +86,7 @@ namespace Cyrex {
         [[nodiscard]] std::tuple<uint32_t, uint32_t> GetScreenSize() const noexcept { return { m_clientWidth, m_clientHeight }; }
         [[nodiscard]] float GetFramesPerSecond() const noexcept { return m_fps; }
         [[nodiscard]] const LoadingData GetLoadingData() const noexcept { return { m_loadingProgress, m_isLoading, m_loadingText }; }
+        [[nodiscard]] Device& GetDevice() const noexcept { return *m_device; }
     private:
         void UpdateCamera() noexcept;
         void UpdateLights() noexcept;
@@ -88,9 +94,9 @@ namespace Cyrex {
 
         Camera m_camera;
 
-        struct alignas(16) CameraData {
-            DirectX::XMVECTOR InitialCamPos;
-            DirectX::XMVECTOR InitialCamRot;
+        struct CameraData {
+            Cyrex::Math::Vector4 InitialCamPos;
+            Cyrex::Math::Quaternion InitialCamRot;
            float InitialCamFov;
         };
 
@@ -149,7 +155,7 @@ namespace Cyrex {
         std::vector<PointLight> m_pointLights;
         std::vector<SpotLight>  m_spotLights;
         std::vector<DirectionalLight> m_directionalLights;
-      
+
         std::atomic_bool  m_isLoading;
         std::future<bool> m_loadingTask;
         float m_loadingProgress;

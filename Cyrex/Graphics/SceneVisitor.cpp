@@ -6,7 +6,7 @@
 #include "Material.h"
 
 #include "API/DX12/CommandList.h"
-#include "API/DX12/Mesh.h"
+#include "Mesh.h"
 
 using namespace Cyrex;
 
@@ -24,7 +24,8 @@ void SceneVisitor::Visit(Scene& scene) {
 }
 
 void SceneVisitor::Visit(SceneNode& sceneNode) {
-    m_lightingPSO.SetWorldMatrix(sceneNode.GetWorldTransform());
+    auto mat = sceneNode.GetWorldTransform();
+    m_lightingPSO.SetWorldMatrix(*(Math::Matrix*)(&mat));
 }
 
 void SceneVisitor::Visit(Mesh& mesh) {

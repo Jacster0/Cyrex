@@ -4,9 +4,9 @@
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <DirectXMath.h>
 #include <DirectXCollision.h>
+
+#include "Core/Math/Matrix.h"
 
 namespace Cyrex {
     class Mesh;
@@ -15,19 +15,19 @@ namespace Cyrex {
 
     class SceneNode : public std::enable_shared_from_this<SceneNode> {
     public:
-        explicit SceneNode(const DirectX::XMMATRIX& localTransform = DirectX::XMMatrixIdentity());
+        explicit SceneNode(const Cyrex::Math::Matrix& localTransform = Cyrex::Math::Matrix());
         virtual ~SceneNode();
 
         const std::string& GetName() const noexcept;
         void SetName(const std::string name) noexcept;
 
-        DirectX::XMMATRIX GetLocalTransform() const noexcept;
-        void SetLocalTransform(const DirectX::XMMATRIX& localTransform);
+        Cyrex::Math::Matrix GetLocalTransform() const noexcept;
+        void SetLocalTransform(const Cyrex::Math::Matrix& localTransform);
 
-        DirectX::XMMATRIX GetInverseLocalTransform() const noexcept;
+        Cyrex::Math::Matrix GetInverseLocalTransform() const noexcept;
 
-        DirectX::XMMATRIX GetWorldTransform() const noexcept;
-        DirectX::XMMATRIX GetInverseWorldTransform() const noexcept;
+        Cyrex::Math::Matrix GetWorldTransform() const noexcept;
+        Cyrex::Math::Matrix GetInverseWorldTransform() const noexcept;
 
         void AddChild(std::shared_ptr<SceneNode> childNode);
         void RemoveChild(std::shared_ptr<SceneNode> childNode);
@@ -42,7 +42,7 @@ namespace Cyrex {
 
         void Accept(IVisitor& visitor);
     protected:
-        DirectX::XMMATRIX GetParentWorldTransform() const noexcept;
+        Cyrex::Math::Matrix GetParentWorldTransform() const noexcept;
     private:
         using NodePtr     = std::shared_ptr<SceneNode>;
         using NodeList    = std::vector<NodePtr>;
@@ -51,17 +51,17 @@ namespace Cyrex {
 
         std::string m_name{ "SceneNode" };
 
-        struct alignas(16) AlignedData
+        struct AlignedData
         {
-            DirectX::XMMATRIX LocalTransform;
-            DirectX::XMMATRIX InverseTransform;
-        } *m_alignedData;
+            Cyrex::Math::Matrix LocalTransform;
+            Cyrex::Math::Matrix InverseTransform;
+        }* m_alignedData;
 
         std::weak_ptr<SceneNode> m_parentNode;
 
-        NodeList                 m_children;
-        NodeNameMap              m_childrenByName;
-        MeshList                 m_meshes;
+        NodeList m_children;
+        NodeNameMap m_childrenByName;
+        MeshList m_meshes;
 
         DirectX::BoundingBox m_AABB{ { 0, 0, 0 }, {0, 0, 0} };
     };

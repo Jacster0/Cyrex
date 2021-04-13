@@ -1,23 +1,25 @@
 #pragma once
 
-#include <DirectXMath.h>
+#include "Core/Math/Vector4.h"
+
 #include <memory>
 #include <map>
 
+
 namespace Cyrex {
     class Texture;
-    struct alignas(16) MaterialProperties {
+    struct MaterialProperties {
         MaterialProperties(
-            const DirectX::XMFLOAT4 diffuse     = { 1.0f, 1.0f, 1.0f, 1.0f },
-            const DirectX::XMFLOAT4 specular    = { 1.0f, 1.0f, 1.0f, 1.0f },
-            const float specularPower           = 128.0f,
-            const DirectX::XMFLOAT4 ambient     = { 0.0f, 0.0f, 0.0f, 1.0f },
-            const DirectX::XMFLOAT4 emissive    = { 0.0f, 0.0f, 0.0f, 1.0f },
-            const DirectX::XMFLOAT4 reflectance = { 0.0f, 0.0f, 0.0f, 0.0f },
-            const float opacity                 = 1.0f,
-            const float indexOfRefraction       = 0.0f,
-            const float bumpIntensity           = 1.0f,
-            const float alphaThreshHold         = 0.1f
+            const Cyrex::Math::Vector4 diffuse     = { 1.0f, 1.0f, 1.0f, 1.0f },
+            const Cyrex::Math::Vector4 specular    = { 1.0f, 1.0f, 1.0f, 1.0f },
+            const float specularPower              = 128.0f,
+            const Cyrex::Math::Vector4 ambient     = { 0.0f, 0.0f, 0.0f, 1.0f },
+            const Cyrex::Math::Vector4 emissive    = { 0.0f, 0.0f, 0.0f, 1.0f },
+            const Cyrex::Math::Vector4 reflectance = { 0.0f, 0.0f, 0.0f, 0.0f },
+            const float opacity                    = 1.0f,
+            const float indexOfRefraction          = 0.0f,
+            const float bumpIntensity              = 1.0f,
+            const float alphaThreshHold            = 0.1f
         )
             :
             Diffuse(diffuse),
@@ -39,11 +41,11 @@ namespace Cyrex {
             HasOpacityTexture(false)
         {}
 
-        DirectX::XMFLOAT4 Diffuse;
-        DirectX::XMFLOAT4 Specular;
-        DirectX::XMFLOAT4 Emissive;
-        DirectX::XMFLOAT4 Ambient;
-        DirectX::XMFLOAT4 Reflectance;
+        Cyrex::Math::Vector4 Diffuse;
+        Cyrex::Math::Vector4 Specular;
+        Cyrex::Math::Vector4 Emissive;
+        Cyrex::Math::Vector4 Ambient;
+        Cyrex::Math::Vector4 Reflectance;
 
         float Opacity;
         float SpecularPower;
@@ -80,23 +82,23 @@ namespace Cyrex {
         Material(const Material& rhs);
         ~Material() = default;
 
-        const DirectX::XMFLOAT4& GetAmbientColor() const noexcept;
-        void SetAmbientColor(const DirectX::XMFLOAT4& ambient) noexcept;
+        const Cyrex::Math::Vector4& GetAmbientColor() const noexcept;
+        void SetAmbientColor(const Cyrex::Math::Vector4& ambient) noexcept;
 
-        const DirectX::XMFLOAT4& GetDiffuseColor() const noexcept;
-        void SetDiffuseColor(const DirectX::XMFLOAT4& diffuse) noexcept;
+        const Cyrex::Math::Vector4& GetDiffuseColor() const noexcept;
+        void SetDiffuseColor(const Cyrex::Math::Vector4& diffuse) noexcept;
 
-        const DirectX::XMFLOAT4& GetSpecularColor() const noexcept;
-        void SetSpecularColor(const DirectX::XMFLOAT4& specular) noexcept;
+        const Cyrex::Math::Vector4& GetSpecularColor() const noexcept;
+        void SetSpecularColor(const Cyrex::Math::Vector4& specular) noexcept;
 
-        const DirectX::XMFLOAT4& GetEmissiveColor() const noexcept;
-        void SetEmissiveColor(const DirectX::XMFLOAT4& emissive) noexcept;
+        const Cyrex::Math::Vector4& GetEmissiveColor() const noexcept;
+        void SetEmissiveColor(const Cyrex::Math::Vector4& emissive) noexcept;
 
         float GetSpecularPower() const noexcept;
         void SetSpecularPower(float specularPower) noexcept;
 
-        const DirectX::XMFLOAT4& GetReflectance() const noexcept;
-        void SetReflectance(const DirectX::XMFLOAT4& reflectance) noexcept;
+        const Cyrex::Math::Vector4& GetReflectance() const noexcept;
+        void SetReflectance(const Cyrex::Math::Vector4& reflectance) noexcept;
 
         const float GetOpacity() const noexcept;
         void SetOpacity(float opacity) noexcept;

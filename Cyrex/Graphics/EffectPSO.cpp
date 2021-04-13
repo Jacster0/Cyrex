@@ -13,23 +13,22 @@
 namespace wrl = Microsoft::WRL;
 namespace dx  = DirectX;
 
-Cyrex::EffectPSO::EffectPSO(Device& device, EnableLighting enableLighting, EnableDecal enableDecal)
+using namespace Cyrex;
+using namespace Cyrex::Math;
+
+EffectPSO::EffectPSO(Device& device, EnableLighting enableLighting, EnableDecal enableDecal)
     :
     m_device(device),
     m_enableLighting(static_cast<bool>(enableLighting)),
     m_enableDecal(static_cast<bool>(enableDecal))
 {
-    m_pMVP = std::make_unique<MVP>();
-
-    //Create the root signature
     CreateRootSignature();
-    //Create the PSO
     CreatePSO();
     //Create an SRV that can be used to pad unused texture slots.
     CreateSRV();
 }
 
-void Cyrex::EffectPSO::CreateRootSignature() noexcept {
+void EffectPSO::CreateRootSignature() noexcept {
     D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
                                                     D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
                                                     D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
@@ -54,11 +53,10 @@ void Cyrex::EffectPSO::CreateRootSignature() noexcept {
     CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
     rootSignatureDescription.Init_1_1(RootParameters::NumRootParameters, rootParameters, 1, &anisotropicSampler, rootSignatureFlags);
 
-    m_rootSignature = m_device.CreateRootSignature(rootSignatureDescription.Desc_1_1);
-
+    m_rootSignature = std::make_shared<RootSignature>(m_device, rootSignatureDescription.Desc_1_1);
 }
 
-void Cyrex::EffectPSO::CreatePSO() noexcept {
+void EffectPSO::CreatePSO() noexcept {
     //Load the shaders
     wrl::ComPtr<ID3DBlob> vertexShaderBlob;
     ThrowIfFailed(D3DReadFileToBlob(L"Graphics/Shaders/Compiled/VertexShader.cso", &vertexShaderBlob));
@@ -101,7 +99,6 @@ void Cyrex::EffectPSO::CreatePSO() noexcept {
     rtvFormats.RTFormats[0]          = backBufferFormat;
 
     CD3DX12_RASTERIZER_DESC rasterizerState(D3D12_DEFAULT);
-    rasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 
     if (m_enableDecal) {
         //Disable culling on decal geometry
@@ -118,10 +115,13 @@ void Cyrex::EffectPSO::CreatePSO() noexcept {
     pipelineStateStream.RTVFormats            = rtvFormats;
     pipelineStateStream.SampleDesc            = sampleDesc;
 
-    m_pipelineStateObject = m_device.CreatePipelineStateObject(pipelineStateStream);
+    m_pipelineStateObject = std::make_shared<PipelineStateObject>(
+        m_device, 
+        D3D12_PIPELINE_STATE_STREAM_DESC{ sizeof(pipelineStateStream), 
+        &pipelineStateStream });
 }
 
-void Cyrex::EffectPSO::CreateSRV() noexcept {
+void EffectPSO::CreateSRV() noexcept {
     D3D12_SHADER_RESOURCE_VIEW_DESC defaultSRV = {};
     defaultSRV.Format                          = DXGI_FORMAT_R8G8B8A8_UNORM;
     defaultSRV.ViewDimension                   = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -134,8 +134,7 @@ void Cyrex::EffectPSO::CreateSRV() noexcept {
     m_defaultSRV = m_device.CreateShaderResourceView(nullptr, &defaultSRV);
 }
 
-
-inline void Cyrex::EffectPSO::BindTexture(CommandList& commandList, uint32_t offset, const std::shared_ptr<Texture>& texture) {
+inline void EffectPSO::BindTexture(CommandList& commandList, uint32_t offset, const std::shared_ptr<Texture>& texture) {
     if (texture) {
         commandList.SetShaderResourceView(
             RootParameters::Textures,
@@ -152,16 +151,16 @@ inline void Cyrex::EffectPSO::BindTexture(CommandList& commandList, uint32_t off
     }
 }
 
-void Cyrex::EffectPSO::Apply(CommandList& commandList) {
+void EffectPSO::Apply(CommandList& commandList) {
     commandList.SetPipelineState(m_pipelineStateObject);
     commandList.SetGraphicsRootSignature(m_rootSignature);
 
     if (m_dirtyFlags & DF_Matrices) {
         Matrices matrices;
-        matrices.ModelMatrix                     = m_pMVP->World;
-        matrices.ModelViewMatrix                 = matrices.ModelMatrix * m_pMVP->View;
-        matrices.ModelViewProjectionMatrix       = matrices.ModelViewMatrix * m_pMVP->Projection;
-        matrices.InverseTransposeModelViewMatrix = dx::XMMatrixTranspose(dx::XMMatrixInverse(nullptr, matrices.ModelViewMatrix));
+        matrices.ModelMatrix                     = m_MVP.World;
+        matrices.ModelViewMatrix                 = matrices.ModelMatrix * m_MVP.View;
+        matrices.ModelViewProjectionMatrix       = matrices.ModelViewMatrix * m_MVP.Projection;
+        matrices.InverseTransposeModelViewMatrix = matrices.ModelViewMatrix.Inversed().Transposed();
 
         commandList.SetGraphicsDynamicConstantBuffer(RootParameters::MatricesCB, matrices);
     }

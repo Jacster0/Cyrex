@@ -1,8 +1,8 @@
 #include "Mesh.h"
-#include "CommandList.h"
-#include "Device.h"
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
+#include "Graphics/API/DX12/CommandList.h"
+#include "Graphics/API/DX12/Device.h"
+#include "Graphics/API/DX12/VertexBuffer.h"
+#include "Graphics/API/DX12/IndexBuffer.h"
 #include "Core/Visitor.h"
 
 namespace dx = DirectX;
