@@ -53,22 +53,19 @@ namespace Cyrex::Math {
     }
 
     template <typename T>
-    [[nodiscard]] inline T AlignDownWithMask(T value, size_t mask) noexcept {
+    [[nodiscard]] inline auto AlignDownWithMask(T value, size_t mask) noexcept {
         return static_cast<T>((static_cast<size_t>(value) & ~mask));
     }
 
-    template <typename T>
-    [[nodiscard]] inline T AlignUp(T value, size_t alignment) noexcept {
+    [[nodiscard]] inline auto AlignUp(auto value, size_t alignment) noexcept {
         return AlignUpWithMask(value, alignment - 1);
     }
 
-    template <typename T>
-    [[nodiscard]] inline T AlignDown(T value, size_t alignment) noexcept  {
+    [[nodiscard]] inline auto AlignDown(auto value, size_t alignment) noexcept  {
         return AlignDownWithMask(value, alignment - 1);
     }
 
-    template<typename T>
-    [[nodiscard]] inline bool IsAligned(T value, size_t alignment) noexcept  {
+    [[nodiscard]] inline bool IsAligned(auto value, size_t alignment) noexcept  {
         return 0 == (static_cast<size_t>(value) & (alignment - 1));
     }
 
@@ -113,7 +110,7 @@ namespace Cyrex::Math {
     }
 
     template<Number T>
-    [[nodiscard]] inline constexpr T auto Signum(T val) {
+    [[nodiscard]] inline constexpr T Signum(T val) {
         return (static_cast<T>(0) < val) - (val < static_cast<T>(0));
     }
 

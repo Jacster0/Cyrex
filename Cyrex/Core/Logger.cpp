@@ -77,7 +77,7 @@ void Cyrex::Logger::SetLevel(Level lvl) noexcept {
         break;
     }
     case Level::crx_wdebug: {
-        SetLevel(OutputStream::crx_console_standard, ConsoleColor::Green, L"[DEBUG] ");
+        SetLevel(OutputStream::crx_console_wstandard, ConsoleColor::Green, L"[DEBUG] ");
         break;
     }
     default:

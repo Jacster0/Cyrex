@@ -1,6 +1,7 @@
 #pragma once
 #include "Platform/Windows/CrxWindow.h"
 #include "Core/Exceptions/CyrexException.h"
+#include <source_location>
 
 namespace Cyrex {
     class DxException : public CyrexException {
@@ -13,14 +14,9 @@ namespace Cyrex {
         std::string FunctionName;
     };
 
-
-    //Since we want the location information provided from the caller, ThrowIfFailed must now be a macro until  
-    //we get support for std::source_location in MSVC and Visual Studio
-#ifndef ThrowIfFailed
-#define ThrowIfFailed(x)                                                     \
-    {                                                                        \
-        HRESULT hr = (x);                                                    \
-        if(FAILED(hr)) { throw DxException(hr, #x, __FILE__, __LINE__); }    \
+    inline void ThrowIfFailed(const HRESULT hr, const std::source_location& loc = std::source_location::current()) {
+        if (FAILED(hr)) {
+            throw DxException(hr, loc.function_name(), loc.file_name(), loc.line());
+        }
     }
-#endif
 }

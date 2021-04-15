@@ -39,8 +39,7 @@ namespace Cyrex {
         static constexpr auto NewLine()  noexcept { return std::endl<char, std::char_traits<char>>; }
         static constexpr auto WNewLine() noexcept { return std::endl<wchar_t, std::char_traits<wchar_t>>; }
 
-        template<typename... Args>
-        void Log(Level lvl, Args&& ...args) noexcept;
+        void Log(Level lvl, auto&& ...args) noexcept;
         template<typename... Args>
         void WLog(Level lvl, Args&& ...args) noexcept;
 
@@ -51,15 +50,11 @@ namespace Cyrex {
     private:
         Logger() = default;
 
-        template<typename... Args>
-        void Log(Args&& ...args) const noexcept;
-        template<typename... Args>
-        void WLog(Args&& ...args) const noexcept;
+        void Log(auto&& ...args) const noexcept;
+        void WLog(auto&& ...args) const noexcept;
 
-        template<typename... Args>
-        void DebugLog(Args&& ...args) const noexcept;
-        template<typename... Args>
-        void WDebugLog(Args&& ...args) const noexcept;
+        void DebugLog(auto&& ...args) const noexcept;
+        void WDebugLog(auto&& ...args) const noexcept;
 
         void SetOutputStream(std::ios_base* stream) noexcept { m_stream = stream; }
         void SetLevel(Level lvl) noexcept;
@@ -73,38 +68,33 @@ namespace Cyrex {
         static inline std::mutex m_loggingMutex;
     };
 
-    template<typename ...Args>
-    inline void Logger::Log(Level lvl, Args&& ...args) noexcept {
+    inline void Logger::Log(Level lvl, auto&& ...args) noexcept {
         std::lock_guard<std::mutex> lock(Cyrex::Logger::m_loggingMutex);
         SetLevel(lvl);
         Log(args...);
         SetLevel(Level::crx_default);
     }
 
-    template<typename ...Args>
-    inline void Logger::Log(Args&& ...args) const noexcept {
-        std::ostream& ostream = dynamic_cast<std::ostream&>(*m_stream);
+    inline void Logger::Log(auto&& ...args) const noexcept {
+        auto& ostream = dynamic_cast<std::ostream&>(*m_stream);
         ostream << m_prefix;
         (ostream << ... << args);
     }
 
-    template<typename ...Args>
-    inline void Logger::WLog(Level lvl, Args&& ...args) noexcept {  
+    inline void Logger::WLog(Level lvl, auto&& ...args) noexcept {
         std::lock_guard<std::mutex> lock(Cyrex::Logger::m_loggingMutex);
         SetLevel(lvl);
         WLog(args...);
         SetLevel(Level::crx_wdefault);
     }
 
-    template<typename ...Args>
-    inline void Logger::WLog(Args&& ...args) const noexcept {
-        std::wostream& ostream = dynamic_cast<std::wostream&>(*m_stream);
+    inline void Logger::WLog(auto&& ...args) const noexcept {
+        auto& ostream = dynamic_cast<std::wostream&>(*m_stream);
         ostream << m_wprefix;
         (ostream << ... << args);
     }
 
-    template<typename ...Args>
-    inline void Logger::DebugLog(Level lvl, Args&& ...args) noexcept {
+    inline void Logger::DebugLog(Level lvl, auto&& ...args) noexcept {
 #ifdef _DEBUG
         std::lock_guard<std::mutex> lock(Cyrex::Logger::m_loggingMutex);
         SetLevel(lvl);
@@ -113,17 +103,15 @@ namespace Cyrex {
 #endif
     }
 
-    template<typename ...Args>
-    inline void Logger::DebugLog(Args&& ...args) const noexcept {
+    inline void Logger::DebugLog(auto&& ...args) const noexcept {
 #ifdef _DEBUG
-        std::ostream& ostream = dynamic_cast<std::ostream&>(*m_stream);
+        auto& ostream = dynamic_cast<std::ostream&>(*m_stream);
         ostream << m_prefix;
         (ostream << ... << args);
 #endif
     }
 
-    template<typename ...Args>
-    inline void Logger::WDebugLog(Level lvl, Args&& ...args) noexcept {
+    inline void Logger::WDebugLog(Level lvl, auto&& ...args) noexcept {
 #ifdef _DEBUG
         std::lock_guard<std::mutex> lock(Cyrex::Logger::m_loggingMutex);
         SetLevel(lvl);
@@ -132,10 +120,9 @@ namespace Cyrex {
 #endif
     }
 
-    template<typename ...Args>
-    inline void Logger::WDebugLog(Args&& ...args) const noexcept {
+    inline void Logger::WDebugLog(auto&& ...args) const noexcept {
 #ifdef _DEBUG
-        std::wostream& ostream = dynamic_cast<std::wostream&>(*m_stream);
+        auto& ostream = dynamic_cast<std::wostream&>(*m_stream);
         ostream << m_wprefix;
         (ostream << ... << args);
 #endif
@@ -180,63 +167,52 @@ namespace Cyrex {
 }
 
 namespace Cyrex::crxlog {
-    template<typename ...Args>
-    inline void info(Args&& ...args) noexcept {
+    inline void info(auto&& ...args) noexcept {
         Logger::Get().Log(Logger::Level::crx_info, args..., Logger::NewLine());
     }
 
-    template<typename ...Args>
-    inline void err(Args&& ...args) noexcept {
+    inline void err(auto&& ...args) noexcept {
         Logger::Get().Log(Logger::Level::crx_error, args..., Logger::NewLine());
     }
 
     template<typename ...Args>
-    inline void warn(Args&& ...args) noexcept {
+    inline void warn(auto&& ...args) noexcept {
         Logger::Get().Log(Logger::Level::crx_warn, args..., Logger::NewLine());
     }
 
-    template<typename ...Args>
-    inline void critical(Args&& ...args) noexcept {
+    inline void critical(auto&& ...args) noexcept {
         Logger::Get().Log(Logger::Level::crx_critical, args..., Logger::NewLine());
     }
 
-    template<typename ...Args>
-    inline void log(Args&& ...args) noexcept {
+    inline void log(auto&& ...args) noexcept {
         Logger::Get().Log(Logger::Level::crx_default, args..., Logger::NewLine());
     }
 
-    template<typename ...Args>
-    inline void winfo(Args&& ...args) noexcept {
+    inline void winfo(auto&& ...args) noexcept {
         Logger::Get().WLog(Logger::Level::crx_winfo, args..., Logger::WNewLine());
     }
 
-    template<typename ...Args>
-    inline void werr(Args&& ...args) noexcept {
+    inline void werr(auto&& ...args) noexcept {
         Logger::Get().WLog(Logger::Level::crx_werror, args..., Logger::WNewLine());
     }
 
-    template<typename ...Args>
-    inline void wwarn(Args&& ...args) noexcept {
+    inline void wwarn(auto&& ...args) noexcept {
         Logger::Get().WLog(Logger::Level::crx_wwarn, args..., Logger::WNewLine());
     }
 
-    template<typename ...Args>
-    inline void wcritical(Args&& ...args) noexcept {
+    inline void wcritical(auto&& ...args) noexcept {
         Logger::Get().WLog(Logger::Level::crx_wcritical, args..., Logger::WNewLine());
     }
 
-    template<typename ...Args>
-    inline void wlog(Args&& ...args) noexcept {
+    inline void wlog(auto&& ...args) noexcept {
         Logger::Get().WLog(Logger::Level::crx_wdefault, args..., Logger::WNewLine());
     }
 
-    template<typename ...Args>
-    inline void debug(Args&& ...args) noexcept {
+    inline void debug(auto&& ...args) noexcept {
         Logger::Get().DebugLog(Logger::Level::crx_debug, args..., Logger::NewLine());
     }
 
-    template<typename ...Args>
-    inline void wdebug(Args&& ...args) noexcept {
-        Logger::Get().WDebugLog(Logger::Level::wcrx_debug, args..., Logger::WNewLine());
+    inline void wdebug(auto&& ...args) noexcept {
+        Logger::Get().WDebugLog(Logger::Level::crx_wdebug, args..., Logger::WNewLine());
     }
 }
