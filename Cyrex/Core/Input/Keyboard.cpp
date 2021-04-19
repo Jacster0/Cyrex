@@ -1,7 +1,31 @@
 #include "Keyboard.h"
 
+bool Cyrex::Keyboard::KeyIsPressed(KeyCode keycode) const noexcept {
+    return KeyIsPressed(static_cast<uint8_t>(keycode));
+}
+
+bool Cyrex::Keyboard::KeyIsPressedOnce(KeyCode keycode) noexcept {
+    return KeyIsPressedOnce(static_cast<uint8_t>(keycode));
+}
+
 bool Cyrex::Keyboard::KeyIsPressed(uint8_t keycode) const noexcept {
     return m_keystates[keycode];
+}
+
+bool Cyrex::Keyboard::KeyIsPressedOnce(uint8_t keycode) noexcept {
+    if (m_keyIsPressedOnce) {
+        m_keystates[keycode] = false;
+
+        return false;
+    }
+
+    if (KeyIsPressed(keycode)) {
+        m_keystates[keycode] = false;
+        m_keyIsPressedOnce   = true;
+
+        return true;
+    }
+    return false;
 }
 
 std::optional<Cyrex::Keyboard::Event> Cyrex::Keyboard::ReadKey() noexcept {
@@ -55,6 +79,14 @@ bool Cyrex::Keyboard::AutorepeatIsEnabled() const noexcept {
     return m_autorepeatEnabled;;
 }
 
+void Cyrex::Keyboard::OnKeyPressed(KeyCode keycode) noexcept {
+    OnKeyPressed(static_cast<uint8_t>(keycode));
+}
+
+void Cyrex::Keyboard::OnKeyReleased(KeyCode keycode) noexcept {
+    OnKeyReleased(static_cast<uint8_t>(keycode));
+}
+
 void Cyrex::Keyboard::OnKeyPressed(uint8_t keycode) noexcept {
     m_keystates[keycode] = true;
     m_keybuffer.push(Keyboard::Event(Keyboard::Event::Type::Press, keycode));
@@ -62,6 +94,7 @@ void Cyrex::Keyboard::OnKeyPressed(uint8_t keycode) noexcept {
 }
 
 void Cyrex::Keyboard::OnKeyReleased(uint8_t keycode) noexcept {
+    m_keyIsPressedOnce = false;
     m_keystates[keycode] = false;
     m_keybuffer.push(Keyboard::Event(Keyboard::Event::Type::Release, keycode));
     TrimBuffer(m_keybuffer);

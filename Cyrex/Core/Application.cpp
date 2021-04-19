@@ -78,6 +78,7 @@ void Cyrex::Application::Initialize() noexcept {
 		m_isInitialized = false;
 	    return;
 	}
+
 	m_window->SetImGuiIntialized(true);
 	m_window->Show();
 
@@ -96,7 +97,7 @@ void Cyrex::Application::KeyboardInput() noexcept {
 		}
 
 		switch (e->GetCode()) {
-		case VK_ESCAPE:
+		case KeyCode::Escape:
 			if (m_window->CursorEnabled()) {
 				m_window->DisableCursor();
 				m_window->m_mouse.EnableRawInput();
@@ -106,20 +107,18 @@ void Cyrex::Application::KeyboardInput() noexcept {
 				m_window->m_mouse.DisableRawInput();
 			}
 			break;
-		case VK_F11:
+		case KeyCode::F11:
 			crxlog::info("Toggled fullscreen mode");
 			m_window->ToggleFullScreen(!m_window->FullScreen());
 			break;
-		case VK_SPACE:
+		case KeyCode::Space:
 			m_gfx->AnimateLights() = !m_gfx->AnimateLights();
 		}
 	}
 	
-	while (const auto e = m_window->Kbd.ReadChar()) {
-		if (e.value() == 'v') {
-			crxlog::info("Toggled VSync");
-			m_gfx->ToggleVsync();
-		}
+	if (m_window->Kbd.KeyIsPressedOnce(KeyCode::V)) {
+		crxlog::info("Toggled VSync");
+		m_gfx->ToggleVsync();
 	}
 
 	m_gfx->KeyboardInput(m_window->Kbd);

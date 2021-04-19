@@ -17,7 +17,6 @@
 #include "Core/Input/Mouse.h"
 #include "Core/Math/Math.h"
 #include "Core/Math/Common.h"
-#include "Core/Utils/StringUtils.h"
 
 #include "API/DX12/DXException.h"
 #include "API/DX12/CommandQueue.h"
@@ -36,6 +35,8 @@
 #include <cstdlib>
 
 #include <ShObjIdl.h>
+
+import StringUtils;
 
 namespace wrl = Microsoft::WRL;
 namespace dx = DirectX;
@@ -60,12 +61,11 @@ Graphics::Graphics()
     Vector4 cameraUp{ 0, 1, 0, 0 };
 
     m_camera.SetLookAt(cameraPos, cameraTarget, cameraUp);
-
-    m_cameraData = std::make_unique<CameraData>();
+  
    
-    m_cameraData->InitialCamPos = m_camera.GetTranslation();
-    m_cameraData->InitialCamRot = m_camera.GetRotation();
-    m_cameraData->InitialCamFov = m_camera.GetFov();
+    m_cameraData.InitialCamPos = m_camera.GetTranslation();
+    m_cameraData.InitialCamRot = m_camera.GetRotation();
+    m_cameraData.InitialCamFov = m_camera.GetFov();
 
     std::vector<COMDLG_FILTERSPEC> fileFilters = { {
         { L"All Files",                              L"*.*"          },
@@ -174,8 +174,7 @@ void Graphics::LoadContent() {
     auto  commandList  = commandQueue.GetCommandList();
 
     m_lightBulb  = GeometryGenerator::CreateSphere(commandList, 0.1f);
-    m_flashLight = GeometryGenerator::CreateTorus(commandList);
-   /* m_flashLight = GeometryGenerator::CreateCone(commandList,0.1f,0.5f);*/
+    m_flashLight = GeometryGenerator::CreateCone(commandList,0.1f,0.5f);
 
     auto fence = commandQueue.ExecuteCommandList(commandList);
 
@@ -271,6 +270,9 @@ bool Graphics::LoadScene(const std::string& sceneFile) {
         Vector4 focusPoint{ boudningSphere.Center.x * scale, boudningSphere.Center.y * scale, boudningSphere.Center.z * scale, 1.0f };
 
         cameraPosition = cameraPosition + focusPoint;
+
+        m_cameraData.InitialCamPos = cameraPosition;
+        m_cameraData.InitialCamFov = cameraFov;
 
         m_camera.SetTranslation(cameraPosition);
 
@@ -406,9 +408,9 @@ void Graphics::UpdateCamera() noexcept {
         m_cameraControls.Forward - m_cameraControls.Backward,
         1.0f ) * speedFactor * dt;
 
-    m_camera.Translate(translate,Space::Local);
+    m_camera.Translate(translate);
 
-    auto cameraRotation = Quaternion::FromPitchYawRoll(
+    const auto& cameraRotation = Quaternion::FromPitchYawRoll(
         Math::ToRadians(m_cameraControls.Pitch),
         Math::ToRadians(m_cameraControls.Yaw), 
         0.0f); 
@@ -522,18 +524,18 @@ void Graphics::KeyboardInput(Keyboard& kbd) noexcept {
         return;
     }
 
-    m_cameraControls.Forward  = static_cast<float>(kbd.KeyIsPressed('W'));
-    m_cameraControls.Left     = static_cast<float>(kbd.KeyIsPressed('A'));
-    m_cameraControls.Backward = static_cast<float>(kbd.KeyIsPressed('S'));
-    m_cameraControls.Right    = static_cast<float>(kbd.KeyIsPressed('D'));
-    m_cameraControls.Down     = static_cast<float>(kbd.KeyIsPressed('Q'));
-    m_cameraControls.Up       = static_cast<float>(kbd.KeyIsPressed('E'));
-    m_cameraControls.Sneak    = kbd.KeyIsPressed(VK_SHIFT);
+    m_cameraControls.Forward  = static_cast<float>(kbd.KeyIsPressed(KeyCode::W));
+    m_cameraControls.Left     = static_cast<float>(kbd.KeyIsPressed(KeyCode::A));
+    m_cameraControls.Backward = static_cast<float>(kbd.KeyIsPressed(KeyCode::S));
+    m_cameraControls.Right    = static_cast<float>(kbd.KeyIsPressed(KeyCode::D));
+    m_cameraControls.Down     = static_cast<float>(kbd.KeyIsPressed(KeyCode::Q));
+    m_cameraControls.Up       = static_cast<float>(kbd.KeyIsPressed(KeyCode::E));
+    m_cameraControls.Sneak    = kbd.KeyIsPressed(KeyCode::Shift);
 
-    if (kbd.KeyIsPressed('R')) {
-        m_camera.SetTranslation(m_cameraData->InitialCamPos);
-        m_camera.SetRotation(m_cameraData->InitialCamRot);
-        m_camera.SetFov(m_cameraData->InitialCamFov);
+    if (kbd.KeyIsPressedOnce(KeyCode::R)) {
+        m_camera.SetTranslation(m_cameraData.InitialCamPos);
+        m_camera.SetRotation(m_cameraData.InitialCamRot);
+        m_camera.SetFov(m_cameraData.InitialCamFov);
 
         m_cameraControls.Pitch = 0.0f;
         m_cameraControls.Yaw   = 0.0f;
