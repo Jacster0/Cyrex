@@ -10,10 +10,12 @@
 #include "Graphics/API/DX12/Texture.h"
 #include "Graphics/API/DX12/DXException.h"
 #include "Graphics/API/DX12/PipelineStateObject.h"
+#include "Graphics/Viewport.h"
 
 #include "Core/Logger.h"
 #include "Core/Utils/TextureUtils.h"
 #include "Core/Math/Matrix.h"
+#include "Core/Math/Rectangle.h"
 
 #include "ImGui/imgui_impl_win32.h"
 #include "Extern/DirectXTex/DirectXTex/DirectXTex.h"
@@ -105,7 +107,7 @@ void D3D12Layer::End(CommandList& cmdList) noexcept {
     const float T = drawData->DisplayPos.y;
     const float B = drawData->DisplayPos.y + drawData->DisplaySize.y;
 
-    const Matrix mvp = Matrix
+    const Matrix mvp
     (
          2.0f / (R - L), 0.0f, 0.0f, 0.0f ,
          0.0f, 2.0f / (T - B), 0.0f, 0.0f ,
@@ -121,11 +123,12 @@ void D3D12Layer::End(CommandList& cmdList) noexcept {
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
   
 
-    D3D12_VIEWPORT viewport = {};
-    viewport.Width          = drawData->DisplaySize.x;
-    viewport.Height         = drawData->DisplaySize.y;
-    viewport.MinDepth       = 0.0f;
-    viewport.MaxDepth       = 1.0f;
+    Viewport viewport { 
+        .Width = drawData->DisplaySize.x, 
+        .Height = drawData->DisplaySize.y, 
+        .MinDepth = 0.0f, 
+        .MaxDepth = 1.0f 
+    };
 
     cmdList.SetViewport(viewport);
     cmdList.SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -156,12 +159,12 @@ void D3D12Layer::End(CommandList& cmdList) noexcept {
             else {
                 ImVec4 clipRect = drawCmd.ClipRect;
 
-                D3D12_RECT scissorRect;
-                scissorRect.left   = static_cast<LONG>(clipRect.x - drawData->DisplayPos.x);
-                scissorRect.top    = static_cast<LONG>(clipRect.y - drawData->DisplayPos.y);
-                scissorRect.right  = static_cast<LONG>(clipRect.z - drawData->DisplayPos.x);
-                scissorRect.bottom = static_cast<LONG>(clipRect.w - drawData->DisplayPos.y);
-
+                Math::Rectangle scissorRect(
+                    clipRect.x - drawData->DisplayPos.x,
+                    clipRect.y - drawData->DisplayPos.y,
+                    clipRect.z - drawData->DisplayPos.x,
+                    clipRect.w - drawData->DisplayPos.y);
+            
                 cmdList.SetScissorRect(scissorRect);
                 cmdList.DrawIndexed(drawCmd.ElemCount, 1, indexOffset);
             }

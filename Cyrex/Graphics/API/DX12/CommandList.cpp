@@ -23,6 +23,7 @@
 #include "VertexBuffer.h"
 
 #include "Core/Math/Math.h"
+
 #include "DXException.h"
 #include <DirectXColors.h>
 
@@ -31,12 +32,11 @@
 
 #include <xmmintrin.h>
 #include <cassert>
-#include <filesystem>
-
 
 namespace wrl = Microsoft::WRL;
-namespace fs  = std::filesystem;
 namespace dx  = DirectX;
+
+using namespace Cyrex;
 
 Cyrex::CommandList::CommandList(Device& device, D3D12_COMMAND_LIST_TYPE type)
     :
@@ -468,28 +468,26 @@ void Cyrex::CommandList::SetGraphicsDynamicStructuredBuffer(
     m_d3d12CommandList->SetGraphicsRootShaderResourceView(slot, heapAlloc.GPU);
 }
 
-void Cyrex::CommandList::SetViewport(const D3D12_VIEWPORT& viewport) {
-    SetViewports({ viewport });
+void Cyrex::CommandList::SetViewport(const Viewport& viewport) {
+    SetViewports(&viewport,1);
 }
 
-void Cyrex::CommandList::SetViewports(const std::vector<D3D12_VIEWPORT>& viewports) {
-    assert(viewports.size() < D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE);
-
+void Cyrex::CommandList::SetViewports(const Viewport const* viewports, const uint32_t viewportCount) {
     m_d3d12CommandList->RSSetViewports(
-        static_cast<uint32_t>(viewports.size()),
-        viewports.data());
+        viewportCount,
+        reinterpret_cast<const D3D12_VIEWPORT const*>(viewports));
 }
 
-void Cyrex::CommandList::SetScissorRect(const D3D12_RECT& scissorRect) {
-    SetScissorRects({ scissorRect });
+void Cyrex::CommandList::SetScissorRect(const Math::Rectangle& scissorRect) const noexcept {
+    SetScissorRects(&scissorRect, 1);
 }
 
-void Cyrex::CommandList::SetScissorRects(const std::vector<D3D12_RECT>& scissorRects) {
-    assert(scissorRects.size() < D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE);
+void Cyrex::CommandList::SetScissorRects(const Math::Rectangle const* scissorRects, const uint32_t scissorCount) const noexcept {
+    assert(scissorCount < D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE);
 
     m_d3d12CommandList->RSSetScissorRects(
-        static_cast<uint32_t>(scissorRects.size()),
-        scissorRects.data());
+        scissorCount,
+        reinterpret_cast<const D3D12_RECT const*>(scissorRects));
 }
 
 void Cyrex::CommandList::SetPipelineState(const std::shared_ptr<PipelineStateObject>& pipelineState) {

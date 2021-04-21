@@ -11,6 +11,9 @@
 #include <functional>
 #include <mutex>
 
+#include "Core/Math/Rectangle.h"
+#include "Graphics/Viewport.h"
+
 namespace Cyrex {
     class Buffer;
     class ByteAddressBuffer;
@@ -172,11 +175,11 @@ namespace Cyrex {
             SetGraphicsDynamicStructuredBuffer(slot, bufferData.size(), sizeof(T::value_type), bufferData.data());
         }
 
-        void SetViewport(const D3D12_VIEWPORT& viewport);
-        void SetViewports(const std::vector<D3D12_VIEWPORT>& viewports);
+        void SetViewport(const Cyrex::Viewport& viewport);
+        void SetViewports(const Cyrex::Viewport const* viewports, const uint32_t viewportCount);
 
-        void SetScissorRect(const D3D12_RECT& scissorRect);
-        void SetScissorRects(const std::vector<D3D12_RECT>& scissorRects);
+        void SetScissorRect(const Cyrex::Math::Rectangle& scissorRect) const noexcept;
+        void SetScissorRects(const Math::Rectangle const* scissorRects, const uint32_t scissorCount) const noexcept;
 
         void SetPipelineState(const std::shared_ptr<PipelineStateObject>& pipelineState);
 
@@ -282,7 +285,7 @@ namespace Cyrex {
     private:
         void TrackResource(Microsoft::WRL::ComPtr<ID3D12Object> object);
 
-        using TrackedObjects = std::vector <Microsoft::WRL::ComPtr<ID3D12Object>>;
+        using TrackedObjects = std::vector<Microsoft::WRL::ComPtr<ID3D12Object>>;
 
         Device& m_device;
         D3D12_COMMAND_LIST_TYPE m_d3d12CommandListType;
@@ -301,7 +304,6 @@ namespace Cyrex {
         ID3D12DescriptorHeap* m_descriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
 
         std::unique_ptr<GenerateMipsPSO> m_generateMipsPSO;
-        //std::unique_ptr<PanoToCubemapPSO> m_panoToCubemapPSO;
 
         TrackedObjects m_trackedObjects;
     };

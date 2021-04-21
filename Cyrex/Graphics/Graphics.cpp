@@ -45,11 +45,8 @@ using namespace Cyrex;
 using namespace Cyrex::Math;
 using namespace DirectX;
 
-static constexpr auto g_longMax = std::numeric_limits<long>::max();
-
 Graphics::Graphics()
     :
-    m_scissorRect(CD3DX12_RECT(0, 0, g_longMax, g_longMax)),
     m_vsync(VSync::Off)
 {
     m_pointLights.resize(1);
@@ -377,10 +374,9 @@ void Graphics::Resize(uint32_t width, uint32_t height) {
     m_clientWidth  = std::max(1u, width);
     m_clientHeight = std::max(1u, height);
 
-    float aspectRatio = m_clientWidth / static_cast<float>(m_clientHeight);
-    m_camera.SetProj(45.0f, aspectRatio, 0.1f, 1000.0f);
+    m_viewport = { 0.0f, 0.0f, static_cast<float>(m_clientWidth), static_cast<float>(m_clientHeight), 0.0f, 1.0f };
 
-    m_viewport = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(m_clientWidth), static_cast<float>(m_clientHeight));
+    m_camera.SetProj(45.0f, m_viewport.AspectRatio(), 0.1f, 1000.0f);
 
     m_renderTarget.Resize(m_clientWidth, m_clientHeight);
     m_swapChain->Resize(m_clientWidth, m_clientHeight);
@@ -546,6 +542,6 @@ void Graphics::OnOpenFileDialog() noexcept {
     if (m_fileDialog.Open() == DialogResult::OK) {
         const auto& filepath = m_fileDialog.GetFilePath();
 
-        m_loadingTask = std::async(std::launch::async, [this, filepath]() -> bool { return LoadScene(ToNarrow(filepath)); });
+        m_loadingTask = std::async(std::launch::async, [this,filepath] { return LoadScene(ToNarrow(filepath)); });
     }
 }

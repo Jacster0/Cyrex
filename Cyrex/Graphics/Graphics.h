@@ -6,9 +6,11 @@
 #include "Core/Filesystem/OpenFileDialog.h"
 #include "Core/Math/Vector4.h"
 #include "Core/Math/Quaternion.h"
+#include "Core/Math/Rectangle.h"
 
 #include "API/DX12/Common.h"
 #include "API/DX12/RenderTarget.h"
+#include "Viewport.h"
 
 #include <memory>
 #include <array>
@@ -98,9 +100,7 @@ namespace Cyrex {
             Cyrex::Math::Vector4 InitialCamPos;
             Cyrex::Math::Quaternion InitialCamRot;
            float InitialCamFov;
-        };
-
-        std::unique_ptr<CameraData> m_cameraData;
+        } m_cameraData;
 
         struct CameraControls {
             float Forward  = 0;
@@ -123,8 +123,8 @@ namespace Cyrex {
         uint32_t m_clientHeight{};
         HWND m_hWnd;
 
-        D3D12_VIEWPORT m_viewport;
-        D3D12_RECT m_scissorRect;
+        Cyrex::Viewport m_viewport;
+        Cyrex::Math::Rectangle m_scissorRect;
 
         VSync m_vsync;
         bool m_isIntialized = false;
