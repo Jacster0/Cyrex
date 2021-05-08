@@ -10,22 +10,22 @@ namespace Cyrex {
     class CPUInfo {
     public:
         CPUInfo();
-        
+
         struct {
             std::string BrandString;
             std::string Vendor;
             std::string Architecture;
             int NumLogicalProcessors;
             int NumCores;
-            std::unordered_map<std::string, bool> InstructionSetFeatures;
+            InstructionSet InstructionSetFeatures;
         } Info;
     private:
-        const std::string GetBrandString()  const noexcept { return m_instructionSet.Brandstring(); }
-        const std::string GetVendor()       const noexcept { return m_instructionSet.Vendor(); }
-        const std::string GetArchitecture() const noexcept { return m_architectures.at(m_sysInfo.wProcessorArchitecture); }
+        [[nodiscard]] const std::string& GetBrandString()  const noexcept { return m_instructionSet.Brandstring(); }
+        [[nodiscard]] const std::string& GetVendor()       const noexcept { return m_instructionSet.Vendor(); }
+        [[nodiscard]] const std::string& GetArchitecture() const noexcept { return m_architectures.at(m_sysInfo.wProcessorArchitecture); }
 
-        const int GetNumberOfLogicalProcessors() const noexcept { return std::thread::hardware_concurrency(); }
-        const int GetNumberOfCores() const noexcept;
+        [[nodiscard]] const uint32_t GetNumberOfLogicalProcessors() const noexcept { return std::thread::hardware_concurrency(); }
+        [[nodiscard]] const uint32_t GetNumberOfCores() const noexcept;
 
         SYSTEM_INFO m_sysInfo;
         InstructionSet m_instructionSet;
