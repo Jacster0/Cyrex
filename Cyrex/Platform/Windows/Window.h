@@ -37,7 +37,7 @@ namespace Cyrex {
 
 		Keyboard Kbd;
 		Mouse m_mouse;
-		std::shared_ptr<Graphics> Gfx = nullptr;
+		Graphics* Gfx = nullptr;
 	private:
 		class WindowClass {
 		public:

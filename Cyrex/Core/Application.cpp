@@ -16,7 +16,7 @@ namespace dx = DirectX;
 
 Cyrex::Application::Application() {
 	m_window = std::make_unique<Window>();
-	m_gfx    = std::make_shared<Graphics>();
+	m_gfx    = std::make_unique<Graphics>();
 
 	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 
@@ -26,11 +26,11 @@ Cyrex::Application::Application() {
 
 	auto cpuInfo = CPUInfo{}.Info;
 
-	crxlog::log("\nCPU INFO: ",                                 Logger::NewLine(),
-		"Active CPU:          ", cpuInfo.BrandString,           Logger::NewLine(),
-		"CPU Vendor:          ", cpuInfo.Vendor,                Logger::NewLine(),
-		"CPU architecture:    ", cpuInfo.Architecture,          Logger::NewLine(),
-		"Cores:               ", cpuInfo.NumCores,              Logger::NewLine(),
+	crxlog::log("\nCPU INFO: ",                                                Logger::NewLine(),
+		"Active CPU:          ", cpuInfo.InstructionSetFeatures.Brandstring(), Logger::NewLine(),
+		"CPU Vendor:          ", cpuInfo.InstructionSetFeatures.Vendor(),      Logger::NewLine(),
+		"CPU architecture:    ", cpuInfo.Architecture,                         Logger::NewLine(),
+		"Cores:               ", cpuInfo.NumCores,                             Logger::NewLine(),
 		"Logical processors:  ", cpuInfo.NumLogicalProcessors);
 
 	Initialize();
@@ -48,10 +48,10 @@ int Cyrex::Application::Run() {
 	}
 
 	while (true) {
-		if (const auto ecode = MessagePump()) {
+		if (const auto exitCode = MessagePump()) {
 			//return exit code
 			m_gfx->UnLoadContent();
-			return *ecode;
+			return *exitCode;
 		}
 		else {
 			//Render/Graphics stuff
@@ -65,7 +65,7 @@ int Cyrex::Application::Run() {
 }
 
 void Cyrex::Application::Initialize() noexcept {
-	m_window->Gfx = m_gfx;
+	m_window->Gfx = m_gfx.get();
 	m_gfx->SetHwnd(m_window->GetWindowHandle());
 	m_window->Kbd.EnableAutorepeat();
 
@@ -126,6 +126,7 @@ void Cyrex::Application::KeyboardInput() noexcept {
 
 void Cyrex::Application::MouseInput() noexcept {
 	using mouseEvent = Mouse::Event::Type;
+
 	while (const auto e = m_window->m_mouse.Read()) {
 		switch (e->GetType()) {
 		case mouseEvent::Move:

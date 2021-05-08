@@ -32,7 +32,7 @@ namespace Cyrex {
         std::optional<int> MessagePump() noexcept;
 
         std::unique_ptr<Window> m_window = nullptr;
-        std::shared_ptr<Graphics> m_gfx = nullptr;
+        std::unique_ptr<Graphics> m_gfx = nullptr;
 
         bool m_isInitialized = false;
     };

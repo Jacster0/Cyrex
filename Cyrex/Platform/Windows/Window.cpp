@@ -2,14 +2,15 @@
 #include "Graphics/Graphics.h"
 #include "Core/Application.h"
 #include "Core/Logger.h"
-#include "Core/Utils/StringUtils.h"
-#include "Core/Utils/ThreadUtils.h"
 
 #include "Editor/EditorLayer.h"
 #include "Editor/ImGui/imgui_impl_win32.h"
 
 #include <cassert>
 #include <comdef.h>
+
+import StringUtils;
+import ThreadUtils;
 
 namespace Cyrex {
 	Window::WindowClass Window::WindowClass::wndClass;
@@ -69,6 +70,7 @@ namespace Cyrex {
 
 	Window::~Window() {
 		DestroyWindow(m_hWnd);
+		Gfx = nullptr;
 	}
 
 	LRESULT Window::SetupProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept {

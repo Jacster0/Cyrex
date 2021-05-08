@@ -10,12 +10,9 @@ using namespace Cyrex;
 CPUInfo::CPUInfo() {
     GetNativeSystemInfo(&m_sysInfo);
 
-    Info.BrandString            = GetBrandString();
-    Info.Vendor                 = GetVendor();
     Info.Architecture           = GetArchitecture();
     Info.NumLogicalProcessors   = GetNumberOfLogicalProcessors();
     Info.NumCores               = GetNumberOfCores();
-    Info.InstructionSetFeatures = std::move(m_instructionSet);
 }
 
 const uint32_t CPUInfo::GetNumberOfCores() const noexcept {
