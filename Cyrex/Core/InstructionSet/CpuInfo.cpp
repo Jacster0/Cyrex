@@ -2,7 +2,6 @@
 #include <cassert>
 #include <algorithm>
 #include <ranges>
-#include <iostream>
 
 namespace views = std::ranges::views;
 
@@ -32,14 +31,12 @@ const uint32_t CPUInfo::GetNumberOfCores() const noexcept {
     //create the buffer
     std::vector<SYSTEM_LOGICAL_PROCESSOR_INFORMATION> buffer(length / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION));
 
-    //Fill the buffer. If the function fails we return 0 because the contents of the buffer will be undefined
-    if (not GetLogicalProcessorInformation(buffer.data(), &length)) [[unlikely]] {
-        return numCores;
-    }
-
-    //Count the number of physical cores on the users cpu.
-    for ([[maybe_unused]] const auto elem : buffer | views::filter(filterLambda)) {
-        numCores++;
+    //Fill the buffer. If the function succeed we can start counting cores.
+    if (GetLogicalProcessorInformation(buffer.data(), &length)) [[likely]] {
+        //Count the number of physical cores on the users cpu.
+        for ([[maybe_unused]] const auto elem : buffer | views::filter(filterLambda)) {
+            numCores++;
+        }
     }
 
     return numCores;
